@@ -1,10 +1,10 @@
-package net.flyingfishflash.listx
+package net.flyingfishflash.loremlist
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication class ListxApplication
+@SpringBootApplication class LoremListApplication
 
 fun main(args: Array<String>) {
-  runApplication<ListxApplication>(*args)
+  runApplication<LoremListApplication>(*args)
 }

@@ -1,0 +1,14 @@
+---
+
+spring:
+  config:
+    activate:
+      on-profile: postgresql
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: 'true'
+    propertieshibernate:
+      dialect: org.hibernate.dialect.PostgreSQLDialect
