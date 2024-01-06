@@ -1,62 +1,76 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
-	id("java")
-	id("org.springframework.boot") version "3.2.1"
-	id("io.spring.dependency-management") version "1.1.4"
-	id("org.hibernate.orm") version "6.4.1.Final"
-	id("org.graalvm.buildtools.native") version "0.9.28"
-	kotlin("jvm") version "1.9.21"
-	kotlin("plugin.spring") version "1.9.21"
-	kotlin("plugin.jpa") version "1.9.21"
+  id("com.diffplug.spotless") version "6.23.3"
+  id("com.github.ben-manes.versions") version "0.50.0"
+  id("org.sonarqube") version "4.4.1.3373"
 }
 
-group = "net.flyingfishflash"
-version = "0.0.1-SNAPSHOT"
+description = "List Manager."
 
-java {
-	sourceCompatibility = JavaVersion.VERSION_17
+val googleJavaFormatVersion by extra { "1.17.0" }
+val ciCommit by extra { ciCommit() }
+val ciPlatform by extra { ciPlatform() }
+val ciPipelineId by extra { ciPipelineId() }
+
+configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+  kotlinGradle { ktfmt() }
+
+  json {
+    target("*.json")
+    prettier()
+  }
+
+  yaml {
+    target("scripts/ci/drone/deploy/*.yaml")
+    prettier()
+    //    jackson().feature("ORDER_MAP_ENTRIES_BY_KEYS", true)
+  }
+
+  format("misc") {
+    target("*.md", "*.xml", ".gitignore")
+    trimTrailingWhitespace()
+    indentWithSpaces()
+    endWithNewline()
+  }
 }
 
-configurations {
-	compileOnly {
-		extendsFrom(configurations.annotationProcessor.get())
-	}
+tasks {
+  register("writeVersionToFile") {
+    doLast { File(".version").writeText(project.version.toString()) }
+  }
+
+  register("writeVersionToTagsFile") {
+    doLast { File(".tags").writeText(project.version.toString()) }
+  }
 }
 
-repositories {
-	mavenCentral()
+fun ciPlatform(): String {
+  var ciPlatform = "Non-CI Build"
+  if (System.getenv("CI") == "true") {
+    if (System.getenv("DRONE") == "true") {
+      ciPlatform = "drone"
+    } else if (System.getenv("GITLAB_CI") == "true") {
+      ciPlatform = "gitlab"
+    }
+  }
+  return ciPlatform
 }
 
-dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-	implementation("org.flywaydb:flyway-core")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	runtimeOnly("com.h2database:h2")
-	runtimeOnly("org.postgresql:postgresql")
-	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.security:spring-security-test")
+fun ciPipelineId(): String {
+  var ciPipelineId = "0"
+  if (ciPlatform() == "drone") {
+    ciPipelineId = System.getenv("DRONE_BUILD_NUMBER")
+  } else if (ciPlatform() == "gitlab") {
+    ciPipelineId = System.getenv("CI_PIPELINE_ID")
+  }
+  return ciPipelineId
 }
 
-tasks.withType<KotlinCompile> {
-	kotlinOptions {
-		freeCompilerArgs += "-Xjsr305=strict"
-		jvmTarget = "17"
-	}
+fun ciCommit(): String {
+  var ciCommit = "No Commit SHA"
+  if (ciPlatform() == "drone") {
+    ciCommit = System.getenv("DRONE_COMMIT_SHA").slice(0..7)
+  } else if (ciPlatform() == "gitlab") {
+    ciCommit = System.getenv("CI_COMMIT_SHORT_SHA")
+  }
+  return ciCommit
 }
-
-tasks.withType<Test> {
-	useJUnitPlatform()
-}
-
-hibernate {
-	enhancement {
-		enableAssociationManagement.set(true)
-	}
-}
-
