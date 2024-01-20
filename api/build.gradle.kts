@@ -26,8 +26,6 @@ val kotlinxSerializationJson = "1.6.2"
 val springDocOpenApiStarterWebmvcUiVersion = "2.3.0"
 val springmockkVersion = "4.0.2"
 
-java { sourceCompatibility = JavaVersion.VERSION_17 }
-
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
 
 dependencies {
@@ -60,11 +58,15 @@ dependencies {
   }
 }
 
-jacoco { toolVersion = "0.8.11" }
-
 allOpen {
   annotations("jakarta.persistence.Entity", "jakarta.persistence.Embeddable", "jakarta.persistence.MappedSuperclass")
 }
+
+hibernate { enhancement { enableAssociationManagement.set(true) } }
+
+jacoco { toolVersion = "0.8.11" }
+
+java { sourceCompatibility = JavaVersion.VERSION_17 }
 
 sonarqube {
   properties {
@@ -74,9 +76,7 @@ sonarqube {
     property("sonar.projectVersion", rootProject.version.toString())
     property(
       "sonar.coverage.exclusions",
-//      "src/main/kotlin/net/flyingfishflash/loremlist/core/CustomCommandLineRunner.java," +
       "src/main/kotlin/net/flyingfishflash/loremlist/core/configuration/**," +
-//        "src/main/kotlin/net/flyingfishflash/loremlist/core/multitenancy/TenantService.java," +
         "src/main/kotlin/net/flyingfishflash/loremlist/**/dto/*," +
         "src/main/kotlin/net/flyingfishflash/loremlist/*/*/*Configuration.kt",
     )
@@ -138,9 +138,7 @@ tasks {
   }
 }
 
-hibernate { enhancement { enableAssociationManagement.set(true) } }
-
-configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+spotless {
   kotlinGradle { ktlint() }
   kotlin { ktlint() }
 
