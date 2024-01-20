@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   id("java")
   id("jacoco")
@@ -70,15 +68,15 @@ allOpen {
 
 sonarqube {
   properties {
-    property("sonar.projectKey", rootProject.name)
+    property("sonar.projectKey", project.name)
     property("sonar.projectVersion", rootProject.version.toString())
     property(
       "sonar.coverage.exclusions",
-      "src/main/java/net/flyingfishflash/ledger/core/CustomCommandLineRunner.java," +
-        "src/main/java/net/flyingfishflash/ledger/core/configuration/**," +
-        "src/main/java/net/flyingfishflash/ledger/core/multitenancy/TenantService.java," +
-        "src/main/java/net/flyingfishflash/ledger/**/dto/*," +
-        "src/main/java/net/flyingfishflash/ledger/*/*/*Configuration.java",
+//      "src/main/kotlin/net/flyingfishflash/loremlist/core/CustomCommandLineRunner.java," +
+      "src/main/kotlin/net/flyingfishflash/loremlist/core/configuration/**," +
+//        "src/main/kotlin/net/flyingfishflash/loremlist/core/multitenancy/TenantService.java," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/**/dto/*," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/*/*/*Configuration.kt",
     )
   }
 }
@@ -96,16 +94,46 @@ springBoot {
   }
 }
 
-tasks.withType<KotlinCompile> {
-  kotlinOptions {
-    freeCompilerArgs += "-Xjsr305=strict"
-    jvmTarget = "17"
+tasks {
+  compileKotlin {
+    kotlinOptions {
+      freeCompilerArgs += "-Xjsr305=strict"
+      jvmTarget = "17"
+    }
   }
-}
 
-tasks.withType<Test> {
-  useJUnitPlatform()
-  testLogging { events("passed", "skipped", "failed") }
+  test {
+    useJUnitPlatform()
+    testLogging { events("passed", "skipped", "failed") }
+    finalizedBy("jacocoUnitTestReport")
+    filter { excludeTestsMatching("net.flyingfishflash.loremlist.integration*") }
+  }
+
+  register<JacocoReport>("jacocoUnitTestReport") {
+    mustRunAfter(test)
+    executionData(fileTree(project.layout.buildDirectory).include("jacoco/test.exec"))
+    sourceDirectories.setFrom(files(project.sourceSets.main.get().allSource.srcDirs))
+    classDirectories.setFrom(
+      files(
+        project.sourceSets.main.get().output.asFileTree.filter { f: File ->
+          !(
+            f.path.contains("/kotlin/main/net/flyingfishflash/loremlist") &&
+              (
+                f.name.equals("Application") ||
+                  f.name.contains("ApplicationConfiguration") ||
+                  f.name.contains("Configuration") ||
+                  f.path.contains("dto/") ||
+                  f.path.contains("configuration/")
+              )
+          )
+        },
+      ),
+    )
+    reports {
+      html.required.set(true)
+      xml.required.set(true)
+    }
+  }
 }
 
 hibernate { enhancement { enableAssociationManagement.set(true) } }
