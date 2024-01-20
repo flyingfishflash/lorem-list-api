@@ -12,7 +12,7 @@ val ciPlatform by extra { ciPlatform() }
 val ciPipelineId by extra { ciPipelineId() }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-  kotlinGradle { ktfmt() }
+  kotlinGradle { ktlint() }
 
   json {
     target("*.json")
