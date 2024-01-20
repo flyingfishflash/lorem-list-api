@@ -2,9 +2,9 @@
 
 config:
   application:
-#    name: &application-name "Listx"
+#    name: &application-name "lorem-list"
 #    description: &application-description "A Kotlin/Spring Boot based list manager"
-    documentation: "https://listx.wiki.github.org/docs"
+    documentation: "https://lorem-list.wiki.github.org/docs"
     api-v1-url-path: &api-v1-url-path "/api/v1"
 
 debug: "false"
