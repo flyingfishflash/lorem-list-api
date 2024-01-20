@@ -6,7 +6,7 @@ plugins {
   id("com.diffplug.spotless")
   id("io.spring.dependency-management") version "1.1.4"
 //  id("org.graalvm.buildtools.native") version "0.9.28"
-  id("org.hibernate.orm") version "6.4.1.Final"
+  id("org.hibernate.orm") version "6.4.2.Final"
   id("org.springframework.boot") version "3.2.2"
   kotlin("jvm") version "1.9.22"
   kotlin("plugin.jpa") version "1.9.22"
