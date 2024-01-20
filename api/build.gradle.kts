@@ -83,6 +83,19 @@ sonarqube {
   }
 }
 
+springBoot {
+  buildInfo {
+    properties {
+      artifact.set("lorem-list-api")
+      name.set("lorem-list api")
+      version.set(rootProject.version.toString())
+      additional.set(
+        mapOf("ciPlatform" to ciPlatform, "ciPipelineId" to ciPipelineId, "commit" to ciCommit),
+      )
+    }
+  }
+}
+
 tasks.withType<KotlinCompile> {
   kotlinOptions {
     freeCompilerArgs += "-Xjsr305=strict"
