@@ -68,7 +68,7 @@ allOpen {
 
 sonarqube {
   properties {
-    property("sonar.projectKey", project.name)
+    property("sonar.projectKey", "lorem-list-api")
     property("sonar.projectVersion", rootProject.version.toString())
     property(
       "sonar.coverage.exclusions",
