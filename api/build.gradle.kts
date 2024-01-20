@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "net.flyingfishflash"
-description = "Lorem List API"
+description = "lorem-list api"
 
 val ciCommit: String by rootProject.extra
 val ciPlatform: String by rootProject.extra
