@@ -11,7 +11,7 @@ val ciCommit by extra { ciCommit() }
 val ciPlatform by extra { ciPlatform() }
 val ciPipelineId by extra { ciPipelineId() }
 
-configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+spotless {
   kotlinGradle { ktlint() }
 
   json {
