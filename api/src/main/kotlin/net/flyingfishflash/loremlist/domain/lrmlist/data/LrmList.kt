@@ -11,7 +11,10 @@ import jakarta.persistence.JoinTable
 import jakarta.persistence.ManyToMany
 import jakarta.persistence.SequenceGenerator
 import kotlinx.serialization.Serializable
+import net.flyingfishflash.loremlist.core.configuration.InstantSerializer
 import net.flyingfishflash.loremlist.domain.lrmlistitem.data.LrmListItem
+import org.hibernate.annotations.CreationTimestamp
+import java.time.Instant
 
 @Serializable
 @Entity(name = "list")
@@ -20,9 +23,10 @@ class LrmList(
   @GeneratedValue(generator = "list_id_seq")
   @Id
   var id: Long? = null,
-//  @CreationTimestamp
-//  @Column(updatable = false)
-//  var createdInstant: Instant? = null,
+  @CreationTimestamp
+  @Column(updatable = false)
+  @Serializable(with = InstantSerializer::class)
+  var createdInstant: Instant? = null,
   @Column(length = 64)
   var name: String,
   @Column(length = 2048)
