@@ -1,22 +1,22 @@
 create schema if not exists public;
 
-create sequence item_seq start with 1 increment by 1;
-create sequence list_seq start with 1 increment by 1;
+create sequence item_sequence start with 1 increment by 1;
+create sequence list_sequence start with 1 increment by 1;
 
 create table item (
-  createdInstant timestamp(6) with time zone,
-  id bigint not null,
+  created timestamp with time zone not null,
+  id bigserial not null,
   quantity bigint,
-  details varchar(255),
-  name varchar(255),
+  description varchar(2048),
+  name varchar(64) not null,
   primary key (id)
 );
 
 create table list (
-  createdInstant timestamp(6) with time zone,
-  id bigint not null,
-  description varchar(255),
-  name varchar(255),
+  created timestamp with time zone not null,
+  id bigserial not null,
+  description varchar(2048),
+  name varchar(64) not null,
   primary key (id)
 );
 

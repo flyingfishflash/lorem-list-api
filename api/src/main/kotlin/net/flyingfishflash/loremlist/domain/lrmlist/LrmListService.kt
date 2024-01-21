@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.domain.lrmlist
 
+import jakarta.transaction.Transactional
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
@@ -8,26 +9,17 @@ import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListMapper
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.exceptions.ListNotFoundException
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
 class LrmListService(val lrmListRepository: LrmListRepository, val lrmListMapper: LrmListMapper) {
   fun create(lrmListRequest: LrmListRequest): LrmList {
-    // map request model to entity model
-    val lrmList = LrmList(name = lrmListRequest.name, description = lrmListRequest.description)
-    return lrmListRepository.save(lrmList)
+    return lrmListRepository.insert(lrmListRequest)
   }
 
-  fun delete(id: Long) {
-    val lrmList = lrmListRepository.findByIdOrNull(id)
-    if (lrmList == null) {
-      throw ListNotFoundException()
-    } else {
-      lrmListRepository.deleteById(id)
-    }
+  fun deleteById(id: Long) {
+    if (lrmListRepository.deleteById(id) < 1) throw ListNotFoundException()
   }
 
   @Suppress("kotlin:S3776")
@@ -70,15 +62,11 @@ class LrmListService(val lrmListRepository: LrmListRepository, val lrmListMapper
         if (violations.isNotEmpty()) {
           throw ConstraintViolationException(violations)
         }
-        lrmListMapper.mapRequestModelToEntityModel(lrmListRequest, lrmList)
+        lrmListRepository.update(lrmListMapper.mapRequestModelToEntityModel(lrmListRequest, lrmList))
       }
     }
     // map entity model to response model
     return Pair(lrmList, patched)
-  }
-
-  fun save(lrmList: LrmList): LrmList {
-    return lrmListRepository.save(lrmList)
   }
 
   fun findAll(): MutableList<LrmList> {

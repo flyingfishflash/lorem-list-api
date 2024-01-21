@@ -34,7 +34,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     val lrmListName = "Lorem List Name"
     val lrmListDescription = "Lorem List Description"
-    val lrmListMockResponse = LrmList(name = lrmListName, description = lrmListDescription)
+    val lrmListMockResponse = LrmList(id = 0, name = lrmListName, description = lrmListDescription)
     val lrmListRequest = LrmListRequest(lrmListName, lrmListDescription)
     val id = 1L
 
@@ -95,22 +95,22 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/$id http delete") {
       it("list is deleted") {
-        every { lrmListService.delete(id) } just Runs
+        every { lrmListService.deleteById(id) } just Runs
         mockMvc.delete("/lists/$id").andExpect {
           status { isNoContent() }
           header { doesNotExist("content-type") }
         }
-        verify(exactly = 1) { lrmListService.delete(id) }
+        verify(exactly = 1) { lrmListService.deleteById(id) }
       }
 
       it("list is not found") {
-        every { lrmListService.delete(id) } throws ListNotFoundException()
+        every { lrmListService.deleteById(id) } throws ListNotFoundException()
         mockMvc.delete("/lists/$id").andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
           jsonPath("$.title") { value("Not Found") }
         }
-        verify(exactly = 1) { lrmListService.delete(id) }
+        verify(exactly = 1) { lrmListService.deleteById(id) }
       }
     }
 

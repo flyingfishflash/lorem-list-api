@@ -19,6 +19,7 @@ val ciCommit: String by rootProject.extra
 val ciPlatform: String by rootProject.extra
 val ciPipelineId: String by rootProject.extra
 
+val exposedVersion = "0.46.0"
 val kotestVersion = "5.8.0"
 val kotestExtensionsSpringVersion = "1.1.3"
 val kotlinxDateTimeVersion = "0.5.0"
@@ -32,12 +33,15 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("jakarta.validation:jakarta.validation-api")
   implementation("org.flywaydb:flyway-core")
+  implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
+  implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+  implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJson")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocOpenApiStarterWebmvcUiVersion")
   implementation("org.springframework.boot:spring-boot-starter-actuator")
-  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+//  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   //  implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter-web")

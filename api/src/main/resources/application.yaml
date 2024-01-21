@@ -12,8 +12,8 @@ debug: "false"
 logging:
   level:
     org:
-      flywaydb: info
-      hibernate: info
+      flywaydb: warn
+#      hibernate: info
       springframework:
         security: DEBUG
 
@@ -51,6 +51,9 @@ server:
       remote-ip-header: "x-forwarded-for"
 
 spring:
+  exposed:
+    show-sql: "true"
+    generate-ddl: "false"
   jackson:
     serialization:
       write-dates-as-timestamps: 'false'
