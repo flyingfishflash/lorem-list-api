@@ -1,25 +1,29 @@
 package net.flyingfishflash.loremlist.domain.lrmlist
 
-import jakarta.transaction.Transactional
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListMapper
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListConverter
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
-import net.flyingfishflash.loremlist.domain.lrmlist.exceptions.ListNotFoundException
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
-class LrmListService(val lrmListRepository: LrmListRepository, val lrmListMapper: LrmListMapper) {
-  fun create(lrmListRequest: LrmListRequest): LrmList {
-    return lrmListRepository.insert(lrmListRequest)
-  }
+class LrmListService(val lrmListRepository: LrmListRepository) {
+  fun create(lrmListRequest: LrmListRequest): LrmList = lrmListRepository.insert(lrmListRequest)
 
-  fun deleteById(id: Long) {
-    if (lrmListRepository.deleteById(id) < 1) throw ListNotFoundException()
+  fun deleteSingleById(id: Long) {
+    val deletedCount = lrmListRepository.deleteById(id)
+    if (deletedCount < 1) {
+      throw ListDeleteException(cause = ListNotFoundException())
+    } else if (deletedCount > 1) {
+      // TODO: The exception should capture a message that more than one record was deleted
+      // TODO: Ensure the transaction is rolled back if an exception is thrown
+      throw ListDeleteException()
+    }
   }
 
   @Suppress("kotlin:S3776")
@@ -62,18 +66,20 @@ class LrmListService(val lrmListRepository: LrmListRepository, val lrmListMapper
         if (violations.isNotEmpty()) {
           throw ConstraintViolationException(violations)
         }
-        lrmListRepository.update(lrmListMapper.mapRequestModelToEntityModel(lrmListRequest, lrmList))
+        lrmListRepository.update(LrmListConverter.toLrmList(lrmListRequest, lrmList))
       }
     }
     // map entity model to response model
     return Pair(lrmList, patched)
   }
 
-  fun findAll(): MutableList<LrmList> {
-    return lrmListRepository.findAll()
-  }
+  fun findAll(): List<LrmList> = lrmListRepository.findAll()
 
-  fun findByIdOrListNotFoundException(id: Long): LrmList {
-    return lrmListRepository.findByIdOrNull(id) ?: throw ListNotFoundException()
+  fun findAllListsAndItems(): List<LrmList> = lrmListRepository.findAllListsAndItems()
+
+  fun findByIdOrListNotFoundException(id: Long): LrmList = lrmListRepository.findByIdOrNull(id) ?: throw ListNotFoundException()
+
+  fun findByIdOrListNotFoundExceptionListAndItems(id: Long): LrmList {
+    return lrmListRepository.findByIdOrNullListAndItems(id) ?: throw ListNotFoundException()
   }
 }

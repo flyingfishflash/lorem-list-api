@@ -11,7 +11,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
-import net.flyingfishflash.loremlist.domain.lrmlist.exceptions.ListNotFoundException
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
@@ -40,7 +39,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists http get") {
       it("lists are found") {
-        every { lrmListService.findAll() } returns mutableListOf(lrmListMockResponse)
+        every { lrmListService.findAll() } returns listOf(lrmListMockResponse)
         mockMvc.get("/lists") {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -49,6 +48,23 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$") { isArray() }
           jsonPath("$.[0].name") { value(lrmListName) }
           jsonPath("$.[0].description") { value(lrmListDescription) }
+          jsonPath("$.[0].items") { isArray() }
+        }
+      }
+    }
+
+    describe("/lists&withItems=true http get") {
+      it("lists and items are found") {
+        every { lrmListService.findAll() } returns listOf(lrmListMockResponse)
+        mockMvc.get("/lists") {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$") { isArray() }
+          jsonPath("$.[0].name") { value(lrmListName) }
+          jsonPath("$.[0].description") { value(lrmListDescription) }
+          jsonPath("$.[0].items") { isArray() }
         }
       }
     }
@@ -95,22 +111,22 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/$id http delete") {
       it("list is deleted") {
-        every { lrmListService.deleteById(id) } just Runs
+        every { lrmListService.deleteSingleById(id) } just Runs
         mockMvc.delete("/lists/$id").andExpect {
           status { isNoContent() }
           header { doesNotExist("content-type") }
         }
-        verify(exactly = 1) { lrmListService.deleteById(id) }
+        verify(exactly = 1) { lrmListService.deleteSingleById(id) }
       }
 
       it("list is not found") {
-        every { lrmListService.deleteById(id) } throws ListNotFoundException()
+        every { lrmListService.deleteSingleById(id) } throws ListNotFoundException()
         mockMvc.delete("/lists/$id").andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
           jsonPath("$.title") { value("Not Found") }
         }
-        verify(exactly = 1) { lrmListService.deleteById(id) }
+        verify(exactly = 1) { lrmListService.deleteSingleById(id) }
       }
     }
 
