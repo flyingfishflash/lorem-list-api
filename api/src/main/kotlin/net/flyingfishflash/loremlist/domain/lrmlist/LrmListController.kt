@@ -71,20 +71,16 @@ class LrmListController(private val lrmListService: LrmListService) {
   }
 
   @GetMapping
-  @Operation(summary = "Retrieve all lists details, optionally including their items")
+  @Operation(summary = "Retrieve all lists details and optionally the items")
   fun findAll(
     @RequestParam(defaultValue = false.toString()) withItems: Boolean,
   ) = if (withItems) lrmListService.findAllListsAndItems() else lrmListService.findAll()
 
   @GetMapping("/{id}")
-  @Operation(summary = "Retrieve a single list optionally including it's items")
+  @Operation(summary = "Retrieve a single list and optionally exclude its items")
   @ApiResponses(value = [ApiResponse(responseCode = "404", description = "List Not Found")])
   fun findById(
     @PathVariable("id") @Min(1) id: Long,
-    @RequestParam(defaultValue = false.toString()) withItems: Boolean,
-  ) = if (withItems) {
-    lrmListService.findByIdOrListNotFoundExceptionListAndItems(id)
-  } else {
-    lrmListService.findByIdOrListNotFoundException(id)
-  }
+    @RequestParam(defaultValue = true.toString()) withItems: Boolean,
+  ) = if (withItems) lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) else lrmListService.findByIdOrListNotFoundException(id)
 }

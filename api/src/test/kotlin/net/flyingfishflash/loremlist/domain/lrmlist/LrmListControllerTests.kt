@@ -3,7 +3,6 @@ package net.flyingfishflash.loremlist.domain.lrmlist
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringExtension
-import io.kotest.matchers.ints.exactly
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -138,7 +137,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists/$id http delete") {
+    describe("/lists/1 http delete") {
       it("list is deleted") {
         every { lrmListService.deleteSingleById(id) } just Runs
         mockMvc.delete("/lists/$id").andExpect {
@@ -159,21 +158,79 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists/$id http get") {
+    describe("/lists/1 http get") {
       it("list is found") {
-        every { lrmListService.findByIdOrListNotFoundException(id) } returns lrmListMockResponse
+        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } returns lrmListMockResponse
         mockMvc.get("/lists/$id").andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.description") { value(lrmListDescription) }
           jsonPath("$.name") { value(lrmListName) }
+          jsonPath("$.items") {
+            isArray()
+            isEmpty() // because our mock is not returning a list with items
+          }
+        }
+        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
+      }
+
+      it("list is not found") {
+        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } throws ListNotFoundException()
+        mockMvc.get("/lists/$id").andExpect {
+          status { isNotFound() }
+          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+          jsonPath("$.title") { value("Not Found") }
+        }
+        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
+      }
+    }
+
+    describe("/lists/1?withItems=true http get") {
+      it("list is found") {
+        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } returns lrmListMockResponse
+        mockMvc.get("/lists/$id?withItems=true").andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.description") { value(lrmListDescription) }
+          jsonPath("$.name") { value(lrmListName) }
+          jsonPath("$.items") {
+            isArray()
+            isEmpty() // because our mock is not returning a list with items
+          }
+        }
+        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
+      }
+
+      it("list is not found") {
+        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } throws ListNotFoundException()
+        mockMvc.get("/lists/$id?withItems=true").andExpect {
+          status { isNotFound() }
+          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+          jsonPath("$.title") { value("Not Found") }
+        }
+        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
+      }
+    }
+
+    describe("/lists/1?withItems=false http get") {
+      it("list is found") {
+        every { lrmListService.findByIdOrListNotFoundException(id) } returns lrmListMockResponse
+        mockMvc.get("/lists/$id?withItems=false").andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.description") { value(lrmListDescription) }
+          jsonPath("$.name") { value(lrmListName) }
+          jsonPath("$.items") {
+            isArray()
+            isEmpty() // because our mock is not returning a list with items
+          }
         }
         verify(exactly = 1) { lrmListService.findByIdOrListNotFoundException(id) }
       }
 
       it("list is not found") {
         every { lrmListService.findByIdOrListNotFoundException(id) } throws ListNotFoundException()
-        mockMvc.get("/lists/$id").andExpect {
+        mockMvc.get("/lists/$id?withItems=false").andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
           jsonPath("$.title") { value("Not Found") }
