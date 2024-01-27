@@ -48,7 +48,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$") { isArray() }
           jsonPath("$.[0].name") { value(lrmListName) }
           jsonPath("$.[0].description") { value(lrmListDescription) }
-          jsonPath("$.[0].items") { isArray() }
+          jsonPath("$.[0].items") {
+            isArray()
+            isEmpty()
+          }
         }
       }
     }
@@ -64,7 +67,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$") { isArray() }
           jsonPath("$.[0].name") { value(lrmListName) }
           jsonPath("$.[0].description") { value(lrmListDescription) }
-          jsonPath("$.[0].items") { isArray() }
+          jsonPath("$.[0].items") {
+            isArray()
+            isEmpty()
+          }
         }
       }
     }
@@ -80,7 +86,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$") { isArray() }
           jsonPath("$.[0].name") { value(lrmListName) }
           jsonPath("$.[0].description") { value(lrmListDescription) }
-          jsonPath("$.[0].items") { isArray() }
+          jsonPath("$.[0].items") {
+            isArray()
+            isEmpty() // because our mock is not returning a list with any items
+          }
         }
       }
     }
