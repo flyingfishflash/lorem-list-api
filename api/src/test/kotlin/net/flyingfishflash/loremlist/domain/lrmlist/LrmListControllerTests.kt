@@ -53,10 +53,26 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists&withItems=true http get") {
-      it("lists and items are found") {
+    describe("/lists?withItems=false http get") {
+      it("lists are found") {
         every { lrmListService.findAll() } returns listOf(lrmListMockResponse)
-        mockMvc.get("/lists") {
+        mockMvc.get("/lists?withItems=false") {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$") { isArray() }
+          jsonPath("$.[0].name") { value(lrmListName) }
+          jsonPath("$.[0].description") { value(lrmListDescription) }
+          jsonPath("$.[0].items") { isArray() }
+        }
+      }
+    }
+
+    describe("/lists?withItems=true http get") {
+      it("lists and items are found") {
+        every { lrmListService.findAllListsAndItems() } returns listOf(lrmListMockResponse)
+        mockMvc.get("/lists?withItems=true") {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }

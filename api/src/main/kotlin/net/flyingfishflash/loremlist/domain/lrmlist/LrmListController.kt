@@ -62,7 +62,7 @@ class LrmListController(private val lrmListService: LrmListService) {
     @PathVariable("id") @Min(1) id: Long,
     @RequestBody patchRequest: Map<String, Any>,
   ): ResponseEntity<LrmList> {
-    val(lrmList, patched) = lrmListService.patch(id, patchRequest)
+    val (lrmList, patched) = lrmListService.patch(id, patchRequest)
     return if (patched) {
       ResponseEntity(lrmList, HttpStatus.OK)
     } else {
