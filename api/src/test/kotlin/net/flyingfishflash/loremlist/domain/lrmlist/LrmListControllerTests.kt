@@ -3,6 +3,7 @@ package net.flyingfishflash.loremlist.domain.lrmlist
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringExtension
+import io.kotest.matchers.ints.exactly
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -53,6 +54,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             isEmpty()
           }
         }
+        verify(exactly = 1) { lrmListService.findAll() }
       }
     }
 
@@ -72,6 +74,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             isEmpty()
           }
         }
+        verify(exactly = 1) { lrmListService.findAll() }
       }
     }
 
@@ -91,6 +94,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             isEmpty() // because our mock is not returning a list with any items
           }
         }
+        verify(exactly = 1) { lrmListService.findAllListsAndItems() }
       }
     }
 
