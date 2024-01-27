@@ -4,7 +4,6 @@ plugins {
   id("com.diffplug.spotless")
   id("io.spring.dependency-management") version "1.1.4"
 //  id("org.graalvm.buildtools.native") version "0.9.28"
-  id("org.hibernate.orm") version "6.4.2.Final"
   id("org.springframework.boot") version "3.2.2"
   kotlin("jvm") version "1.9.22"
   kotlin("plugin.jpa") version "1.9.22"
@@ -41,7 +40,6 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJson")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocOpenApiStarterWebmvcUiVersion")
   implementation("org.springframework.boot:spring-boot-starter-actuator")
-//  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   //  implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter-web")
@@ -61,12 +59,6 @@ dependencies {
     exclude(group = "org.mockito", module = "mockito-junit-jupiter")
   }
 }
-
-allOpen {
-  annotations("jakarta.persistence.Entity", "jakarta.persistence.Embeddable", "jakarta.persistence.MappedSuperclass")
-}
-
-hibernate { enhancement { enableAssociationManagement.set(true) } }
 
 jacoco { toolVersion = "0.8.11" }
 
