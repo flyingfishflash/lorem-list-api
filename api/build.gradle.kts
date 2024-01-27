@@ -80,7 +80,8 @@ sonarqube {
     property("sonar.projectVersion", rootProject.version.toString())
     property(
       "sonar.coverage.exclusions",
-      "src/main/kotlin/net/flyingfishflash/loremlist/core/configuration/**," +
+      "src/main/kotlin/net/flyingfishflash/loremlist/LoremListApplication.kt," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/core/configuration/**," +
         "src/main/kotlin/net/flyingfishflash/loremlist/**/dto/*," +
         "src/main/kotlin/net/flyingfishflash/loremlist/*/*/*Configuration.kt",
     )
