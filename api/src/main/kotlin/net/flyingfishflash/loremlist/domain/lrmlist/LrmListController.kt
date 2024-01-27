@@ -80,11 +80,11 @@ class LrmListController(private val lrmListService: LrmListService) {
   ) = if (withItems) lrmListService.findAllListsAndItems() else lrmListService.findAll()
 
   //  @ApiResponses(value = [ApiResponse(responseCode = "404", description = "List Not Found", content = [Content(schema = Schema(implementation = ListNotFoundException::class))])])
-  @GetMapping("/{id}")
-//  @Operation(summary = "Retrieve a single list and optionally exclude its items")
+  //  @Operation(summary = "Retrieve a single list and optionally exclude its items")
 //  @ApiResponses(value = [ApiResponse(responseCode = "404", description = "List Not Found")])
+  @GetMapping("/{id}")
   fun findById(
-    @PathVariable("id") /*@Min(1)*/ id: Long,
+    @PathVariable("id") @Min(1) id: Long,
     @RequestParam(defaultValue = true.toString()) withItems: Boolean,
   ) = if (withItems) lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) else lrmListService.findByIdOrListNotFoundException(id)
 }
