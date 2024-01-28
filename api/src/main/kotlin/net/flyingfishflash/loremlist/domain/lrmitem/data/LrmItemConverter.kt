@@ -4,7 +4,7 @@ import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import org.jetbrains.exposed.sql.ResultRow
 
 object LrmItemConverter {
-  fun toLrmListItem(resultRow: ResultRow): LrmItem =
+  fun toLrmItem(resultRow: ResultRow): LrmItem =
     LrmItem(
       id = resultRow[LrmListItemTable.id].value,
       created = resultRow[LrmListItemTable.created],

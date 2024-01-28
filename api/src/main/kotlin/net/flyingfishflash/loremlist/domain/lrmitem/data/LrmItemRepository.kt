@@ -1,9 +1,8 @@
 package net.flyingfishflash.loremlist.domain.lrmitem.data
 
 import net.flyingfishflash.loremlist.domain.LrmListItemTable
-import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
-import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
+import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -20,13 +19,9 @@ class LrmItemRepository {
   private val repositoryTable = LrmListItemTable
   private val listSequence = org.jetbrains.exposed.sql.Sequence("item_sequence")
 
-  fun deleteById(id: Long): Int {
-    val deletedCount = repositoryTable.deleteWhere { repositoryTable.id eq id }
-    // TODO: custom exception
-    if (deletedCount > 1) throw UnsupportedOperationException() else return deletedCount
-  }
+  fun deleteById(id: Long): Int = repositoryTable.deleteWhere { repositoryTable.id eq LrmListItemTable.id }
 
-  fun findAll(): MutableList<LrmItem> =
+  fun findAll(): List<LrmItem> =
     repositoryTable.select(
       repositoryTable.id,
       repositoryTable.name,
@@ -34,19 +29,13 @@ class LrmItemRepository {
       repositoryTable.created,
       repositoryTable.quantity,
     )
-      .map { it.toListItemRecord() }
-      .toMutableList()
+      .map { it.toLrmItem() }
+      .toList()
 
   fun findByIdOrNull(id: Long): LrmItem? =
-    repositoryTable.select(
-      repositoryTable.id,
-      repositoryTable.name,
-      repositoryTable.description,
-      repositoryTable.created,
-      repositoryTable.quantity,
-    )
-      .where { LrmListTable.id eq id }
-      .map { it.toListItemRecord() }
+    repositoryTable.selectAll()
+      .where { repositoryTable.id eq id }
+      .map { it.toLrmItem() }
       .firstOrNull()
 
   fun insert(lrmItemRequest: LrmItemRequest): LrmItem {
@@ -63,9 +52,9 @@ class LrmItemRepository {
     val lrmListItem =
       repositoryTable.selectAll()
         .where { repositoryTable.id eq id }
-        .map { it.toListItemRecord() }
+        .map { it.toLrmItem() }
         // TODO: custom exception
-        .singleOrNull() ?: throw ListNotFoundException()
+        .singleOrNull() ?: throw ItemNotFoundException()
     return lrmListItem
   }
 
@@ -79,5 +68,5 @@ class LrmItemRepository {
     }
   }
 
-  private fun ResultRow.toListItemRecord(): LrmItem = LrmItemConverter.toLrmListItem(this)
+  private fun ResultRow.toLrmItem(): LrmItem = LrmItemConverter.toLrmItem(this)
 }

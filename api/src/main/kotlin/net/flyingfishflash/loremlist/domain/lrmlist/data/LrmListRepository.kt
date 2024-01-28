@@ -94,7 +94,7 @@ class LrmListRepository {
 
   private fun ResultRow.toLrmList(): LrmList = LrmListConverter.toLrmList(this)
 
-  private fun ResultRow.toLrmListItem(): LrmItem = LrmItemConverter.toLrmListItem(this)
+  private fun ResultRow.toLrmListItem(): LrmItem = LrmItemConverter.toLrmItem(this)
 
   private fun Iterable<ResultRow>.toLrmListsWithItems(): List<LrmList> =
     fold(initial = mutableMapOf<Long, LrmList>(), operation = { map, resultRow ->

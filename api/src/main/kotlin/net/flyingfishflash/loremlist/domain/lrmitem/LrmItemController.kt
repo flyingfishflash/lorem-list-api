@@ -43,13 +43,13 @@ class LrmItemController(val lrmItemService: LrmItemService) {
   fun delete(
     @PathVariable("id") @Min(1) id: Long,
   ): ResponseEntity<Any> {
-    lrmItemService.deleteById(id)
+    lrmItemService.deleteSingleById(id)
     return ResponseEntity(HttpStatus.NO_CONTENT)
   }
 
   @GetMapping
   @Operation(summary = "Retrieve all list items")
-  fun findAll(): MutableList<LrmItem> = lrmItemService.findAll()
+  fun findAll(): List<LrmItem> = lrmItemService.findAll()
 
   @PostMapping("/{id}/to-list")
   @Operation(summary = "Assign Item to List")
