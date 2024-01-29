@@ -9,8 +9,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.net.URI
-import java.util.*
-
+import java.util.Optional
 
 /**
  * The most basic implementation works:
@@ -24,10 +23,10 @@ import java.util.*
 
 @RestControllerAdvice
 class ApiExceptionHandler {
-
   @ExceptionHandler(AbstractApiException::class)
   fun handleException(
-    request: HttpServletRequest, exception: AbstractApiException
+    request: HttpServletRequest,
+    exception: AbstractApiException,
   ): ResponseEntity<Response<ProblemDetail>?> {
     val httpMethod = request.method
     val httpStatus =
@@ -38,11 +37,11 @@ class ApiExceptionHandler {
     if (problemDetail.instance == null) {
       problemDetail.instance = URI.create(request.requestURI)
     }
-    //ProblemDetailUtility.setCustomPropertiesFromThrowable(problemDetail, exception)
+    // ProblemDetailUtility.setCustomPropertiesFromThrowable(problemDetail, exception)
 
     return ResponseEntity<Response<ProblemDetail>?>(
       Response(problemDetail, "Hard Code this Message into the ApiException", httpMethod),
-      httpStatus
+      httpStatus,
     )
   }
 }

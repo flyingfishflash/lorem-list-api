@@ -1,12 +1,12 @@
 package net.flyingfishflash.loremlist.core.response.structure
 
-import io.swagger.v3.oas.annotations.media.Schema
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import java.net.URI
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 // @JsonPropertyOrder("id", "disposition", "instance", "method")
 
@@ -14,7 +14,6 @@ import java.util.*
  * @param <T> Type of the <i>content</i> field of the Response
  */
 @Serializable
-@Schema
 class Response<T> : ApplicationResponse<T> {
   private val id: String = UUID.randomUUID().toString()
   private val disposition: Disposition
