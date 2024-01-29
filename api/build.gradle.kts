@@ -40,6 +40,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJson")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocOpenApiStarterWebmvcUiVersion")
+  implementation("org.springdoc:springdoc-openapi-starter-common:$springDocOpenApiStarterWebmvcUiVersion")
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   //  implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-validation")

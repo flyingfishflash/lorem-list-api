@@ -18,7 +18,7 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
   fun deleteSingleById(id: Long) {
     val deletedCount = lrmListRepository.deleteById(id)
     if (deletedCount < 1) {
-      throw ListDeleteException(cause = ListNotFoundException())
+      throw ListDeleteException(cause = ListNotFoundException(id))
     } else if (deletedCount > 1) {
       // TODO: The exception should capture a message that more than one record was deleted
       // TODO: Ensure the transaction is rolled back if an exception is thrown
@@ -34,7 +34,7 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
     var patched = false
     val lrmList = lrmListRepository.findByIdOrNull(id)
     if (lrmList == null) {
-      throw ListNotFoundException()
+      throw ListNotFoundException(id)
     } else {
       var newName = lrmList.name
       var newDescription = lrmList.description
@@ -77,9 +77,9 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
 
   fun findAllListsAndItems(): List<LrmList> = lrmListRepository.findAllListsAndItems()
 
-  fun findByIdOrListNotFoundException(id: Long): LrmList = lrmListRepository.findByIdOrNull(id) ?: throw ListNotFoundException()
+  fun findByIdOrListNotFoundException(id: Long): LrmList = lrmListRepository.findByIdOrNull(id) ?: throw ListNotFoundException(id)
 
   fun findByIdOrListNotFoundExceptionListAndItems(id: Long): LrmList {
-    return lrmListRepository.findByIdOrNullListAndItems(id) ?: throw ListNotFoundException()
+    return lrmListRepository.findByIdOrNullListAndItems(id) ?: throw ListNotFoundException(id)
   }
 }

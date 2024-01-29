@@ -58,41 +58,41 @@ spring:
     serialization:
       write-dates-as-timestamps: 'false'
   #      write-enums-to-lowercase: true
-  jpa:
-    hibernate:
+#  jpa:
+#    hibernate:
 #      ddl-auto: "none"
-      ddl-auto: "create-drop"
+#      ddl-auto: "create-drop"
       # https://stackoverflow.com/questions/29087626/entity-class-name-is-transformed-into-sql-table-name-with-underscores
-      naming:
-        physical-strategy: "org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl"
-    properties:
-      hibernate:
-        cache:
-          use_second_level_cache: "false"
-        format_sql: "false"
-        generate_statistics: "false"
-        jdbc:
-          batch_size: "20"
-        order_inserts: "true"
-        query:
-          plan_cache_max_size: "16"
-          plan_parameter_metadata_max_size: "32"
-      jakarta:
-        persistence:
-          sharedCache:
-            mode: "UNSPECIFIED"
-          schema-generation:
-            create-source: metadata
-            scripts:
-              action: create
-              create-target: create.sql
-    show-sql: "false"
+#      naming:
+#        physical-strategy: "org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl"
+#    properties:
+#      hibernate:
+#        cache:
+#          use_second_level_cache: "false"
+#        format_sql: "false"
+#        generate_statistics: "false"
+#        jdbc:
+#          batch_size: "20"
+#        order_inserts: "true"
+#        query:
+#          plan_cache_max_size: "16"
+#          plan_parameter_metadata_max_size: "32"
+#      jakarta:
+#        persistence:
+#          sharedCache:
+#            mode: "UNSPECIFIED"
+#          schema-generation:
+#            create-source: metadata
+#            scripts:
+#              action: create
+#              create-target: create.sql
+#    show-sql: "false"
   main:
     banner-mode: "off"
   mvc:
     throw-exception-if-no-handler-found: "true"
     problemdetails:
-      enabled: "true"
+      enabled: true
   output:
     ansi:
       enabled: "always"
@@ -118,7 +118,9 @@ spring:
 trace: "false"
 
 springdoc:
+  api-docs:
+    version: "openapi_3_1"
   swagger-ui:
-    defaultModelsExpandDepth: -1
+    defaultModelsExpandDepth: 2
     operationsSorter: "alpha"
     tagsSorter: "alpha"

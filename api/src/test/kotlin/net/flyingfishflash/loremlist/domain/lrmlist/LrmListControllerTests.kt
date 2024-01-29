@@ -148,11 +148,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
 
       it("list is not found") {
-        every { lrmListService.deleteSingleById(id) } throws ListNotFoundException()
+        every { lrmListService.deleteSingleById(id) } throws ListNotFoundException(id)
         mockMvc.delete("/lists/$id").andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
-          jsonPath("$.title") { value("Not Found") }
+          jsonPath("$.title") { value(ListNotFoundException.TITLE) }
         }
         verify(exactly = 1) { lrmListService.deleteSingleById(id) }
       }
@@ -175,11 +175,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
 
       it("list is not found") {
-        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } throws ListNotFoundException()
+        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } throws ListNotFoundException(id)
         mockMvc.get("/lists/$id").andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
-          jsonPath("$.title") { value("Not Found") }
+          jsonPath("$.title") { value(ListNotFoundException.TITLE) }
         }
         verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
       }
@@ -202,11 +202,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
 
       it("list is not found") {
-        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } throws ListNotFoundException()
+        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } throws ListNotFoundException(id)
         mockMvc.get("/lists/$id?withItems=true").andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
-          jsonPath("$.title") { value("Not Found") }
+          jsonPath("$.title") { value(ListNotFoundException.TITLE) }
         }
         verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
       }
@@ -229,11 +229,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
 
       it("list is not found") {
-        every { lrmListService.findByIdOrListNotFoundException(id) } throws ListNotFoundException()
+        every { lrmListService.findByIdOrListNotFoundException(id) } throws ListNotFoundException(id)
         mockMvc.get("/lists/$id?withItems=false").andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
-          jsonPath("$.title") { value("Not Found") }
+          jsonPath("$.title") { value(ListNotFoundException.TITLE) }
         }
         verify(exactly = 1) { lrmListService.findByIdOrListNotFoundException(id) }
       }
@@ -269,14 +269,14 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
 
       it("list is not found") {
-        every { lrmListService.patch(id, any()) } throws ListNotFoundException()
+        every { lrmListService.patch(id, any()) } throws ListNotFoundException(id)
         mockMvc.patch("/lists/$id") {
           content = Json.encodeToString(mapOf("name" to lrmListDescription))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
-          jsonPath("$.title") { value("Not Found") }
+          jsonPath("$.title") { value(ListNotFoundException.TITLE) }
         }
         verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmListDescription)) }
       }

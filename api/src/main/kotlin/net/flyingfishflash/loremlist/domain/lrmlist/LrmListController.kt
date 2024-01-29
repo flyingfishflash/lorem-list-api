@@ -18,16 +18,22 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "list controller")
 @RestController
 @RequestMapping("/lists")
-@ApiResponses(value = [ApiResponse(responseCode = "400", description = "Bad Request")])
+@ApiResponses(
+  value = [
+    ApiResponse(
+      responseCode = "400",
+      description = "Bad Request",
+      // content = [Content(schema = Schema(ref = "#/components/schemas/ProblemDetail"))],
+    ),
+  ],
+)
 class LrmListController(private val lrmListService: LrmListService) {
   @PostMapping
-  @ResponseBody
   @Operation(summary = "Create a new list")
   fun create(
     @Valid @RequestBody lrmListRequest: LrmListRequest,
@@ -73,15 +79,22 @@ class LrmListController(private val lrmListService: LrmListService) {
   }
 
   @GetMapping
-  @ResponseBody
   @Operation(summary = "Retrieve all lists details and optionally the items")
   fun findAll(
     @RequestParam(defaultValue = false.toString()) withItems: Boolean,
   ) = if (withItems) lrmListService.findAllListsAndItems() else lrmListService.findAll()
 
-  //  @ApiResponses(value = [ApiResponse(responseCode = "404", description = "List Not Found", content = [Content(schema = Schema(implementation = ListNotFoundException::class))])])
-  //  @Operation(summary = "Retrieve a single list and optionally exclude its items")
-//  @ApiResponses(value = [ApiResponse(responseCode = "404", description = "List Not Found")])
+//  @ApiResponses(
+//    value = [
+//      ApiResponse(
+//        responseCode = "404",
+//        description = "List Not Found",
+//        content = [Content(schema = Schema(implementation = ProblemDetail::class))],
+//      ),
+//    ],
+//  )
+  @Operation(summary = "Retrieve a single list and optionally exclude its items")
+  @ApiResponses(value = [ApiResponse(responseCode = "404", description = "List Not Found")])
   @GetMapping("/{id}")
   fun findById(
     @PathVariable("id") @Min(1) id: Long,

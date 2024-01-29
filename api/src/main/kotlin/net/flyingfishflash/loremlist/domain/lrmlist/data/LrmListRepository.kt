@@ -74,7 +74,7 @@ class LrmListRepository {
       repositoryTable.selectAll()
         .where { repositoryTable.id eq id }
         .map { it.toLrmList() }
-        .singleOrNull() ?: throw ListInsertException(cause = ListNotFoundException())
+        .singleOrNull() ?: throw ListInsertException(cause = ListNotFoundException(id.value))
     return lrmList
   }
 
@@ -86,7 +86,7 @@ class LrmListRepository {
       }
 
     if (updatedCount == 1) {
-      return findByIdOrNull(lrmList.id) ?: throw ListUpdateException(cause = ListNotFoundException())
+      return findByIdOrNull(lrmList.id) ?: throw ListUpdateException(cause = ListNotFoundException(lrmList.id))
     } else {
       throw ListUpdateException()
     }
