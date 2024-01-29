@@ -31,6 +31,7 @@ configurations { compileOnly { extendsFrom(configurations.annotationProcessor.ge
 
 dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+  implementation("io.github.oshai:kotlin-logging-jvm:6.0.3")
   implementation("jakarta.validation:jakarta.validation-api")
   implementation("org.flywaydb:flyway-core")
   implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
