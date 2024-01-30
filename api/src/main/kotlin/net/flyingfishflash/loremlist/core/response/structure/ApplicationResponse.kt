@@ -1,7 +1,5 @@
 package net.flyingfishflash.loremlist.core.response.structure
 
-import io.swagger.v3.oas.annotations.media.Schema
-
 /**
  * Describes the structure of error responses sent to a client<br>
  *
@@ -11,7 +9,6 @@ import io.swagger.v3.oas.annotations.media.Schema
  * response.content.message
  * </pre>
  */
-@Schema
 interface ApplicationResponse<T> {
   /**
    * @return Unique identifier intended for log entry reference
