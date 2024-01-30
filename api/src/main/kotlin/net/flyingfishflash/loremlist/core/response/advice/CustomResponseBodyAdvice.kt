@@ -45,10 +45,12 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
     serverHttpResponse: ServerHttpResponse,
   ): Any? {
     val method = methodParameter.method
+    // ApplicationResponse
     var response: ApplicationResponse<*>? = null
 
     // pristine
     when {
+      // ApplicationResponse
       o is ApplicationResponse<*> -> {
         response = o
       }

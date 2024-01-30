@@ -1,6 +1,8 @@
 package net.flyingfishflash.loremlist.domain.lrmlist
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -28,7 +30,12 @@ import org.springframework.web.bind.annotation.RestController
     ApiResponse(
       responseCode = "400",
       description = "Bad Request",
-      // content = [Content(schema = Schema(ref = "#/components/schemas/ProblemDetail"))],
+      content = [Content(schema = Schema(implementation = ResponseProblemDetail::class))],
+    ),
+    ApiResponse(
+      responseCode = "200",
+      description = "Success",
+      content = [Content(schema = Schema(implementation = ResponseListOfLrmList::class))],
     ),
   ],
 )
@@ -61,9 +68,21 @@ class LrmListController(private val lrmListService: LrmListService) {
   @Operation(summary = "Update a list")
   @ApiResponses(
     value = [
-      ApiResponse(responseCode = "200", description = "List Updated"),
-      ApiResponse(responseCode = "204", description = "List Not Updated"),
-      ApiResponse(responseCode = "404", description = "List Not Found"),
+      ApiResponse(
+        responseCode = "200",
+        description = "List Updated",
+        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+      ApiResponse(
+        responseCode = "204",
+        description = "List Not Updated",
+        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblemDetail::class))],
+      ),
     ],
   )
   fun patch(
@@ -84,17 +103,21 @@ class LrmListController(private val lrmListService: LrmListService) {
     @RequestParam(defaultValue = false.toString()) withItems: Boolean,
   ) = if (withItems) lrmListService.findAllListsAndItems() else lrmListService.findAll()
 
-//  @ApiResponses(
-//    value = [
-//      ApiResponse(
-//        responseCode = "404",
-//        description = "List Not Found",
-//        content = [Content(schema = Schema(implementation = ProblemDetail::class))],
-//      ),
-//    ],
-//  )
   @Operation(summary = "Retrieve a single list and optionally exclude its items")
-  @ApiResponses(value = [ApiResponse(responseCode = "404", description = "List Not Found")])
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "404",
+        description = "List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblemDetail::class))],
+      ),
+      ApiResponse(
+        responseCode = "200",
+        description = "List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+    ],
+  )
   @GetMapping("/{id}")
   fun findById(
     @PathVariable("id") @Min(1) id: Long,
