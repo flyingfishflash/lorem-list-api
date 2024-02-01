@@ -1,6 +1,9 @@
+import com.adarshr.gradle.testlogger.theme.ThemeType
+
 plugins {
   id("java")
   id("jacoco")
+  id("com.adarshr.test-logger") version "4.0.0"
   id("com.diffplug.spotless")
   id("io.spring.dependency-management") version "1.1.4"
 //  id("org.graalvm.buildtools.native") version "0.9.28"
@@ -98,6 +101,12 @@ springBoot {
   }
 }
 
+testlogger {
+  showExceptions = false
+  showSimpleNames = true
+  theme = ThemeType.MOCHA
+}
+
 tasks {
   compileKotlin {
     kotlinOptions {
@@ -108,7 +117,7 @@ tasks {
 
   test {
     useJUnitPlatform()
-    testLogging { events("passed", "skipped", "failed") }
+//    testLogging { events("passed", "skipped", "failed") }
     finalizedBy("jacocoUnitTestReport")
     filter { excludeTestsMatching("net.flyingfishflash.loremlist.integration*") }
   }
