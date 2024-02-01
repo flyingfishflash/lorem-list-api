@@ -3,7 +3,7 @@ package net.flyingfishflash.loremlist.core.response.structure
 import java.net.URI
 
 /**
- * Describes the structure of error responses sent to a client<br>
+ * Describes the structure of API responses sent to a client<br>
  *
  * <pre>
  * response.status
