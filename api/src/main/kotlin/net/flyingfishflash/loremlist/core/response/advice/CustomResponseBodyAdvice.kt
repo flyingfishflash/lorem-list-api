@@ -95,8 +95,4 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
       logger.warn { "Returning object from CustomResponseBodyAdvice.beforeBodyWrite() without examination: $o" }
     }
   }
-
-//  companion object {
-//    private val logger: Logger = LoggerFactory.getLogger(CustomResponseBodyAdvice::class.java)
-//  }
 }
