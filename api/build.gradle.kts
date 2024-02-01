@@ -25,6 +25,7 @@ val ciPipelineId: String by rootProject.extra
 val exposedVersion = "0.46.0"
 val kotestVersion = "5.8.0"
 val kotestExtensionsSpringVersion = "1.1.3"
+val kotlinLoggingVersion = "6.0.3"
 val kotlinxDateTimeVersion = "0.5.0"
 val kotlinxSerializationJson = "1.6.2"
 val springDocOpenApiStarterWebmvcUiVersion = "2.3.0"
@@ -34,7 +35,7 @@ configurations { compileOnly { extendsFrom(configurations.annotationProcessor.ge
 
 dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation("io.github.oshai:kotlin-logging-jvm:6.0.3")
+  implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
   implementation("jakarta.validation:jakarta.validation-api")
   implementation("org.flywaydb:flyway-core")
   implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")

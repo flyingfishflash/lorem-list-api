@@ -1,9 +1,8 @@
 package net.flyingfishflash.loremlist.core.response.advice
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.flyingfishflash.loremlist.core.response.structure.ApplicationResponse
 import net.flyingfishflash.loremlist.core.response.structure.Response
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -15,6 +14,8 @@ import org.springframework.web.ErrorResponseException
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice
+
+private val logger = KotlinLogging.logger {}
 
 @RestControllerAdvice
 class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
@@ -76,7 +77,7 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
         (method != null)
 //        && !method.isAnnotationPresent(IgnoreResponseBinding::class.java)
       -> {
-        logger.warn("Object wrapped in Response with successful disposition by default {}", o)
+        logger.warn { "Object wrapped in Response with successful disposition by default $o" }
         applicationResponse =
           Response(
             o,
@@ -88,14 +89,14 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
     }
 
     // TODO: use kotlinx-serialization to output json response
-    applicationResponse.let { logger.info("json response (todo): {}", it) }
+    applicationResponse.let { logger.info { "json response (todo): $it" } }
 
     return applicationResponse ?: o.let {
-      logger.warn("Returning object from CustomResponseBodyAdvice.beforeBodyWrite() without examination: {}", o)
+      logger.warn { "Returning object from CustomResponseBodyAdvice.beforeBodyWrite() without examination: $o" }
     }
   }
 
-  companion object {
-    private val logger: Logger = LoggerFactory.getLogger(CustomResponseBodyAdvice::class.java)
-  }
+//  companion object {
+//    private val logger: Logger = LoggerFactory.getLogger(CustomResponseBodyAdvice::class.java)
+//  }
 }
