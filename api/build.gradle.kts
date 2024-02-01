@@ -102,10 +102,21 @@ springBoot {
   }
 }
 
-testlogger {
-  showExceptions = false
-  showSimpleNames = true
-  theme = ThemeType.MOCHA
+spotless {
+  kotlinGradle { ktlint() }
+  kotlin { ktlint() }
+
+  json {
+    target("*.json")
+    jackson()
+  }
+
+  format("misc") {
+    target("*.md", "*.xml", ".gitignore")
+    trimTrailingWhitespace()
+    indentWithSpaces()
+    endWithNewline()
+  }
 }
 
 tasks {
@@ -149,19 +160,8 @@ tasks {
   }
 }
 
-spotless {
-  kotlinGradle { ktlint() }
-  kotlin { ktlint() }
-
-  json {
-    target("*.json")
-    jackson()
-  }
-
-  format("misc") {
-    target("*.md", "*.xml", ".gitignore")
-    trimTrailingWhitespace()
-    indentWithSpaces()
-    endWithNewline()
-  }
+testlogger {
+  showExceptions = false
+  showSimpleNames = true
+  theme = ThemeType.MOCHA
 }
