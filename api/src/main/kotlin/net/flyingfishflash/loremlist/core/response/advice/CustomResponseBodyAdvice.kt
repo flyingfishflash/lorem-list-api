@@ -2,6 +2,7 @@ package net.flyingfishflash.loremlist.core.response.advice
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.flyingfishflash.loremlist.core.response.structure.ApplicationResponse
+import net.flyingfishflash.loremlist.core.response.structure.IgnoreResponseBinding
 import net.flyingfishflash.loremlist.core.response.structure.Response
 import org.springframework.core.MethodParameter
 import org.springframework.http.HttpStatus
@@ -77,8 +78,8 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
       }
       // --
       methodParameter.containingClass.isAnnotationPresent(RestController::class.java) &&
-        (method != null)
-//        && !method.isAnnotationPresent(IgnoreResponseBinding::class.java)
+        (method != null) &&
+        !method.isAnnotationPresent(IgnoreResponseBinding::class.java)
       -> {
         logger.warn { "Object wrapped in Response with successful disposition by default $o" }
         applicationResponse =
