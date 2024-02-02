@@ -39,11 +39,12 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
     val method = methodParameter.method
     var applicationResponse: ApplicationResponse<*>? = null
 
-    // pristine
     when {
+      // --
       o is ApplicationResponse<*> -> {
         applicationResponse = o
       }
+      // --
       o is Throwable && o !is ErrorResponseException -> {
         val problemDetail = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR)
         // ProblemDetailUtility.setCustomPropertiesFromThrowable(problemDetail, o)
@@ -54,6 +55,7 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
             serverHttpRequest.method.toString(),
           )
       }
+      // --
       o is ErrorResponseException -> {
         val pd: ProblemDetail = o.body
         // ProblemDetailUtility.setCustomPropertiesFromThrowable(pd, o)
@@ -64,6 +66,7 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
             serverHttpRequest.method.toString(),
           )
       }
+      // --
       o is ProblemDetail -> {
         applicationResponse =
           Response(
@@ -72,6 +75,7 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
             serverHttpRequest.method.toString(),
           )
       }
+      // --
       methodParameter.containingClass.isAnnotationPresent(RestController::class.java) &&
         (method != null)
 //        && !method.isAnnotationPresent(IgnoreResponseBinding::class.java)
