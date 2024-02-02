@@ -23,10 +23,9 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
     returnType: MethodParameter,
     converterType: Class<out HttpMessageConverter<*>>,
   ): Boolean {
-    // exclude springdoc/swagger from beforeBodyWrite
-    var supported: Boolean
-    returnType.method?.name.let { supported = !it.equals("openapiJson") }
-    return supported
+    // exclude swagger from beforeBodyWrite
+    return (returnType.declaringClass.toString() != "class org.springdoc.webmvc.ui.SwaggerWelcomeWebMvc") &&
+      (returnType.method?.name != "openapiJson")
   }
 
   override fun beforeBodyWrite(
