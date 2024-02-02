@@ -1,6 +1,6 @@
 plugins {
   id("com.diffplug.spotless") version "6.25.0"
-  id("com.github.ben-manes.versions") version "0.50.0"
+  id("com.github.ben-manes.versions") version "0.51.0"
   id("org.sonarqube") version "4.4.1.3373"
 }
 
