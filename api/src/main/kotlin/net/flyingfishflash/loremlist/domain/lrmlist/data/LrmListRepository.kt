@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.domain.lrmlist.data
 
+import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListTable.created
@@ -21,8 +22,6 @@ import org.jetbrains.exposed.sql.nextLongVal
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 @Repository
 class LrmListRepository {
@@ -65,7 +64,7 @@ class LrmListRepository {
       repositoryTable
         .insertAndGetId {
           it[id] = listSequence.nextLongVal()
-          it[created] = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)
+          it[created] = now()
           it[name] = lrmListRequest.name
           it[description] = lrmListRequest.description
         }
@@ -102,7 +101,7 @@ class LrmListRepository {
       val itemId = resultRow.getOrNull(LrmListItemTable.id)
       val item = itemId?.let { resultRow.toLrmListItem() }
       val current = map.getOrDefault(list.id, list)
-      map[list.id] = current.copy(items = current.items + listOfNotNull(item))
+      map[list.id] = current.copyWith(items = current.items + listOfNotNull(item))
       map
     }).values.toList()
 }

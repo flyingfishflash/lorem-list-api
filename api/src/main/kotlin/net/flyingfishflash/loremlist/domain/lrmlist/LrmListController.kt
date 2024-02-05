@@ -1,13 +1,19 @@
 package net.flyingfishflash.loremlist.domain.lrmlist
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
+import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
 import org.springframework.http.HttpStatus
@@ -23,85 +29,125 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "list controller")
-@RestController
-@RequestMapping("/lists")
 @ApiResponses(
   value = [
     ApiResponse(
       responseCode = "400",
       description = "Bad Request",
-      content = [Content(schema = Schema(implementation = ResponseProblemDetail::class))],
-    ),
-    ApiResponse(
-      responseCode = "200",
-      description = "Success",
-      content = [Content(schema = Schema(implementation = ResponseListOfLrmList::class))],
+      content = [Content(schema = Schema(implementation = ResponseProblem::class))],
     ),
   ],
 )
+@RestController
+@RequestMapping("/lists")
 class LrmListController(private val lrmListService: LrmListService) {
-  @PostMapping
+  private val logger = KotlinLogging.logger {}
+
   @Operation(summary = "Create a new list")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "List Created",
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+    ],
+  )
+  @PostMapping
   fun create(
     @Valid @RequestBody lrmListRequest: LrmListRequest,
-  ): LrmList {
-    val lrmList = lrmListService.create(lrmListRequest)
-    return lrmList
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<LrmList>> {
+    val responseStatus = HttpStatus.OK
+    val responseContent = lrmListService.create(lrmListRequest)
+    val responseMessage = "created new list"
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { "response as json: " + Json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
   }
 
-  @DeleteMapping("/{id}")
   @Operation(summary = "Delete a list")
   @ApiResponses(
     value = [
       ApiResponse(responseCode = "204", description = "List Deleted"),
-      ApiResponse(responseCode = "404", description = "List Not Found"),
+      ApiResponse(
+        responseCode = "404",
+        description = "List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
     ],
   )
+  @DeleteMapping("/{id}")
   fun delete(
     @PathVariable("id") @Min(1) id: Long,
-  ): ResponseEntity<Any> {
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<String>> {
     lrmListService.deleteSingleById(id)
-    return ResponseEntity(HttpStatus.NO_CONTENT)
+    val response = ResponseSuccess("content", "deleted list id $id", request)
+    logger.info { "response as json: " + Json.encodeToString(response) }
+    return ResponseEntity(response, HttpStatus.NO_CONTENT)
   }
 
-  @PatchMapping("/{id}")
   @Operation(summary = "Update a list")
   @ApiResponses(
     value = [
       ApiResponse(
         responseCode = "200",
         description = "List Updated",
-        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
       ),
       ApiResponse(
         responseCode = "204",
         description = "List Not Updated",
-        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
       ),
       ApiResponse(
         responseCode = "404",
         description = "List Not Found",
-        content = [Content(schema = Schema(implementation = ResponseProblemDetail::class))],
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
       ),
     ],
   )
+  @PatchMapping("/{id}")
   fun patch(
     @PathVariable("id") @Min(1) id: Long,
     @RequestBody patchRequest: Map<String, Any>,
-  ): ResponseEntity<LrmList> {
-    val (lrmList, patched) = lrmListService.patch(id, patchRequest)
-    return if (patched) {
-      ResponseEntity(lrmList, HttpStatus.OK)
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<LrmList>> {
+    val (responseContent, patched) = lrmListService.patch(id, patchRequest)
+    val response: ResponseSuccess<*>
+    val responseEntity: ResponseEntity<ResponseSuccess<LrmList>>
+    if (patched) {
+      response = ResponseSuccess(responseContent, "patched", request)
+      responseEntity = ResponseEntity(response, HttpStatus.OK)
     } else {
-      ResponseEntity(lrmList, HttpStatus.NO_CONTENT)
+      response = ResponseSuccess(responseContent, "not patched", request)
+      responseEntity = ResponseEntity(response, HttpStatus.NO_CONTENT)
     }
+    logger.info { "response as json: " + Json.encodeToString(response) }
+    return responseEntity
   }
 
-  @GetMapping
   @Operation(summary = "Retrieve all lists details and optionally the items")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "all lists",
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+    ],
+  )
+  @GetMapping
   fun findAll(
     @RequestParam(defaultValue = false.toString()) withItems: Boolean,
-  ) = if (withItems) lrmListService.findAllListsAndItems() else lrmListService.findAll()
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
+    val responseContent = if (withItems) lrmListService.findAllListsAndItems() else lrmListService.findAll()
+    val response = ResponseSuccess(responseContent, "the message", request)
+    logger.info { "response as json: " + Json.encodeToString(response) }
+    return ResponseEntity(response, HttpStatus.OK)
+  }
 
   @Operation(summary = "Retrieve a single list and optionally exclude its items")
   @ApiResponses(
@@ -109,12 +155,12 @@ class LrmListController(private val lrmListService: LrmListService) {
       ApiResponse(
         responseCode = "404",
         description = "List Not Found",
-        content = [Content(schema = Schema(implementation = ResponseProblemDetail::class))],
+        content = [Content(schema = Schema(implementation = ResponseProblem::class, example = "sdkljsldkfjslfj"))],
       ),
       ApiResponse(
         responseCode = "200",
-        description = "List Not Found",
-        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+        description = "List Found",
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
       ),
     ],
   )
@@ -122,5 +168,16 @@ class LrmListController(private val lrmListService: LrmListService) {
   fun findById(
     @PathVariable("id") @Min(1) id: Long,
     @RequestParam(defaultValue = true.toString()) withItems: Boolean,
-  ) = if (withItems) lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) else lrmListService.findByIdOrListNotFoundException(id)
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<LrmList>> {
+    val responseContent =
+      if (withItems) {
+        lrmListService.findByIdOrListNotFoundExceptionListAndItems(id)
+      } else {
+        lrmListService.findByIdOrListNotFoundException(id)
+      }
+    val response = ResponseSuccess(responseContent, "retrieved list $id", request)
+    logger.info { "response as json: " + Json.encodeToString(response) }
+    return ResponseEntity(response, HttpStatus.OK)
+  }
 }

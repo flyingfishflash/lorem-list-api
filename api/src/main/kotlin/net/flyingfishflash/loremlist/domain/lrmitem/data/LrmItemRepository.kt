@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.domain.lrmitem.data
 
+import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
@@ -11,8 +12,6 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.nextLongVal
 import org.jetbrains.exposed.sql.selectAll
 import org.springframework.stereotype.Repository
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 @Repository
 class LrmItemRepository {
@@ -43,7 +42,7 @@ class LrmItemRepository {
       repositoryTable
         .insertAndGetId {
           it[id] = listSequence.nextLongVal()
-          it[created] = OffsetDateTime.now().withOffsetSameInstant(ZoneOffset.UTC)
+          it[created] = now()
           it[name] = lrmItemRequest.name
           it[description] = lrmItemRequest.description
           it[quantity] = lrmItemRequest.quantity

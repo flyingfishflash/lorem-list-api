@@ -11,7 +11,7 @@ plugins {
   id("org.springdoc.openapi-gradle-plugin") version "1.8.0"
   kotlin("jvm") version "1.9.22"
   kotlin("plugin.jpa") version "1.9.22"
-  kotlin("plugin.serialization") version "1.9.22"
+  kotlin("plugin.serialization")
   kotlin("plugin.spring") version "1.9.22"
 }
 
@@ -34,7 +34,7 @@ val springmockkVersion = "4.0.2"
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
 
 dependencies {
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+//  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
   implementation("jakarta.validation:jakarta.validation-api")
   implementation("org.flywaydb:flyway-core")
@@ -44,8 +44,12 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJson")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocOpenApiStarterWebmvcUiVersion")
-  implementation("org.springdoc:springdoc-openapi-starter-common:$springDocOpenApiStarterWebmvcUiVersion")
+  implementation(
+    "org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocOpenApiStarterWebmvcUiVersion",
+  )
+  implementation(
+    "org.springdoc:springdoc-openapi-starter-common:$springDocOpenApiStarterWebmvcUiVersion",
+  )
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   //  implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -104,7 +108,15 @@ springBoot {
 
 spotless {
   kotlinGradle { ktlint() }
-  kotlin { ktlint() }
+  kotlin {
+    ktlint()
+      .editorConfigOverride(
+        mapOf(
+          "indent_size" to 2,
+          "ktlint_code_style" to "intellij_idea",
+        ),
+      )
+  }
 
   json {
     target("*.json")

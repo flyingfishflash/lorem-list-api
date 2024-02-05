@@ -1,33 +1,60 @@
 package net.flyingfishflash.loremlist.core.response.structure
 
+import com.fasterxml.jackson.annotation.JsonValue
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.util.Locale
+import org.springframework.http.HttpStatus
+import java.util.*
 
 /**
  * Represents the disposition of any request from a client.
  *
- * <p>Every response to a client must include no more than one Disposition.
+ * <p>Every response to a client must include exactly one Disposition.
  */
+interface Disposition
+
 @Serializable
-enum class Disposition {
-  /** Client request error due to an unexpected platform or framework error */
-  ERROR,
-
-  /** Client request failure in an anticipated manner */
-  FAILURE,
-
+enum class DispositionOfSuccess : Disposition {
   /** Client request success */
+  @SerialName("success")
   SUCCESS,
-
   ;
 
-  /**
-   * Returns an enum constant name() formatted in Camel Case (dromedaryCamelCase)
-   *
-   * @return An enum constant name() formatted in Camel Case (dromedaryCamelCase)
-   * @JsonValue
-   */
-  fun jsonValue(): String {
+  /** Returns an enum constant name() in lowercase */
+  @JsonValue
+  fun nameAsLowercase(): String {
     return name.lowercase(Locale.getDefault())
+  }
+}
+
+@Serializable
+enum class DispositionOfProblem : Disposition {
+  /** Client request disposition of error: http 5xx - unanticipated problem in platform, framework or server */
+  @SerialName("error")
+  ERROR,
+
+  /** Client request disposition of failure: http 4xx - anticipated problem */
+  @SerialName("failure")
+  FAILURE,
+
+  /** Client request disposition of undefined: http 1xx->3xx */
+  @SerialName("undefined")
+  UNDEFINED,
+  ;
+
+  /** Returns an enum constant name() in lowercase */
+  @JsonValue
+  fun nameAsLowercase(): String {
+    return name.lowercase(Locale.getDefault())
+  }
+
+  companion object {
+    /** Calculate the disposition of the API Event from the Http status */
+    fun calcDisposition(httpStatus: Int) =
+      when {
+        HttpStatus.valueOf(httpStatus).is4xxClientError -> FAILURE
+        HttpStatus.valueOf(httpStatus).is5xxServerError -> ERROR
+        else -> UNDEFINED
+      }
   }
 }

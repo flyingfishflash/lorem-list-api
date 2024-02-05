@@ -1,78 +1,164 @@
 package net.flyingfishflash.loremlist.core.response.structure
 
-import org.springframework.http.HttpStatus
+import jakarta.servlet.http.HttpServletRequest
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.encodeStructure
+import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
 import org.springframework.http.ProblemDetail
-import java.net.URI
-import java.util.Locale
+import org.springframework.http.server.ServerHttpRequest
 import java.util.UUID
 
 /**
- * @param <T> Type of the <i>content</i> field of the Response
+ * Describes the structure of API responses sent to a client<br>
  */
-open class Response<T> : ApplicationResponse<T> {
-  override val id: String = UUID.randomUUID().toString()
-  final override val disposition: Disposition
-  final override val instance: URI?
-  final override val method: String
-    get() = field.lowercase(Locale.getDefault())
-  final override val message: String
-  final override val size: Int
-  final override val content: T
+@Serializable
+sealed interface Response<T> {
+  val id: UUID
+  val disposition: Disposition
+  val method: String
+  val instance: String?
+  val message: String
+  val size: Int
+  val content: T
+}
 
-  /**
-   * @param content
-   * @param message
-   * @param method
-   * @param instance
+@Serializable
+data class ResponseProblem(
+  @Serializable(with = UUIDSerializer::class) override val id: UUID = UUID.randomUUID(),
+  override val disposition: DispositionOfProblem,
+  override val method: String,
+  override val instance: String?,
+  override val message: String,
+  override val size: Int,
+  override val content: ApiProblemDetail,
+) : Response<ApiProblemDetail> {
+
+  /** Create an API ResponseSuccess from a ProblemDetail
+   * @return ResponseSuccess<ApiProblemDetail>
    */
-  constructor(content: T, message: String, method: String, instance: URI) {
-    require(content !is ProblemDetail) { "Content must not be of type ProblemDetail" }
-    this.disposition = calcDisposition(HttpStatus.OK.value())
-    this.message = message
-    this.content = content
-    this.size = calcSize()
-    this.method = method
-    this.instance = instance
+  constructor(problemDetail: ProblemDetail, request: HttpServletRequest) : this(
+    disposition = DispositionOfProblem.calcDisposition(problemDetail.status),
+    method = request.method.lowercase(),
+    instance = request.requestURI.toString(),
+    message = "from Api Exception Advice",
+    size = calcSize(problemDetail),
+    content = ApiProblemDetail(problemDetail),
+  )
+
+  /** Create an API ResponseSuccess from a ProblemDetail
+   * @return ResponseSuccess<ApiProblemDetail>
+   */
+  constructor(problemDetail: ProblemDetail, request: ServerHttpRequest) : this(
+    disposition = DispositionOfProblem.calcDisposition(problemDetail.status),
+    method = request.method.name().lowercase(),
+    instance = request.uri.path.lowercase(),
+    message = "from Custom Response Body Advice",
+    size = calcSize(problemDetail),
+    content = ApiProblemDetail(problemDetail),
+  )
+}
+
+@Serializable
+data class ResponseSuccess<T>(
+  @Serializable(with = UUIDSerializer::class) override val id: UUID = UUID.randomUUID(),
+  override val disposition: DispositionOfSuccess,
+  override val method: String,
+  override val instance: String?,
+  override val message: String,
+  override val size: Int,
+  @Contextual override val content: T,
+) : Response<T> {
+
+  /** Create an API ResponseSuccess from any other object type
+   * @return ResponseSuccess<*>
+   */
+  constructor(responseContent: T, responseMessage: String, request: HttpServletRequest) : this(
+    disposition = DispositionOfSuccess.SUCCESS,
+    method = request.method.lowercase(),
+    instance = request.requestURI,
+    message = responseMessage,
+    size = calcSize(responseContent),
+    content = responseContent,
+  )
+
+  /** Create an API ResponseSuccess from any other object type
+   * @return ResponseSuccess<*>
+   */
+  constructor(responseContent: T, responseMessage: String, request: ServerHttpRequest) : this(
+    disposition = DispositionOfSuccess.SUCCESS,
+    method = request.method.name().lowercase(),
+    instance = request.uri.path.lowercase(),
+    message = responseMessage,
+    size = calcSize(responseContent),
+    content = responseContent,
+  )
+}
+
+/** Calculate the number of items included in the content
+ * return Int
+ */
+private fun calcSize(content: Any?): Int =
+  when (content) {
+    null -> 0
+    is Collection<*> -> content.size
+    is Map<*, *> -> content.size
+    else -> 1
   }
 
-  /**
-   * @param content
-   * @param message
-   * @param method
-   */
-  constructor(content: T, message: String, method: String) {
-    require(content is ProblemDetail) { "Content must be of type ProblemDetail" }
-    this.disposition = calcDisposition(content.status)
-    this.message = message
-    this.content = content
-    this.size = calcSize()
-    this.method = method
-    this.instance = content.instance
+/** Potentially can be used, but not necessary in this implementation */
+class ApiResponseSerializer<T>(private val serializer: KSerializer<T>) : KSerializer<Response<T>> {
+  override val descriptor: SerialDescriptor =
+    buildClassSerialDescriptor("Response") {
+      element("content", serializer.descriptor)
+    }
+
+  override fun serialize(
+    encoder: Encoder,
+    value: Response<T>,
+  ) {
+    encoder.encodeStructure(descriptor) {
+      encodeSerializableElement(descriptor, 0, serializer, value.content)
+      println(value.method)
+      encodeStringElement(descriptor, 4, value.method.lowercase())
+    }
   }
 
-  /** Calculate the number of items included in the content  */
-  private fun calcSize(): Int =
-    when (content) {
-      is List<*> -> content.size
-      is Map<*, *> -> content.size
-      else -> 1
-    }
-
-  /** Calculate the disposition of the Api Event from the Http status  */
-  private fun calcDisposition(httpStatus: Int): Disposition =
-    when {
-      HttpStatus.valueOf(httpStatus).is4xxClientError -> Disposition.FAILURE
-      HttpStatus.valueOf(httpStatus).is5xxServerError -> Disposition.ERROR
-      else -> Disposition.SUCCESS
-    }
-
-  final override fun toString(): String {
-    return "Response(id='$id', " +
-      "disposition=$disposition, " +
-      "method='$method', " +
-      "message='$message', " +
-      "size=$size, " +
-      "content=$content, " +
-      "instance=$instance)"
+  override fun deserialize(decoder: Decoder): Response<T> {
+    TODO("Not implemented")
   }
 }
+
+// fun main() {
+//  val apiResponse1 =
+//    ResponseSuccess(
+//      disposition = Disposition.SUCCESS,
+//      method = "METHOD",
+//      message = "message",
+//      size = 1,
+//      instance = "instance",
+//      content = listOf(LrmList(id = 900, created = now(), name = "list name", description = "list description")),
+//    )
+//
+//  val json =
+//    Json {
+//      prettyPrint = true
+//      serializersModule =
+//        SerializersModule {
+//          contextual(ApiResponseSerializer::class) { args -> ApiResponseSerializer(args[0]) }
+//        }
+//    }
+//
+//  val serialized1 = json.encodeToString(apiResponse1)
+//
+//  println(serialized1)
+// }
+
+// Deserialize the JSON string back to the original instance
+//  val deserializedContainer = json.decodeFromString<ResponseSuccess<Long>>(serialized2)
+//  println(deserializedContainer)

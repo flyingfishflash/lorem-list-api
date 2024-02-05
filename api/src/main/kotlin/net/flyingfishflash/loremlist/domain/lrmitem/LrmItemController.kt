@@ -1,9 +1,9 @@
 package net.flyingfishflash.loremlist.domain.lrmitem
 
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.responses.ApiResponse
-import io.swagger.v3.oas.annotations.responses.ApiResponses
-import io.swagger.v3.oas.annotations.tags.Tag
+// import io.swagger.v3.oas.annotations.Operation
+// import io.swagger.v3.oas.annotations.responses.ApiResponse
+// import io.swagger.v3.oas.annotations.responses.ApiResponses
+// import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
@@ -18,13 +18,13 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-@Tag(name = "list item controller")
+// @Tag(name = "list item controller")
+// @ApiResponses(value = [ApiResponse(responseCode = "400", description = "Bad Request")])
 @RestController
 @RequestMapping("/item")
-@ApiResponses(value = [ApiResponse(responseCode = "400", description = "Bad Request")])
 class LrmItemController(val lrmItemService: LrmItemService) {
+  //  @Operation(summary = "Create a new list item")
   @PostMapping
-  @Operation(summary = "Create a new list item")
   fun create(
     @Valid @RequestBody lrmItemRequest: LrmItemRequest,
   ): LrmItem {
@@ -32,14 +32,14 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     return lrmListItem
   }
 
+  //  @Operation(summary = "Delete a list")
+//  @ApiResponses(
+//    value = [
+//      ApiResponse(responseCode = "204", description = "List Item Deleted"),
+//      ApiResponse(responseCode = "404", description = "List Item Not Found"),
+//    ],
+//  )
   @DeleteMapping("/{id}")
-  @Operation(summary = "Delete a list")
-  @ApiResponses(
-    value = [
-      ApiResponse(responseCode = "204", description = "List Item Deleted"),
-      ApiResponse(responseCode = "404", description = "List Item Not Found"),
-    ],
-  )
   fun delete(
     @PathVariable("id") @Min(1) id: Long,
   ): ResponseEntity<Any> {
@@ -47,16 +47,18 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     return ResponseEntity(HttpStatus.NO_CONTENT)
   }
 
+  //  @Operation(summary = "Retrieve all list items")
   @GetMapping
-  @Operation(summary = "Retrieve all list items")
   fun findAll(): List<LrmItem> = lrmItemService.findAll()
 
-  @PostMapping("/{id}/to-list")
-  @Operation(summary = "Assign Item to List")
-  fun toList(
-    @PathVariable("id") @Min(1) id: Long,
-    @Min(1) @RequestBody listId: Long,
-  ) {
-    lrmItemService.assignItemToList(listId, id)
-  }
+//  @PostMapping("/{id}/to-list")
+//  @Operation(summary = "Assign Item to List")
+//  fun toList(
+//    @PathVariable("id") @Min(1) id: Long,
+//    @Min(1) @RequestBody listId: Long,
+//  ): ResponseEntity<ResponseSuccess<*>> {
+//    lrmItemService.assignItemToList(listId, id)
+//    // val z = ResponseSuccess("this is the content", "this is the message", "this is the method", URI.create("http://exmaple.net"))
+//    return ResponseEntity(HttpStatus.OK)
+//  }
 }

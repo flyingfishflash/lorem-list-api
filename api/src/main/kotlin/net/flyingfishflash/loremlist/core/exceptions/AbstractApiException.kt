@@ -10,10 +10,10 @@ abstract class AbstractApiException protected constructor(
   detail: String,
   cause: Throwable?,
 ) : ErrorResponseException(
-    httpStatusCode,
-    ProblemDetail.forStatusAndDetail(httpStatusCode, detail),
-    cause,
-  ) {
+  httpStatusCode,
+  ProblemDetail.forStatusAndDetail(httpStatusCode, detail),
+  cause,
+) {
   init {
     super.setTitle(title)
   }
