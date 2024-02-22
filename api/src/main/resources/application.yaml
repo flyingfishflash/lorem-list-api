@@ -92,7 +92,7 @@ spring:
   mvc:
     throw-exception-if-no-handler-found: "true"
     problemdetails:
-      enabled: false
+      enabled: true
   output:
     ansi:
       enabled: "always"

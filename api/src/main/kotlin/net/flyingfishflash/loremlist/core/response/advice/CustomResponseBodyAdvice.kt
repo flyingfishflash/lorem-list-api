@@ -59,8 +59,9 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
       }
       // --
       o is ProblemDetail -> {
-        applicationResponse = ResponseProblem(problemDetail = o, serverHttpRequest)
-        logger.info { "response as json: " + Json.encodeToString(applicationResponse) }
+        val responseProblem = ResponseProblem(problemDetail = o, serverHttpRequest)
+        applicationResponse = responseProblem
+        logger.info { "response as json: " + Json.encodeToString(responseProblem) }
       }
       // --
       methodParameter.containingClass.isAnnotationPresent(RestController::class.java) &&
@@ -75,6 +76,10 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
           logger.warn { "ResponseSuccess for: $o" }
         }
       }
+    }
+
+    if (!selectedConverterType.name.contains("KotlinSerializationJsonHttpMessageConverter")) {
+      logger.warn { "message converter type: ${selectedConverterType.name}" }
     }
 
     return applicationResponse ?: o.let {
