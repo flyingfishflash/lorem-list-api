@@ -2,21 +2,47 @@ package net.flyingfishflash.loremlist.domain.lrmlist
 
 import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import org.springframework.http.HttpStatus
-import org.springframework.web.ErrorResponseException
 
 class ListNotFoundException(id: Long, cause: Throwable? = null) : AbstractApiException(
-  HttpStatus.NOT_FOUND,
-  TITLE,
-  "List not found for id $id",
-  cause,
+  httpStatus = HttpStatus.NOT_FOUND,
+  title = TITLE,
+  detail = "List not found for id $id",
+  cause = cause,
 ) {
   companion object {
     const val TITLE = "List Not Found"
   }
 }
 
-class ListInsertException(cause: Throwable? = null) : ErrorResponseException(HttpStatus.BAD_REQUEST, cause)
+class ListInsertException(cause: Throwable? = null) : AbstractApiException(
+  httpStatus = HttpStatus.BAD_REQUEST,
+  title = TITLE,
+  detail = "Problem inserting a new list",
+  cause = cause,
+) {
+  companion object {
+    const val TITLE = "List Insert Exception"
+  }
+}
 
-class ListUpdateException(cause: Throwable? = null) : ErrorResponseException(HttpStatus.BAD_REQUEST, cause)
+class ListUpdateException(id: Long, cause: Throwable? = null) : AbstractApiException(
+  httpStatus = HttpStatus.BAD_REQUEST,
+  title = TITLE,
+  detail = "Problem updating list id $id",
+  cause = cause,
+) {
+  companion object {
+    const val TITLE = "List Update Exception"
+  }
+}
 
-class ListDeleteException(cause: Throwable? = null) : ErrorResponseException(HttpStatus.BAD_REQUEST, cause)
+class ListDeleteException(id: Long, cause: Throwable? = null) : AbstractApiException(
+  httpStatus = HttpStatus.BAD_REQUEST,
+  title = TITLE,
+  detail = "Problem deleting list id $id",
+  cause = cause,
+) {
+  companion object {
+    const val TITLE = "List Delete Exception"
+  }
+}

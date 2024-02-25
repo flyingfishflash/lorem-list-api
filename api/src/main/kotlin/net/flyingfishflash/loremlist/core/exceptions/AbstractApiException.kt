@@ -1,20 +1,12 @@
 package net.flyingfishflash.loremlist.core.exceptions
 
-import org.springframework.http.HttpStatusCode
-import org.springframework.http.ProblemDetail
-import org.springframework.web.ErrorResponseException
+import org.springframework.http.HttpStatus
+import java.net.URI
 
 abstract class AbstractApiException protected constructor(
-  httpStatusCode: HttpStatusCode,
-  title: String,
-  detail: String,
+  val type: URI = URI.create("about:config"),
+  val httpStatus: HttpStatus,
+  val title: String,
+  val detail: String,
   cause: Throwable?,
-) : ErrorResponseException(
-  httpStatusCode,
-  ProblemDetail.forStatusAndDetail(httpStatusCode, detail),
-  cause,
-) {
-  init {
-    super.setTitle(title)
-  }
-}
+) : Exception()

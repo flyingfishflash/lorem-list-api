@@ -7,17 +7,18 @@ import org.springframework.http.ProblemDetail
 @Serializable
 data class ApiProblemDetail(
   val type: String,
-  val title: String? = null,
+  val title: String,
   val status: Int,
-  val detail: String? = null,
+  val detail: String,
   val extensions: JsonElement? = null,
 ) {
+  /** Construct an ApiProblem from a Spring ProblemDetail */
   constructor(problemDetail: ProblemDetail) : this(
     type = problemDetail.type.toString(),
-    title = problemDetail.title,
+    title = problemDetail.title ?: "default title",
     status = problemDetail.status,
-    detail = problemDetail.detail,
-  ) {
-    // ProblemDetailUtility.setCustomPropertiesFromThrowable(problemDetail, o)
-  }
+    detail = problemDetail.detail ?: "default detail",
+  )
+
+  // TODO initialize ApiProblemDetail extension properties
 }

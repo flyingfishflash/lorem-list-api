@@ -18,11 +18,11 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
   fun deleteSingleById(id: Long) {
     val deletedCount = lrmListRepository.deleteById(id)
     if (deletedCount < 1) {
-      throw ListDeleteException(cause = ListNotFoundException(id))
+      throw ListDeleteException(id = id, cause = ListNotFoundException(id))
     } else if (deletedCount > 1) {
       // TODO: The exception should capture a message that more than one record was deleted
       // TODO: Ensure the transaction is rolled back if an exception is thrown
-      throw ListDeleteException()
+      throw ListDeleteException(id = id)
     }
   }
 

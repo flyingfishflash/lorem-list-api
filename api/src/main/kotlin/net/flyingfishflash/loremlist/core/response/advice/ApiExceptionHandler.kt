@@ -5,12 +5,11 @@ import jakarta.servlet.http.HttpServletRequest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
+import net.flyingfishflash.loremlist.core.response.structure.ApiProblemDetail
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import java.net.URI
 
 /**
  * Handles API Exceptions
@@ -27,19 +26,16 @@ class ApiExceptionHandler {
   private val logger = KotlinLogging.logger {}
 
   @ExceptionHandler(AbstractApiException::class)
-  fun handleException(
-    request: HttpServletRequest,
-    exception: AbstractApiException,
-  ): ResponseEntity<ResponseProblem?> {
-    val httpStatus = HttpStatus.resolve(exception.statusCode.value()) ?: HttpStatus.NOT_IMPLEMENTED
-    val problemDetail = exception.body
-    if (problemDetail.instance == null) problemDetail.instance = URI.create(request.requestURI)
-
-    // ProblemDetailUtility.setCustomPropertiesFromThrowable(problemDetail, exception)
-
-    val applicationResponse = ResponseProblem(problemDetail = problemDetail, request = request)
+  fun handleAbstractApiException(request: HttpServletRequest, exception: AbstractApiException): ResponseEntity<ResponseProblem?> {
+    val apiProblemDetail = ApiProblemDetail(
+      type = exception.type.toString(),
+      title = exception.title,
+      status = exception.httpStatus.value(),
+      detail = exception.detail,
+    )
+    // TODO initialize ApiProblemDetail extension properties either here or in in ApiProblemDetail constructor
+    val applicationResponse = ResponseProblem(apiProblemDetail, request)
     logger.info { Json.encodeToString(applicationResponse) }
-
-    return ResponseEntity<ResponseProblem?>(applicationResponse, httpStatus)
+    return ResponseEntity<ResponseProblem?>(applicationResponse, exception.httpStatus)
   }
 }

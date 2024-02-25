@@ -2,13 +2,7 @@ package net.flyingfishflash.loremlist.core.response.structure
 
 import jakarta.servlet.http.HttpServletRequest
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.encoding.encodeStructure
 import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
 import org.springframework.http.ProblemDetail
 import org.springframework.http.server.ServerHttpRequest
@@ -33,7 +27,7 @@ data class ResponseProblem(
   @Serializable(with = UUIDSerializer::class) override val id: UUID = UUID.randomUUID(),
   override val disposition: DispositionOfProblem,
   override val method: String,
-  override val instance: String?,
+  override val instance: String,
   override val message: String,
   override val size: Int,
   override val content: ApiProblemDetail,
@@ -46,9 +40,21 @@ data class ResponseProblem(
     disposition = DispositionOfProblem.calcDisposition(problemDetail.status),
     method = request.method.lowercase(),
     instance = request.requestURI.toString(),
-    message = "from Api Exception Advice",
+    message = "from response problem constructor",
     size = calcSize(problemDetail),
     content = ApiProblemDetail(problemDetail),
+  )
+
+  /** Create an API ResponseSuccess from an ApiProblem
+   * @return ResponseSuccess<ApiProblem>
+   */
+  constructor(apiProblemDetail: ApiProblemDetail, request: HttpServletRequest) : this(
+    disposition = DispositionOfProblem.calcDisposition(apiProblemDetail.status),
+    method = request.method.lowercase(),
+    instance = request.requestURI.toString(),
+    message = "from response problem constructor",
+    size = calcSize(apiProblemDetail),
+    content = apiProblemDetail,
   )
 
   /** Create an API ResponseSuccess from a ProblemDetail
@@ -58,7 +64,7 @@ data class ResponseProblem(
     disposition = DispositionOfProblem.calcDisposition(problemDetail.status),
     method = request.method.name().lowercase(),
     instance = request.uri.path.lowercase(),
-    message = "from Custom Response Body Advice",
+    message = "from response problem constructor",
     size = calcSize(problemDetail),
     content = ApiProblemDetail(problemDetail),
   )
@@ -112,27 +118,27 @@ private fun calcSize(content: Any?): Int =
   }
 
 /** Potentially can be used, but not necessary in this implementation */
-class ApiResponseSerializer<T>(private val serializer: KSerializer<T>) : KSerializer<Response<T>> {
-  override val descriptor: SerialDescriptor =
-    buildClassSerialDescriptor("Response") {
-      element("content", serializer.descriptor)
-    }
-
-  override fun serialize(
-    encoder: Encoder,
-    value: Response<T>,
-  ) {
-    encoder.encodeStructure(descriptor) {
-      encodeSerializableElement(descriptor, 0, serializer, value.content)
-      println(value.method)
-      encodeStringElement(descriptor, 4, value.method.lowercase())
-    }
-  }
-
-  override fun deserialize(decoder: Decoder): Response<T> {
-    TODO("Not implemented")
-  }
-}
+// class ApiResponseSerializer<T>(private val serializer: KSerializer<T>) : KSerializer<Response<T>> {
+//  override val descriptor: SerialDescriptor =
+//    buildClassSerialDescriptor("Response") {
+//      element("content", serializer.descriptor)
+//    }
+//
+//  override fun serialize(
+//    encoder: Encoder,
+//    value: Response<T>,
+//  ) {
+//    encoder.encodeStructure(descriptor) {
+//      encodeSerializableElement(descriptor, 0, serializer, value.content)
+//      println(value.method)
+//      encodeStringElement(descriptor, 4, value.method.lowercase())
+//    }
+//  }
+//
+//  override fun deserialize(decoder: Decoder): Response<T> {
+//    TODO("Not implemented")
+//  }
+// }
 
 // fun main() {
 //  val apiResponse1 =

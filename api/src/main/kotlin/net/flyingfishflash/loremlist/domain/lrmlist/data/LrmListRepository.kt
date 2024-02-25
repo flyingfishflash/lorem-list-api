@@ -85,9 +85,9 @@ class LrmListRepository {
       }
 
     if (updatedCount == 1) {
-      return findByIdOrNull(lrmList.id) ?: throw ListUpdateException(cause = ListNotFoundException(lrmList.id))
+      return findByIdOrNull(lrmList.id) ?: throw ListUpdateException(id = lrmList.id, cause = ListNotFoundException(lrmList.id))
     } else {
-      throw ListUpdateException()
+      throw ListUpdateException(id = lrmList.id)
     }
   }
 
