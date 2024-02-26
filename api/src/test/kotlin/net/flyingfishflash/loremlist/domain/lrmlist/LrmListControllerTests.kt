@@ -101,7 +101,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         val mockReturn = listOf(lrmListMockResponse)
         every { lrmListService.findAllListsAndItems() } returns mockReturn
         val instance = "/lists?withItems=true"
-        mockMvc.get("/lists?withItems=true") {
+        mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -128,7 +128,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         println(Json.encodeToString(lrmListRequest))
         every { lrmListService.create(lrmListRequest) } returns lrmListMockResponse
         val instance = "/lists"
-        mockMvc.post("/lists") {
+        mockMvc.post(instance) {
           content = Json.encodeToString(lrmListRequest)
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -147,15 +147,15 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
       it("requested list name is an empty string") {
         val instance = "/lists"
-        mockMvc.post("/lists") {
+        mockMvc.post(instance) {
           content = Json.encodeToString(LrmListRequest("", lrmListDescription))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isBadRequest() }
-          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+          content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-          jsonPath("$.message") { value("from Custom Response Body Advice") }
+          jsonPath("$.message") { value("from response problem constructor") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value("Bad Request") }
@@ -171,10 +171,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isBadRequest() }
-          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+          content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-          jsonPath("$.message") { value("from Custom Response Body Advice") }
+          jsonPath("$.message") { value("from response problem constructor") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value("Bad Request") }
@@ -206,10 +206,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         val instance = "/lists/$id"
         mockMvc.delete(instance).andExpect {
           status { isNotFound() }
-          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+          content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-          jsonPath("$.message") { value("from Custom Response Body Advice") }
+          jsonPath("$.message") { value("from response problem constructor") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
@@ -247,10 +247,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         val instance = "/lists/$id"
         mockMvc.get(instance).andExpect {
           status { isNotFound() }
-          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+          content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("from Custom Response Body Advice") }
+          jsonPath("$.message") { value("from response problem constructor") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
@@ -288,10 +288,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         val instance = "/lists/$id?withItems=true"
         mockMvc.get(instance).andExpect {
           status { isNotFound() }
-          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+          content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("from Custom Response Body Advice") }
+          jsonPath("$.message") { value("from response problem constructor") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
@@ -329,10 +329,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         val instance = "/lists/$id?withItems=false"
         mockMvc.get(instance).andExpect {
           status { isNotFound() }
-          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+          content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("from Custom Response Body Advice") }
+          jsonPath("$.message") { value("from response problem constructor") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
@@ -400,10 +400,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
-          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+          content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-          jsonPath("$.message") { value("from Custom Response Body Advice") }
+          jsonPath("$.message") { value("from response problem constructor") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }

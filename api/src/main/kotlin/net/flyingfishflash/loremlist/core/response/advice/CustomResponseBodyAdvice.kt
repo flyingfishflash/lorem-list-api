@@ -82,8 +82,8 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
       logger.warn { "message converter type: ${selectedConverterType.name}" }
     }
 
-    return applicationResponse ?: o.let {
-      logger.warn { "Returning object from CustomResponseBodyAdvice.beforeBodyWrite() without examination: $o" }
+    return applicationResponse ?: o.also {
+      logger.warn { "Returning object from CustomResponseBodyAdvice.beforeBodyWrite() without examination: $it" }
     }
   }
 }
