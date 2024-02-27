@@ -4,16 +4,15 @@ config:
   application:
 #    name: &application-name "lorem-list"
 #    description: &application-description "A Kotlin/Spring Boot based list manager"
-    documentation: "https://lorem-list.wiki.github.org/docs"
-    api-v1-url-path: &api-v1-url-path "/api/v1"
+    documentation: 'https://lorem-list.wiki.github.org/docs'
+    api-v1-url-path: /api/v1
 
-debug: "false"
+debug: 'false'
 
 logging:
   level:
     org:
       flywaydb: warn
-#      hibernate: info
       springframework:
         security: DEBUG
 
@@ -26,20 +25,20 @@ management:
   endpoints:
     enabled-by-default: false
     web:
-      base-path: "/management"
+      base-path: /management
       cors:
-        allowed-origins: "*"
-        allowed-methods: "OPTIONS, GET"
+        allowed-origins: '*'
+        allowed-methods: 'OPTIONS, GET'
       exposure:
-        include: "info,health"
+        include: 'info,health'
 
 server:
   error:
     whitelabel:
-      enabled: "false"
-  port: "8282"
+      enabled: 'false'
+  port: '8282'
   servlet:
-    context-path: *api-v1-url-path
+    context-path: /api/v1
 #    session:
 #      cookie:
 #        secure: "true"
@@ -47,80 +46,46 @@ server:
 #      timeout: "5m"
   tomcat:
     remoteip:
-      protocol-header: "x-forwarded-proto"
-      remote-ip-header: "x-forwarded-for"
+      protocol-header: x-forwarded-proto
+      remote-ip-header: x-forwarded-for
 
 spring:
   exposed:
-    show-sql: "true"
-    generate-ddl: "false"
+    show-sql: 'true'
+    generate-ddl: 'false'
   jackson:
+    default-property-inclusion: non_null
     serialization:
       write-dates-as-timestamps: 'false'
-  #      write-enums-to-lowercase: true
-#  jpa:
-#    hibernate:
-#      ddl-auto: "none"
-#      ddl-auto: "create-drop"
-      # https://stackoverflow.com/questions/29087626/entity-class-name-is-transformed-into-sql-table-name-with-underscores
-#      naming:
-#        physical-strategy: "org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl"
-#    properties:
-#      hibernate:
-#        cache:
-#          use_second_level_cache: "false"
-#        format_sql: "false"
-#        generate_statistics: "false"
-#        jdbc:
-#          batch_size: "20"
-#        order_inserts: "true"
-#        query:
-#          plan_cache_max_size: "16"
-#          plan_parameter_metadata_max_size: "32"
-#      jakarta:
-#        persistence:
-#          sharedCache:
-#            mode: "UNSPECIFIED"
-#          schema-generation:
-#            create-source: metadata
-#            scripts:
-#              action: create
-#              create-target: create.sql
-#    show-sql: "false"
   main:
-    banner-mode: "off"
+    banner-mode: 'off'
   mvc:
-    throw-exception-if-no-handler-found: "true"
+    throw-exception-if-no-handler-found: 'true'
     problemdetails:
-      enabled: false
+      enabled: true
   output:
     ansi:
-      enabled: "always"
+      enabled: always
   profiles:
-    active: "h2"
+    active: h2
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: "https://zitadel.flyingfishflash.net"
+          issuer-uri: 'https://zitadel.flyingfishflash.net'
   servlet:
     multipart:
-      max-file-size: "50MB"
-      max-request-size: "50MB"
-#  session:
-#    jdbc:
-#      initialize-schema: "never"
-#      table-name: "public.SPRING_SESSION"
+      max-file-size: 50MB
+      max-request-size: 50MB
   sql:
     init:
-      mode: "never"
-
-trace: "false"
+      mode: never
+trace: 'false'
 
 springdoc:
   api-docs:
-    version: "openapi_3_1"
+    version: openapi_3_1
   swagger-ui:
     defaultModelsExpandDepth: 3
-    operationsSorter: "alpha"
-    tagsSorter: "alpha"
+    operationsSorter: alpha
+    tagsSorter: alpha
