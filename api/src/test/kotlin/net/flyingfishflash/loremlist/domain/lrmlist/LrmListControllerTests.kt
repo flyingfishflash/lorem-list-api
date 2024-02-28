@@ -152,7 +152,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isBadRequest() }
-          content { contentType(MediaType.APPLICATION_JSON) }
+          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
           jsonPath("$.message") { value("from response problem constructor") }
@@ -171,7 +171,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isBadRequest() }
-          content { contentType(MediaType.APPLICATION_JSON) }
+          content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
           jsonPath("$.message") { value("from response problem constructor") }
