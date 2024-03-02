@@ -38,6 +38,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     val lrmListName = "Lorem List Name"
     val lrmListDescription = "Lorem List Description"
     val lrmListMockResponse = LrmList(id = 0, name = lrmListName, description = lrmListDescription)
+    val lrmListMockResponseWithEmptyItems = LrmList(id = 0, name = lrmListName, description = lrmListDescription, items = setOf())
     val lrmListRequest = LrmListRequest(lrmListName, lrmListDescription)
     val id = 1L
 
@@ -61,8 +62,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.content.[0].name") { value(lrmListName) }
           jsonPath("$.content.[0].description") { value(lrmListDescription) }
           jsonPath("$.content.[0].items") {
-            isArray()
-            isEmpty()
+            doesNotExist()
           }
         }
         verify(exactly = 1) { lrmListService.findAll() }
@@ -88,8 +88,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.content.[0].name") { value(lrmListName) }
           jsonPath("$.content.[0].description") { value(lrmListDescription) }
           jsonPath("$.content.[0].items") {
-            isArray()
-            isEmpty()
+            doesNotExist()
           }
         }
         verify(exactly = 1) { lrmListService.findAll() }
@@ -98,7 +97,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists?withItems=true http get") {
       it("lists and items are found") {
-        val mockReturn = listOf(lrmListMockResponse)
+        val mockReturn = listOf(lrmListMockResponseWithEmptyItems)
         every { lrmListService.findAllListsAndItems() } returns mockReturn
         val instance = "/lists?withItems=true"
         mockMvc.get(instance) {
@@ -222,7 +221,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/1 http get") {
       it("list is found") {
-        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } returns lrmListMockResponse
+        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } returns lrmListMockResponseWithEmptyItems
         val instance = "/lists/$id"
         mockMvc.get(instance).andExpect {
           status { isOk() }
@@ -263,7 +262,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/1?withItems=true http get") {
       it("list is found") {
-        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } returns lrmListMockResponse
+        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } returns lrmListMockResponseWithEmptyItems
         val instance = "/lists/$id?withItems=true"
         mockMvc.get("/lists/$id?withItems=true").andExpect {
           status { isOk() }
@@ -317,8 +316,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.content.description") { value(lrmListDescription) }
           jsonPath("$.content.name") { value(lrmListName) }
           jsonPath("$.content.items") {
-            isArray()
-            isEmpty()
+            doesNotExist()
           }
         }
         verify(exactly = 1) { lrmListService.findByIdOrListNotFoundException(id) }
@@ -361,8 +359,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.content.description") { value(lrmListDescription) }
           jsonPath("$.content.name") { value(lrmListName) }
           jsonPath("$.content.items") {
-            isArray()
-            isEmpty()
+            doesNotExist()
           }
         }
         verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmListName)) }
@@ -385,8 +382,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.content.description") { value(lrmListDescription) }
           jsonPath("$.content.name") { value(lrmListName) }
           jsonPath("$.content.items") {
-            isArray()
-            isEmpty()
+            doesNotExist()
           }
         }
         verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmListDescription)) }

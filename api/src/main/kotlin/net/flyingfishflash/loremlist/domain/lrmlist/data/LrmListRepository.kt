@@ -101,7 +101,9 @@ class LrmListRepository {
       val itemId = resultRow.getOrNull(LrmListItemTable.id)
       val item = itemId?.let { resultRow.toLrmListItem() }
       val current = map.getOrDefault(list.id, list)
-      map[list.id] = current.copyWith(items = current.items + listOfNotNull(item))
+      // if items is null return an empty set otherwise add create a list of non-null items
+      // so a serialized list explicitly returns [] when a list has no items otherwise the items key will not be rendered
+      map[list.id] = current.copyWith(items = if (current.items != null) current.items.plus(listOfNotNull(item)) else setOf())
       map
     }).values.toList()
 }
