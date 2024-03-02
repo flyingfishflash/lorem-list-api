@@ -27,7 +27,7 @@ val kotestVersion = "5.8.0"
 val kotestExtensionsSpringVersion = "1.1.3"
 val kotlinLoggingVersion = "6.0.3"
 val kotlinxDateTimeVersion = "0.5.0"
-val kotlinxSerializationJson = "1.6.2"
+val kotlinxSerializationJson = "1.6.3"
 val springDocOpenApiStarterWebmvcUiVersion = "2.3.0"
 val springmockkVersion = "4.0.2"
 
