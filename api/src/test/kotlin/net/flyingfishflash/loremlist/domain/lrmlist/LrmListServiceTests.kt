@@ -14,6 +14,9 @@ import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
 import org.junit.jupiter.api.assertThrows
 
+/**
+ * LrmListService Unit Tests
+ */
 class LrmListServiceTests : DescribeSpec({
 
   val lrmListRepository = mockk<LrmListRepository>()
