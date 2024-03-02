@@ -8,5 +8,5 @@ abstract class AbstractApiException protected constructor(
   val httpStatus: HttpStatus,
   val title: String,
   val detail: String,
-  cause: Throwable?,
-) : Exception()
+  cause: Throwable? = null,
+) : Exception(cause)
