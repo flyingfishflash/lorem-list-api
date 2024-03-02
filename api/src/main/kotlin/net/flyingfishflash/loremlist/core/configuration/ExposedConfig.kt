@@ -26,13 +26,4 @@ class ExposedConfig {
     DatabaseConfig {
       useNestedTransactions = true
     }
-
-//  @Bean
-//  fun messageConverter(): KotlinSerializationJsonHttpMessageConverter {
-//    return KotlinSerializationJsonHttpMessageConverter(
-//      Json {
-//        ignoreUnknownKeys = true
-//      },
-//    )
-//  }
 }

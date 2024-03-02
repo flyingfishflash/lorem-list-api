@@ -79,7 +79,7 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
     }
 
     if (!selectedConverterType.name.contains("KotlinSerializationJsonHttpMessageConverter")) {
-      logger.warn { "message converter type: ${selectedConverterType.name}" }
+      logger.info { "message converter type: ${selectedConverterType.name}" }
     }
 
     return applicationResponse ?: o.also {

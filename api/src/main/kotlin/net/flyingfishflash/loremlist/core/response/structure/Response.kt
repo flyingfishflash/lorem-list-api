@@ -33,20 +33,8 @@ data class ResponseProblem(
   override val content: ApiProblemDetail,
 ) : Response<ApiProblemDetail> {
 
-  /** Create an API ResponseSuccess from a ProblemDetail
-   * @return ResponseSuccess<ApiProblemDetail>
-   */
-  constructor(problemDetail: ProblemDetail, request: HttpServletRequest) : this(
-    disposition = DispositionOfProblem.calcDisposition(problemDetail.status),
-    method = request.method.lowercase(),
-    instance = request.requestURI.toString(),
-    message = "from response problem constructor",
-    size = calcSize(problemDetail),
-    content = ApiProblemDetail(problemDetail),
-  )
-
-  /** Create an API ResponseSuccess from an ApiProblem
-   * @return ResponseSuccess<ApiProblem>
+  /** Create an API ResponseProblem from an ApiProblem
+   * @return ResponseProblem
    */
   constructor(apiProblemDetail: ApiProblemDetail, request: HttpServletRequest) : this(
     disposition = DispositionOfProblem.calcDisposition(apiProblemDetail.status),
@@ -57,8 +45,8 @@ data class ResponseProblem(
     content = apiProblemDetail,
   )
 
-  /** Create an API ResponseSuccess from a ProblemDetail
-   * @return ResponseSuccess<ApiProblemDetail>
+  /** Create an API ResponseProblem from a Spring ProblemDetail
+   * @return ResponseProblem
    */
   constructor(problemDetail: ProblemDetail, request: ServerHttpRequest) : this(
     disposition = DispositionOfProblem.calcDisposition(problemDetail.status),
@@ -81,7 +69,7 @@ data class ResponseSuccess<T>(
   @Contextual override val content: T,
 ) : Response<T> {
 
-  /** Create an API ResponseSuccess from any other object type
+  /** Create an API ResponseSuccess with content from any object type
    * @return ResponseSuccess<*>
    */
   constructor(responseContent: T, responseMessage: String, request: HttpServletRequest) : this(
@@ -93,7 +81,7 @@ data class ResponseSuccess<T>(
     content = responseContent,
   )
 
-  /** Create an API ResponseSuccess from any other object type
+  /** Create an API ResponseSuccess with content from any object type
    * @return ResponseSuccess<*>
    */
   constructor(responseContent: T, responseMessage: String, request: ServerHttpRequest) : this(
