@@ -188,14 +188,14 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         every { lrmListService.deleteSingleById(id) } just Runs
         val instance = "/lists/$id"
         mockMvc.delete(instance).andExpect {
-          status { isNoContent() }
+          status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
           jsonPath("$.message") { value("deleted list id $id") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content") { value("content") }
+          jsonPath("$.content.message") { value("content") }
         }
         verify(exactly = 1) { lrmListService.deleteSingleById(id) }
       }

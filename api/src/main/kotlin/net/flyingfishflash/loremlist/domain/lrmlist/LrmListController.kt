@@ -12,6 +12,7 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
@@ -69,7 +70,7 @@ class LrmListController(private val lrmListService: LrmListService) {
   @Operation(summary = "Delete a list")
   @ApiResponses(
     value = [
-      ApiResponse(responseCode = "204", description = "List Deleted"),
+      ApiResponse(responseCode = "200", description = "List Deleted"),
       ApiResponse(
         responseCode = "404",
         description = "List Not Found",
@@ -81,11 +82,11 @@ class LrmListController(private val lrmListService: LrmListService) {
   fun delete(
     @PathVariable("id") @Min(1) id: Long,
     request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<String>> {
+  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
     lrmListService.deleteSingleById(id)
-    val response = ResponseSuccess("content", "deleted list id $id", request)
+    val response = ResponseSuccess(ApiMessage("content"), "deleted list id $id", request)
     logger.info { "response as json: " + Json.encodeToString(response) }
-    return ResponseEntity(response, HttpStatus.NO_CONTENT)
+    return ResponseEntity<ResponseSuccess<ApiMessage>>(response, HttpStatus.OK)
   }
 
   @Operation(summary = "Update a list")
