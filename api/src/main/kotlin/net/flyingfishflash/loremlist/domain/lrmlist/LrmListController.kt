@@ -89,46 +89,6 @@ class LrmListController(private val lrmListService: LrmListService) {
     return ResponseEntity<ResponseSuccess<ApiMessage>>(response, HttpStatus.OK)
   }
 
-  @Operation(summary = "Update a list")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "List Updated",
-//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
-      ),
-      ApiResponse(
-        responseCode = "204",
-        description = "List Not Updated",
-//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "List Not Found",
-        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-      ),
-    ],
-  )
-  @PatchMapping("/{id}")
-  fun patch(
-    @PathVariable("id") @Min(1) id: Long,
-    @RequestBody patchRequest: Map<String, Any>,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<LrmList>> {
-    val (responseContent, patched) = lrmListService.patch(id, patchRequest)
-    val response: ResponseSuccess<*>
-    val responseEntity: ResponseEntity<ResponseSuccess<LrmList>>
-    if (patched) {
-      response = ResponseSuccess(responseContent, "patched", request)
-      responseEntity = ResponseEntity(response, HttpStatus.OK)
-    } else {
-      response = ResponseSuccess(responseContent, "not patched", request)
-      responseEntity = ResponseEntity(response, HttpStatus.NO_CONTENT)
-    }
-    logger.info { "response as json: " + Json.encodeToString(response) }
-    return responseEntity
-  }
-
   @Operation(summary = "Retrieve all lists details and optionally the items")
   @ApiResponses(
     value = [
@@ -180,5 +140,45 @@ class LrmListController(private val lrmListService: LrmListService) {
     val response = ResponseSuccess(responseContent, "retrieved list $id", request)
     logger.info { "response as json: " + Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
+  }
+
+  @Operation(summary = "Update a list")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "List Updated",
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+      ApiResponse(
+        responseCode = "204",
+        description = "List Not Updated",
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  @PatchMapping("/{id}")
+  fun patch(
+    @PathVariable("id") @Min(1) id: Long,
+    @RequestBody patchRequest: Map<String, Any>,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<LrmList>> {
+    val (responseContent, patched) = lrmListService.patch(id, patchRequest)
+    val response: ResponseSuccess<*>
+    val responseEntity: ResponseEntity<ResponseSuccess<LrmList>>
+    if (patched) {
+      response = ResponseSuccess(responseContent, "patched", request)
+      responseEntity = ResponseEntity(response, HttpStatus.OK)
+    } else {
+      response = ResponseSuccess(responseContent, "not patched", request)
+      responseEntity = ResponseEntity(response, HttpStatus.NO_CONTENT)
+    }
+    logger.info { "response as json: " + Json.encodeToString(response) }
+    return responseEntity
   }
 }
