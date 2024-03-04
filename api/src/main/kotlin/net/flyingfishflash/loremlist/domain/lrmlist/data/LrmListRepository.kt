@@ -5,6 +5,7 @@ import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListTable.created
 import net.flyingfishflash.loremlist.domain.LrmListTable.description
+import net.flyingfishflash.loremlist.domain.LrmListTable.id
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
@@ -35,10 +36,16 @@ class LrmListRepository {
       .map { it.toLrmList() }
       .toList()
 
-  fun findAllListsAndItems(): List<LrmList> =
-    (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
+  fun findAllListsAndItems(): List<LrmList>/*: List<LrmList>*/ {
+    val results = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .selectAll()
-      .toLrmListsWithItems()
+      .toList()
+
+    val listItemsByList: Map<Long, List<ResultRow>> = results.groupBy { it[LrmListTable.id].value }.map { }
+    println(listItemsByList)
+
+    return results.map { it.toLrmList() }.toList()
+  }
 
   fun findByIdOrNull(id: Long): LrmList? =
     repositoryTable.select(repositoryTable.id, repositoryTable.name, repositoryTable.description, repositoryTable.created)
@@ -94,6 +101,9 @@ class LrmListRepository {
   private fun ResultRow.toLrmList(): LrmList = LrmListConverter.toLrmList(this)
 
   private fun ResultRow.toLrmListItem(): LrmItem = LrmItemConverter.toLrmItem(this)
+
+//  private fun ResultRow.toLrmListWithItems(): LrmList =
+//    map {}
 
   private fun Iterable<ResultRow>.toLrmListsWithItems(): List<LrmList> =
     fold(initial = mutableMapOf<Long, LrmList>(), operation = { map, resultRow ->

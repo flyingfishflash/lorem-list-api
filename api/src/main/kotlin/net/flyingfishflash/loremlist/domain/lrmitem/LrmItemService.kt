@@ -14,15 +14,17 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
   fun deleteSingleById(id: Long) {
     val deletedCount = lrmItemRepository.deleteById(id)
     if (deletedCount < 1) {
-      throw ItemDeleteException(cause = ItemNotFoundException())
+      throw ItemDeleteException(id = id, cause = ItemNotFoundException(id = id))
     } else if (deletedCount > 1) {
       // TODO: The exception should capture a message that more than one record was deleted
       // TODO: Ensure the transaction is rolled back if an exception is thrown
-      throw ItemDeleteException()
+      throw ItemDeleteException(id = id)
     }
   }
 
   fun findAll(): List<LrmItem> = lrmItemRepository.findAll()
+
+  fun findAllItemsAndLists(): List<LrmItem> = lrmItemRepository.findAllItemsAndLists()
 
   fun assignItemToList(
     listId: Long,

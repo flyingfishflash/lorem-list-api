@@ -10,15 +10,37 @@ open class LrmList(
   var created: Instant? = null,
   var name: String,
   var description: String? = null,
-  val items: Set<LrmItem>? = null,
 ) {
   fun copyWith(
     id: Long = this.id,
     created: Instant? = this.created,
     name: String = this.name,
     description: String? = this.description,
-    items: Set<LrmItem>? = this.items,
   ): LrmList {
-    return LrmList(id, created, name, description, items)
+    return LrmList(id, created, name, description)
   }
 }
+
+class LrmListWithItems(
+  id: Long,
+  created: Instant? = null,
+  name: String,
+  description: String? = null,
+  val items: Set<LrmItem>? = null // Replace List<String> with the actual type of your items
+) : LrmList(id, created, name, description) {
+  fun copyWith(
+    id: Long = this.id,
+    created: Instant? = this.created,
+    name: String = this.name,
+    description: String? = this.description,
+    items: Set<LrmItem>? = this.items
+  ): LrmListWithItems {
+    return LrmListWithItems(id, created, name, description, items)
+  }
+}
+
+@Serializable
+data class LrmListSuccinct(
+  val id: Long,
+  val name: String,
+)
