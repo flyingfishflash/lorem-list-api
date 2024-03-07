@@ -1,6 +1,5 @@
 package net.flyingfishflash.loremlist.domain.lrmlist.data
 
-import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
 import org.jetbrains.exposed.sql.ResultRow

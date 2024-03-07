@@ -5,7 +5,6 @@ import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListTable.created
 import net.flyingfishflash.loremlist.domain.LrmListTable.description
-import net.flyingfishflash.loremlist.domain.LrmListTable.id
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
@@ -36,15 +35,47 @@ class LrmListRepository {
       .map { it.toLrmList() }
       .toList()
 
-  fun findAllListsAndItems(): List<LrmList>/*: List<LrmList>*/ {
-    val results = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
-      .selectAll()
-      .toList()
+  // TODO Paging Query
+  fun findAllListsAndItems(): List<LrmList> {
+    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
+      .select(
+        repositoryTable.id,
+        repositoryTable.created,
+        repositoryTable.name,
+        repositoryTable.description,
+        LrmListItemTable.id,
+        LrmListItemTable.created,
+        LrmListItemTable.name,
+        LrmListItemTable.description,
+        LrmListItemTable.quantity,
+      ).toList()
 
-    val listItemsByList: Map<Long, List<ResultRow>> = results.groupBy { it[LrmListTable.id].value }.map { }
-    println(listItemsByList)
+    val listItemsByList = resultRows
+      .filter {
+        @Suppress("SENSELESS_COMPARISON")
+        it[LrmListItemTable.id] != null
+      }
+      .groupBy(
+        keySelector = { it[repositoryTable.id].value },
+        valueTransform = {
+          LrmItem(
+            id = it[LrmListItemTable.id].value,
+            created = it[LrmListItemTable.created],
+            name = it[LrmListItemTable.name],
+            description = it[LrmListItemTable.description],
+            quantity = it[LrmListItemTable.quantity],
+          )
+        },
+      )
 
-    return results.map { it.toLrmList() }.toList()
+    val listsAndItems = resultRows
+      .map {
+        LrmList(it[repositoryTable.id].value, it[repositoryTable.created], it[repositoryTable.name], it[repositoryTable.description])
+      }.distinct().map {
+        it.copy(items = listItemsByList[it.id]?.toSet() ?: setOf())
+      }
+
+    return listsAndItems
   }
 
   fun findByIdOrNull(id: Long): LrmList? =
@@ -59,12 +90,49 @@ class LrmListRepository {
         )
       }
 
-  fun findByIdOrNullListAndItems(id: Long): LrmList? =
-    (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
-      .selectAll()
-      .where { LrmListTable.id eq id }
-      .map { it.toLrmList() }
-      .firstOrNull()
+  fun findByIdOrNullListAndItems(id: Long): LrmList? {
+    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
+      .select(
+        repositoryTable.id,
+        repositoryTable.created,
+        repositoryTable.name,
+        repositoryTable.description,
+        LrmListItemTable.id,
+        LrmListItemTable.created,
+        LrmListItemTable.name,
+        LrmListItemTable.description,
+        LrmListItemTable.quantity,
+      ).where { LrmListTable.id eq id }.toList()
+
+    val listItems = resultRows
+      .asSequence()
+      .filter {
+        @Suppress("SENSELESS_COMPARISON")
+        it[LrmListItemTable.id] != null
+      }
+      .map {
+        LrmItem(
+          id = it[LrmListItemTable.id].value,
+          created = it[LrmListItemTable.created],
+          name = it[LrmListItemTable.name],
+          description = it[LrmListItemTable.description],
+          quantity = it[LrmListItemTable.quantity],
+        )
+      }.toSet()
+
+    val listWithItems = resultRows.map {
+      LrmList(
+        it[repositoryTable.id].value,
+        it[repositoryTable.created],
+        it[repositoryTable.name],
+        it[repositoryTable.description],
+      )
+    }.distinct().map {
+      it.copy(items = listItems)
+    }.firstOrNull()
+
+    return listWithItems
+  }
 
   fun insert(lrmListRequest: LrmListRequest): LrmList {
     val id =
