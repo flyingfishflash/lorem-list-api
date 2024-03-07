@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 
 @Serializable
-open class LrmItem(
+data class LrmItem(
   var id: Long,
   var created: Instant? = null,
   var name: String,
