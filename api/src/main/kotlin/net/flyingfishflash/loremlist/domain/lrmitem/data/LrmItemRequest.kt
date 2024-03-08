@@ -18,6 +18,6 @@ data class LrmItemRequest(
   )
   @field:Size(max = 2048)
   val description: String? = null,
-  @Min(0)
+  @field:Min(0)
   val quantity: Long = 0,
 )
