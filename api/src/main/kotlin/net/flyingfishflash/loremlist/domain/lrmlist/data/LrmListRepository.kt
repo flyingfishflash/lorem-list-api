@@ -8,12 +8,10 @@ import net.flyingfishflash.loremlist.domain.LrmListTable.description
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemConverter
 import net.flyingfishflash.loremlist.domain.lrmlist.ListInsertException
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.ListUpdateException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
-import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -31,8 +29,20 @@ class LrmListRepository {
   fun deleteById(id: Long): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
 
   fun findAll(): List<LrmList> =
-    repositoryTable.select(repositoryTable.id, repositoryTable.name, repositoryTable.description, repositoryTable.created)
-      .map { it.toLrmList() }
+    repositoryTable.select(
+      repositoryTable.id,
+      repositoryTable.name,
+      repositoryTable.description,
+      repositoryTable.created,
+    )
+      .map {
+        LrmList(
+          it[repositoryTable.id].value,
+          it[repositoryTable.created],
+          it[repositoryTable.name],
+          it[repositoryTable.description],
+        )
+      }
       .toList()
 
   // TODO Paging Query
@@ -147,7 +157,14 @@ class LrmListRepository {
     val lrmList =
       repositoryTable.selectAll()
         .where { repositoryTable.id eq id }
-        .map { it.toLrmList() }
+        .map {
+          LrmList(
+            it[repositoryTable.id].value,
+            it[repositoryTable.created],
+            it[repositoryTable.name],
+            it[repositoryTable.description],
+          )
+        }
         .singleOrNull() ?: throw ListInsertException(cause = ListNotFoundException(id.value))
     return lrmList
   }
@@ -166,22 +183,15 @@ class LrmListRepository {
     }
   }
 
-  private fun ResultRow.toLrmList(): LrmList = LrmListConverter.toLrmList(this)
-
-  private fun ResultRow.toLrmListItem(): LrmItem = LrmItemConverter.toLrmItem(this)
-
-//  private fun ResultRow.toLrmListWithItems(): LrmList =
-//    map {}
-
-  private fun Iterable<ResultRow>.toLrmListsWithItems(): List<LrmList> =
-    fold(initial = mutableMapOf<Long, LrmList>(), operation = { map, resultRow ->
-      val list = resultRow.toLrmList()
-      val itemId = resultRow.getOrNull(LrmListItemTable.id)
-      val item = itemId?.let { resultRow.toLrmListItem() }
-      val current = map.getOrDefault(list.id, list)
-      // if items is null return an empty set otherwise add create a list of non-null items
-      // so a serialized list explicitly returns [] when a list has no items otherwise the items key will not be rendered
-      map[list.id] = current.copyWith(items = if (current.items != null) current.items.plus(listOfNotNull(item)) else setOf())
-      map
-    }).values.toList()
+//  private fun Iterable<ResultRow>.toLrmListsWithItems(): List<LrmList> =
+//    fold(initial = mutableMapOf<Long, LrmList>(), operation = { map, resultRow ->
+//      val list = resultRow.toLrmList()
+//      val itemId = resultRow.getOrNull(LrmListItemTable.id)
+//      val item = itemId?.let { resultRow.toLrmListItem() }
+//      val current = map.getOrDefault(list.id, list)
+//      // if items is null return an empty set otherwise add create a list of non-null items
+//      // so a serialized list explicitly returns [] when a list has no items otherwise the items key will not be rendered
+//      map[list.id] = current.copyWith(items = if (current.items != null) current.items.plus(listOfNotNull(item)) else setOf())
+//      map
+//    }).values.toList()
 }
