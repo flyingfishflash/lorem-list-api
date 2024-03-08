@@ -12,15 +12,15 @@ data class LrmList(
   var description: String? = null,
   val items: Set<LrmItem>? = null,
 ) {
-  fun copyWith(
-    id: Long = this.id,
-    created: Instant? = this.created,
-    name: String = this.name,
-    description: String? = this.description,
-    items: Set<LrmItem>? = null,
-  ): LrmList {
-    return LrmList(id, created, name, description, items)
-  }
+//  fun copyWith(
+//    id: Long = this.id,
+//    created: Instant? = this.created,
+//    name: String = this.name,
+//    description: String? = this.description,
+//    items: Set<LrmItem>? = null,
+//  ): LrmList {
+//    return LrmList(id, created, name, description, items)
+//  }
 }
 
 // class LrmListWithItems(
