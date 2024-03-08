@@ -10,7 +10,7 @@ data class LrmItem(
   var created: Instant? = null,
   var name: String,
   var description: String? = null,
-  var quantity: Long? = null,
+  var quantity: Long = 0,
   val lists: Set<LrmListSuccinct>? = null,
 ) {
   fun copyWith(
@@ -18,7 +18,7 @@ data class LrmItem(
     created: Instant? = this.created,
     name: String = this.name,
     description: String? = this.description,
-    quantity: Long? = this.quantity,
+    quantity: Long = this.quantity,
     lists: Set<LrmListSuccinct>? = this.lists,
   ): LrmItem {
     return LrmItem(id, created, name, description, quantity, lists)
