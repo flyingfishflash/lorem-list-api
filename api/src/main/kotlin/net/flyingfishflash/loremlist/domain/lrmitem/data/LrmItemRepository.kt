@@ -35,8 +35,8 @@ class LrmItemRepository {
       .map { it.toLrmItem() }
       .toList()
 
-  fun findAllItemsAndLists(): List<LrmItem> =
-    (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
+  fun findAllItemsAndLists(): List<LrmItem> {
+    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
       .select(
         repositoryTable.id,
         repositoryTable.name,
@@ -45,8 +45,32 @@ class LrmItemRepository {
         repositoryTable.quantity,
         LrmListTable.id,
         LrmListTable.name,
+      ).toList()
+
+    val listsByItems = resultRows
+      .filter {
+        @Suppress("SENSELESS_COMPARISON")
+        it[LrmListTable.id] != null
+      }
+      .groupBy(
+        keySelector = { it[repositoryTable.id].value },
+        valueTransform = {
+          LrmListSuccinct(
+            id = it[LrmListTable.id].value,
+            name = it[LrmListTable.name],
+          )
+        },
       )
-      .toLrmItemsWithLists()
+
+    val listsAndItems = resultRows
+      .map {
+        it.toLrmItem()
+      }.distinct().map {
+        it.copy(lists = listsByItems[it.id]?.toSet() ?: setOf())
+      }
+
+    return listsAndItems
+  }
 
   fun findByIdOrNull(id: Long): LrmItem? =
     repositoryTable.selectAll()
@@ -85,22 +109,22 @@ class LrmItemRepository {
 
   private fun ResultRow.toLrmItem(): LrmItem = LrmItemConverter.toLrmItem(this)
 
-  private fun Iterable<ResultRow>.toLrmItemsWithLists(): List<LrmItem> =
-    fold(initial = mutableMapOf<Long, LrmItem>(), operation = { map, resultRow ->
-      val item = resultRow.toLrmItem()
-      val listId = resultRow.getOrNull(LrmListTable.id)
-      val listSuccinct = listId?.let { LrmListSuccinct(id = it.value, name = resultRow[LrmListTable.name]) }
-      val current = map.getOrDefault(item.id, item)
-      // if lists is null return an empty set otherwise add create a list of non-null items
-      // so a serialized list explicitly returns [] when a list has no items otherwise the items key will not be rendered
-      map[item.id] = current.copyWith(
-        lists =
-        if (current.lists != null) {
-          current.lists.plus(listOfNotNull(listSuccinct))
-        } else {
-          setOf()
-        },
-      )
-      map
-    }).values.toList()
+//  private fun Iterable<ResultRow>.toLrmItemsWithLists(): List<LrmItem> =
+//    fold(initial = mutableMapOf<Long, LrmItem>(), operation = { map, resultRow ->
+//      val item = resultRow.toLrmItem()
+//      val listId = resultRow.getOrNull(LrmListTable.id)
+//      val listSuccinct = listId?.let { LrmListSuccinct(id = it.value, name = resultRow[LrmListTable.name]) }
+//      val current = map.getOrDefault(item.id, item)
+//      // if lists is null return an empty set otherwise add create a list of non-null items
+//      // so a serialized list explicitly returns [] when a list has no items otherwise the items key will not be rendered
+//      map[item.id] = current.copy(
+//        lists =
+//        if (current.lists != null) {
+//          current.lists.plus(listOfNotNull(listSuccinct))
+//        } else {
+//          setOf()
+//        },
+//      )
+//      map
+//    }).values.toList()
 }
