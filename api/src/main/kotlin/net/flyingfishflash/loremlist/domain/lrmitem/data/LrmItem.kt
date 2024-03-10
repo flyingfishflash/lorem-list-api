@@ -15,15 +15,4 @@ data class LrmItem(
   var description: String? = null,
   @EncodeDefault var quantity: Long = 0,
   val lists: Set<LrmListSuccinct>? = null,
-) {
-  fun copyWith(
-    id: Long = this.id,
-    created: Instant? = this.created,
-    name: String = this.name,
-    description: String? = this.description,
-    quantity: Long = this.quantity,
-    lists: Set<LrmListSuccinct>? = this.lists,
-  ): LrmItem {
-    return LrmItem(id, created, name, description, quantity, lists)
-  }
-}
+)
