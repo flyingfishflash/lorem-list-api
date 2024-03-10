@@ -62,14 +62,14 @@ class LrmItemRepository {
         },
       )
 
-    val listsAndItems = resultRows
+    val itemsAndLists = resultRows
       .map {
         it.toLrmItem()
       }.distinct().map {
         it.copy(lists = listsByItems[it.id]?.toSet() ?: setOf())
       }
 
-    return listsAndItems
+    return itemsAndLists
   }
 
   fun findByIdOrNull(id: Long): LrmItem? =
@@ -107,7 +107,15 @@ class LrmItemRepository {
     }
   }
 
-  private fun ResultRow.toLrmItem(): LrmItem = LrmItemConverter.toLrmItem(this)
+  fun ResultRow.toLrmItem(): LrmItem {
+    return LrmItem(
+      id = this[LrmListItemTable.id].value,
+      created = this[LrmListItemTable.created],
+      name = this[LrmListItemTable.name],
+      description = this[LrmListItemTable.description],
+      quantity = this[LrmListItemTable.quantity],
+    )
+  }
 
 //  private fun Iterable<ResultRow>.toLrmItemsWithLists(): List<LrmItem> =
 //    fold(initial = mutableMapOf<Long, LrmItem>(), operation = { map, resultRow ->
