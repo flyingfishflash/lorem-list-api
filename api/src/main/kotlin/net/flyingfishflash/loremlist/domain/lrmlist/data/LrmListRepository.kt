@@ -12,6 +12,7 @@ import net.flyingfishflash.loremlist.domain.lrmlist.ListInsertException
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.ListUpdateException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
@@ -35,14 +36,7 @@ class LrmListRepository {
       repositoryTable.description,
       repositoryTable.created,
     )
-      .map {
-        LrmList(
-          it[repositoryTable.id].value,
-          it[repositoryTable.created],
-          it[repositoryTable.name],
-          it[repositoryTable.description],
-        )
-      }
+      .map { it.toLrmlist() }
       .toList()
 
   // TODO Paging Query
@@ -79,11 +73,9 @@ class LrmListRepository {
       )
 
     val listsAndItems = resultRows
-      .map {
-        LrmList(it[repositoryTable.id].value, it[repositoryTable.created], it[repositoryTable.name], it[repositoryTable.description])
-      }.distinct().map {
-        it.copy(items = listItemsByList[it.id]?.toSet() ?: setOf())
-      }
+      .map { it.toLrmlist() }
+      .distinct()
+      .map { it.copy(items = listItemsByList[it.id]?.toSet() ?: setOf()) }
 
     return listsAndItems
   }
@@ -130,17 +122,11 @@ class LrmListRepository {
         )
       }.toSet()
 
-    val listWithItems = resultRows.map {
-      LrmList(
-        it[repositoryTable.id].value,
-        it[repositoryTable.created],
-        it[repositoryTable.name],
-        it[repositoryTable.description],
-      )
-    }.distinct().map {
-      it.copy(items = listItems)
-    }.firstOrNull()
-
+    val listWithItems = resultRows
+      .map { it.toLrmlist() }
+      .distinct()
+      .map { it.copy(items = listItems) }
+      .firstOrNull()
     return listWithItems
   }
 
@@ -157,14 +143,7 @@ class LrmListRepository {
     val lrmList =
       repositoryTable.selectAll()
         .where { repositoryTable.id eq id }
-        .map {
-          LrmList(
-            it[repositoryTable.id].value,
-            it[repositoryTable.created],
-            it[repositoryTable.name],
-            it[repositoryTable.description],
-          )
-        }
+        .map { it.toLrmlist() }
         .singleOrNull() ?: throw ListInsertException(cause = ListNotFoundException(id.value))
     return lrmList
   }
@@ -181,6 +160,15 @@ class LrmListRepository {
     } else {
       throw ListUpdateException(id = lrmList.id)
     }
+  }
+
+  private fun ResultRow.toLrmlist(): LrmList {
+    return LrmList(
+      id = this[repositoryTable.id].value,
+      created = this[repositoryTable.created],
+      name = this[repositoryTable.name],
+      description = this[repositoryTable.description],
+    )
   }
 
 //  private fun Iterable<ResultRow>.toLrmListsWithItems(): List<LrmList> =
