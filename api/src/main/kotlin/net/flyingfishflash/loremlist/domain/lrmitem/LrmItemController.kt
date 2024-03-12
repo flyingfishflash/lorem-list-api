@@ -106,7 +106,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
   ): ResponseEntity<ResponseSuccess<List<LrmItem>>> {
     val responseStatus = HttpStatus.OK
     val responseMessage = "retrieved all items"
-    val responseContent = if (withLists) lrmItemService.findAllItemsAndLists() else lrmItemService.findAll()
+    val responseContent = if (withLists) lrmItemService.findAllAndLists() else lrmItemService.findAll()
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { "response as json: " + Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
@@ -119,7 +119,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     @Min(1) @RequestBody listId: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    lrmItemService.assignItemToList(listId, id)
+    lrmItemService.assignToList(itemId = id, listId = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "assigned list item to list"
     val responseContent = ApiMessage("assigned list item to list")

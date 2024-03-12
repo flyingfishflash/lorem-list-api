@@ -35,7 +35,7 @@ class LrmItemRepository {
       .map { it.toLrmItem() }
       .toList()
 
-  fun findAllItemsAndLists(): List<LrmItem> {
+  fun findAllAndLists(): List<LrmItem> {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
       .select(
         repositoryTable.id,

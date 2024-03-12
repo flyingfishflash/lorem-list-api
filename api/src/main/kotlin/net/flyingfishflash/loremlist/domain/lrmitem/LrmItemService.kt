@@ -9,6 +9,10 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional
 class LrmItemService(val lrmItemRepository: LrmItemRepository) {
+  fun assignToList(itemId: Long, listId: Long) = lrmItemRepository.addItemToList(listId, itemId)
+
+  fun copyToList(itemId: Long, listId: Long) = assignToList(itemId = itemId, listId = listId)
+
   fun create(lrmItemRequest: LrmItemRequest): LrmItem = lrmItemRepository.insert(lrmItemRequest)
 
   fun deleteSingleById(id: Long) {
@@ -24,10 +28,12 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
 
   fun findAll(): List<LrmItem> = lrmItemRepository.findAll()
 
-  fun findAllItemsAndLists(): List<LrmItem> = lrmItemRepository.findAllItemsAndLists()
+  fun findAllAndLists(): List<LrmItem> = lrmItemRepository.findAllAndLists()
 
-  fun assignItemToList(
-    listId: Long,
-    itemId: Long,
-  ) = lrmItemRepository.addItemToList(listId, itemId)
+  fun moveToList(itemId: Long, sourceListId: Long, destListId: Long) {
+    copyToList(itemId = itemId, listId = destListId)
+    removeFromList(itemId = itemId, listId = sourceListId)
+  }
+
+  fun removeFromList(itemId: Long, listId: Long): Nothing = TODO()
 }

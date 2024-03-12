@@ -30,7 +30,7 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("delete()") {
+  describe("deleteSingleById()") {
     it("item repository returns 0 deleted records") {
       every { lrmItemRepository.deleteById(id) } returns 0
       assertThrows<ItemDeleteException> {
@@ -58,6 +58,14 @@ class LrmItemServiceTests : DescribeSpec({
       every { lrmItemRepository.findAll() } returns listOf(lrmItemMockResponse)
       lrmItemService.findAll()
       verify(exactly = 1) { lrmItemRepository.findAll() }
+    }
+  }
+
+  describe("findAllAndLists()") {
+    it("items are returned") {
+      every { lrmItemRepository.findAllAndLists() } returns listOf(lrmItemMockResponse)
+      lrmItemService.findAllAndLists()
+      verify(exactly = 1) { lrmItemRepository.findAllAndLists() }
     }
   }
 
