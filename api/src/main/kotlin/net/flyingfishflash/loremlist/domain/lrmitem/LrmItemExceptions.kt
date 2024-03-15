@@ -39,10 +39,22 @@ class ItemUpdateException(id: Long, cause: Throwable? = null) : AbstractApiExcep
 class ItemDeleteException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.BAD_REQUEST,
   title = TITLE,
+  // TODO: Fix this detail
   detail = "Problem deleting list id $id",
   cause = cause,
 ) {
   companion object {
     const val TITLE = "Item Delete Exception"
+  }
+}
+
+class ItemAddToListException(id: Long, cause: Throwable? = null) : AbstractApiException(
+  httpStatus = HttpStatus.BAD_REQUEST,
+  title = TITLE,
+  detail = "Problem adding item id $id to a list",
+  cause = cause,
+) {
+  companion object {
+    const val TITLE = "Item Add to List Exception"
   }
 }

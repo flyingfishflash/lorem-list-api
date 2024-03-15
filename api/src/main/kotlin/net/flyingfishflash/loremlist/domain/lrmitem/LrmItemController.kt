@@ -16,6 +16,7 @@ import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemMoveToListRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -42,6 +43,21 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/items")
 class LrmItemController(val lrmItemService: LrmItemService) {
   private val logger = KotlinLogging.logger {}
+
+  @PostMapping("/{id}/add-to-list")
+  @Operation(summary = "Assign Item to List")
+  fun addToList(
+    @PathVariable("id") @Min(1) id: Long,
+    @Min(1) @RequestBody listId: Long,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
+    lrmItemService.addToList(itemId = id, listId = listId)
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "assigned list item to list"
+    val responseContent = ApiMessage("assigned list item to list")
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
+  }
 
   @Operation(summary = "Create a new item")
   @ApiResponses(
@@ -112,17 +128,37 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     return ResponseEntity(response, responseStatus)
   }
 
-  @PostMapping("/{id}/to-list")
-  @Operation(summary = "Assign Item to List")
-  fun toList(
+  @PostMapping("/{id}/move-to-list")
+  @Operation(summary = "Move Item to List")
+  fun moveToList(
+    @PathVariable("id") @Min(1) id: Long,
+    @RequestBody moveToListRequest: LrmItemMoveToListRequest,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
+    lrmItemService.moveToList(
+      itemId = id,
+      fromListId = moveToListRequest.fromListId,
+      toListId = moveToListRequest.toListId,
+    )
+    val responseMessage = "moved item id $id from list id ${moveToListRequest.fromListId}" +
+      " to list id ${moveToListRequest.toListId}"
+    val responseStatus = HttpStatus.OK
+    val responseContent = ApiMessage(responseMessage)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @PostMapping("/{id}/remove-from-list")
+  @Operation(summary = "Remove Item from List")
+  fun removeFromList(
     @PathVariable("id") @Min(1) id: Long,
     @Min(1) @RequestBody listId: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    lrmItemService.assignToList(itemId = id, listId = listId)
+    lrmItemService.removeFromList(itemId = id, listId = listId)
     val responseStatus = HttpStatus.OK
-    val responseMessage = "assigned list item to list"
-    val responseContent = ApiMessage("assigned list item to list")
+    val responseMessage = "removed list item from list"
+    val responseContent = ApiMessage("removed list item from list")
     val response = ResponseSuccess(responseContent, responseMessage, request)
     return ResponseEntity(response, responseStatus)
   }
