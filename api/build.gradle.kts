@@ -28,7 +28,7 @@ val kotestExtensionsSpringVersion = "1.1.3"
 val kotlinLoggingVersion = "6.0.3"
 val kotlinxDateTimeVersion = "0.5.0"
 val kotlinxSerializationJson = "1.6.3"
-val springDocOpenApiStarterWebmvcUiVersion = "2.3.0"
+val springDocOpenApiStarterWebmvcUiVersion = "2.4.0"
 val springmockkVersion = "4.0.2"
 
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
