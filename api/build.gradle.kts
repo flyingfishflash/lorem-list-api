@@ -29,6 +29,7 @@ val kotestExtensionsSpringVersion = "1.1.3"
 val kotlinLoggingVersion = "6.0.3"
 val kotlinxDateTimeVersion = "0.5.0"
 val kotlinxSerializationJson = "1.6.3"
+val postgresqlVersion = "42.7.3"
 val springDocOpenApiStarterWebmvcUiVersion = "2.4.0"
 val springmockkVersion = "4.0.2"
 
@@ -58,7 +59,7 @@ dependencies {
     exclude(group = "org.springframework.boot", module = "spring-boot-starter-json")
   }
   runtimeOnly("com.h2database:h2")
-  runtimeOnly("org.postgresql:postgresql")
+  runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
   testImplementation("com.ninja-squad:springmockk:$springmockkVersion")
   testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
