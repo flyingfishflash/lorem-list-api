@@ -23,7 +23,7 @@ val ciPlatform: String by rootProject.extra
 val ciPipelineId: String by rootProject.extra
 
 val exposedVersion = "0.48.0"
-val kotestVersion = "5.8.0"
+val kotestVersion = "5.8.1"
 val kotestExtensionsSpringVersion = "1.1.3"
 val kotlinLoggingVersion = "6.0.3"
 val kotlinxDateTimeVersion = "0.5.0"
