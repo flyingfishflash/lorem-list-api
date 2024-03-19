@@ -6,8 +6,9 @@ import org.springframework.http.HttpStatus
 class ListNotFoundException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.NOT_FOUND,
   title = TITLE,
-  detail = "List not found for id $id",
+  message = "List not found for id $id",
   cause = cause,
+  responseMessage = "List not found for id $id",
 ) {
   companion object {
     const val TITLE = "List Not Found"
@@ -17,8 +18,9 @@ class ListNotFoundException(id: Long, cause: Throwable? = null) : AbstractApiExc
 class ListInsertException(cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.BAD_REQUEST,
   title = TITLE,
-  detail = "Problem inserting a new list",
+  message = "Problem inserting a new list",
   cause = cause,
+  responseMessage = "Problem inserting a new list",
 ) {
   companion object {
     const val TITLE = "List Insert Exception"
@@ -28,8 +30,9 @@ class ListInsertException(cause: Throwable? = null) : AbstractApiException(
 class ListUpdateException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.BAD_REQUEST,
   title = TITLE,
-  detail = "Problem updating list id $id",
+  message = "Problem updating list id $id",
   cause = cause,
+  responseMessage = "Problem updating list id $id",
 ) {
   companion object {
     const val TITLE = "List Update Exception"
@@ -39,8 +42,9 @@ class ListUpdateException(id: Long, cause: Throwable? = null) : AbstractApiExcep
 class ListDeleteException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.BAD_REQUEST,
   title = TITLE,
-  detail = "Problem deleting list id $id",
+  message = "Problem deleting list id $id",
   cause = cause,
+  responseMessage = "Problem deleting list id $id",
 ) {
   companion object {
     const val TITLE = "List Delete Exception"

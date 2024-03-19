@@ -24,8 +24,9 @@ class ApiExceptionHandler {
       type = exception.type.toString(),
       title = exception.title,
       status = exception.httpStatus.value(),
-      detail = exception.detail,
+      detail = exception.message,
     )
+    val z = exception.responseMessage
     // TODO initialize ApiProblemDetail extension properties either here or in in ApiProblemDetail constructor
     val applicationResponse = ResponseProblem(apiProblemDetail, request)
     log.info { Json.encodeToString(applicationResponse) }
