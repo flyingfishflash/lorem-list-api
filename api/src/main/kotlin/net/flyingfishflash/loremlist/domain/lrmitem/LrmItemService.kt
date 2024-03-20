@@ -25,14 +25,32 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
       when (val original = (ex as? ExposedSQLException)?.cause) {
         is SQLIntegrityConstraintViolationException -> {
           logger.error { original.toString() }
-          if (lrmItemRepository.findByIdOrNull(itemId) == null) {
-            val message = "source item id $itemId not found"
-            throw ItemAddToListException(itemId, ItemNotFoundException(itemId))
-          } else if (lrmListRepository.findByIdOrNull(listId) == null) {
-            val message = "destination list id $listId not found"
-            throw ItemAddToListException(itemId, ListNotFoundException(listId))
-          } else {
-            throw ApiException(HttpStatus.BAD_REQUEST, null, "item $itemId is already assigned to list $listId", ex)
+          when {
+            lrmItemRepository.findByIdOrNull(itemId) == null -> throw ItemAddToListException(
+              itemId,
+              listId,
+              ItemNotFoundException(itemId),
+              null,
+              "Item id $itemId could not be added to list id $listId because the item couldn't be found",
+            )
+            lrmListRepository.findByIdOrNull(listId) == null -> throw ItemAddToListException(
+              itemId,
+              listId,
+              ListNotFoundException(listId),
+              null,
+              "Item id $itemId could not be added to list id $listId because the list couldn't be found",
+            )
+            original.message?.contains("Unique index or primary key violation") == true ->
+              throw ItemAddToListException(
+                itemId,
+                listId,
+                original,
+                original.message,
+                "Item id $itemId could not be added to list id $listId because it's already been added.",
+              )
+            else -> {
+              throw ItemAddToListException(itemId, listId, original, original.message, "Unanticipated sql integrity constraint violation")
+            }
           }
         }
         else -> throw ApiException(HttpStatus.INTERNAL_SERVER_ERROR, null, ex.message.toString(), ex)
@@ -45,11 +63,17 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
   fun deleteSingleById(id: Long) {
     val deletedCount = lrmItemRepository.deleteById(id)
     if (deletedCount < 1) {
-      throw ItemDeleteException(id = id, cause = ItemNotFoundException(id = id))
+      throw ItemDeleteException(
+        id = id,
+        cause = ItemNotFoundException(id = id),
+        responseMessage = "Item id $id was not deleted because it could be found to delete.",
+      )
     } else if (deletedCount > 1) {
-      // TODO: The exception should capture a message that more than one record was deleted
       // TODO: Ensure the transaction is rolled back if an exception is thrown
-      throw ItemDeleteException(id = id)
+      throw ItemDeleteException(
+        id = id,
+        responseMessage = "More than one item with id $id were found. No items have been deleted.",
+      )
     }
   }
 
@@ -65,11 +89,40 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
   fun removeFromList(itemId: Long, listId: Long) {
     val deletedCount = lrmItemRepository.removeItemFromList(itemId, listId)
     if (deletedCount < 1) {
-      throw ItemDeleteException(id = itemId, cause = ItemNotFoundException(id = itemId))
+      if (lrmItemRepository.findByIdOrNull(itemId) == null) {
+        throw ItemRemoveFromListException(
+          itemId,
+          listId,
+          ItemNotFoundException(itemId),
+          responseMessage = "Item id $itemId could not be removed from list id $listId " +
+            "because item id $itemId could not be found",
+        )
+      } else if (lrmListRepository.findByIdOrNull(listId) == null) {
+        throw ItemRemoveFromListException(
+          itemId,
+          listId,
+          ListNotFoundException(listId),
+          responseMessage = "Item id $itemId could not be removed from list id $listId " +
+            "because list id $listId could not be found",
+        )
+      } else {
+        throw ItemRemoveFromListException(
+          itemId,
+          listId,
+          null,
+          "Item id $itemId exists and list id $listId exists but 0 records were deleted.",
+          "Item id $itemId is not associated with list id $listId",
+        )
+      }
     } else if (deletedCount > 1) {
-      // TODO: The exception should capture a message that more than one record was deleted
       // TODO: Ensure the transaction is rolled back if an exception is thrown
-      throw ItemDeleteException(id = itemId)
+      throw ItemRemoveFromListException(
+        itemId,
+        listId,
+        null,
+        "Delete transaction rolled back because the count of deleted records was > 1.",
+        "Item id $itemId is associated with list id $listId multiple times.",
+      )
     }
   }
 }

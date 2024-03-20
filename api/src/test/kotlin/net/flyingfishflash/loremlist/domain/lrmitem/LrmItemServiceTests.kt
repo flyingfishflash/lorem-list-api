@@ -1,14 +1,18 @@
 package net.flyingfishflash.loremlist.domain.lrmitem
 
+import io.kotest.assertions.any
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.clearMocks
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.unmockkAll
 import io.mockk.verify
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
@@ -22,18 +26,23 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.Statement
 import org.jetbrains.exposed.sql.statements.StatementContext
 import org.jetbrains.exposed.sql.statements.StatementType
-import org.junit.jupiter.api.assertThrows
+import org.springframework.http.HttpStatus
 import java.sql.SQLException
 import java.sql.SQLIntegrityConstraintViolationException
 
 class LrmItemServiceTests : DescribeSpec({
-  val lrmItemRepository = mockk<LrmItemRepository>()
-  val lrmListRepository = mockk<LrmListRepository>()
-  val lrmItemService = LrmItemService(lrmItemRepository, lrmListRepository)
+  val mockLrmItemRepository = mockk<LrmItemRepository>()
+  val mockLrmListRepository = mockk<LrmListRepository>()
   val mockTransaction = mockk<Transaction>()
   val mockStatementContext = mockk<StatementContext>()
   val mockContexts = listOf(mockStatementContext)
+  val lrmItemService = LrmItemService(mockLrmItemRepository, mockLrmListRepository)
   val mockSQLIntegrityConstraintViolationException = mockk<SQLIntegrityConstraintViolationException>()
+  val exposedSQLExceptionConstraintViolation = ExposedSQLException(
+    cause = mockSQLIntegrityConstraintViolationException,
+    transaction = mockTransaction,
+    contexts = mockContexts,
+  )
 
   val lrmItemName = "Lorem Item Name"
   val lrmItemDescription = "Lorem Item Description"
@@ -45,123 +54,166 @@ class LrmItemServiceTests : DescribeSpec({
   val lrmListMockResponse = LrmList(id = 0, name = lrmListName, description = lrmListDescription)
 
   describe("addToList()") {
-    it("item added to list") {
-      every { lrmItemRepository.addItemToList(1L, 1L) } just runs
+    it("added to list") {
+      every { mockLrmItemRepository.addItemToList(1L, 1L) } just runs
       lrmItemService.addToList(itemId = 1, listId = 1)
-      verify(exactly = 1) { lrmItemRepository.addItemToList(1L, 1L) }
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1L, 1L) }
     }
 
     it("item not found") {
-      val exposedSQLException = ExposedSQLException(
-        cause = mockSQLIntegrityConstraintViolationException,
-        transaction = mockTransaction,
-        contexts = mockContexts,
-      )
-      every { lrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLException
-      every { lrmItemRepository.findByIdOrNull(1L) } returns null
-      assertThrows<ItemAddToListException> {
-        lrmItemService.addToList(itemId = 1, listId = 1)
-      }.cause.shouldBeInstanceOf<ItemNotFoundException>()
-      verify(exactly = 1) { lrmItemRepository.addItemToList(1L, 1L) }
+      every { mockLrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLExceptionConstraintViolation
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns null
+      shouldThrow<ItemAddToListException> { lrmItemService.addToList(itemId = 1, listId = 1) }
+        .cause.shouldBeInstanceOf<ItemNotFoundException>()
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1L, 1L) }
     }
 
     it("list not found") {
-      val exposedSQLException = ExposedSQLException(
-        cause = mockSQLIntegrityConstraintViolationException,
-        transaction = mockTransaction,
-        contexts = mockContexts,
-      )
-      every { lrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLException
-      every { lrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
-      every { lrmListRepository.findByIdOrNull(1L) } returns null
-      assertThrows<ItemAddToListException> {
-        lrmItemService.addToList(itemId = 1, listId = 1)
-      }.cause.shouldBeInstanceOf<ListNotFoundException>()
-      verify(exactly = 1) { lrmItemRepository.addItemToList(1L, 1L) }
+      every { mockLrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLExceptionConstraintViolation
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
+      every { mockLrmListRepository.findByIdOrNull(1L) } returns null
+      shouldThrow<ItemAddToListException> { lrmItemService.addToList(itemId = 1, listId = 1) }
+        .cause.shouldBeInstanceOf<ListNotFoundException>()
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1L, 1L) }
     }
 
-    it("item already added to list") {
-      val exposedSQLException = ExposedSQLException(
-        cause = mockSQLIntegrityConstraintViolationException,
-        transaction = mockTransaction,
-        contexts = mockContexts,
-      )
-      every { lrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLException
-      every { lrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
-      every { lrmListRepository.findByIdOrNull(1L) } returns lrmListMockResponse
+    it("already added to list") {
+      every { mockLrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLExceptionConstraintViolation
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
+      every { mockLrmListRepository.findByIdOrNull(1L) } returns lrmListMockResponse
       every { mockContexts[0].statement } returns mockk<Statement<String>>()
       every { mockContexts[0].statement.type } returns mockk<StatementType>()
-      assertThrows<ApiException> {
-        lrmItemService.addToList(itemId = 1, listId = 1)
-      }.cause.shouldBeInstanceOf<ExposedSQLException>()
-      verify(exactly = 1) { lrmItemRepository.addItemToList(1L, 1L) }
+      every { mockSQLIntegrityConstraintViolationException.message } returns "Unique index or primary key violation"
+      shouldThrow<ItemAddToListException> { lrmItemService.addToList(itemId = 1, listId = 1) }
+        .responseMessage.shouldBe("Item id 1 could not be added to list id 1 because it's already been added.")
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1L, 1L) }
     }
 
-    it("other exposed sql exception caught") {
-      val exposedSQLException = ExposedSQLException(
+    it("unanticipated sql integrity constraint violation") {
+      every { mockLrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLExceptionConstraintViolation
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
+      every { mockLrmListRepository.findByIdOrNull(1L) } returns lrmListMockResponse
+      every { mockSQLIntegrityConstraintViolationException.message } returns "unanticipated sql integrity constraint violation"
+      shouldThrow<ItemAddToListException> { lrmItemService.addToList(itemId = 1, listId = 1) }
+        .cause.shouldBeInstanceOf<SQLIntegrityConstraintViolationException>()
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1L, 1L) }
+    }
+
+    it("unanticipated exposed sql exception") {
+      val exposedSQLExceptionGeneric = ExposedSQLException(
         cause = SQLException("Cause of ExposedSQLException"),
         transaction = mockTransaction,
         contexts = mockContexts,
       )
-      every { lrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLException
+      every { mockLrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLExceptionGeneric
       every { mockContexts[0].statement } returns mockk<Statement<String>>()
       every { mockContexts[0].statement.type } returns mockk<StatementType>()
-      assertThrows<ApiException> {
-        lrmItemService.addToList(itemId = 1, listId = 1)
-      }.cause.shouldBeInstanceOf<SQLException>()
-        .cause?.message.shouldContain("Cause of ExposedSQLException")
-      verify(exactly = 1) { lrmItemRepository.addItemToList(1L, 1L) }
+      val exception = shouldThrow<ApiException> { lrmItemService.addToList(itemId = 1, listId = 1) }
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<SQLException>()
+      exception.cause?.message.shouldContain("Cause of ExposedSQLException")
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1L, 1L) }
     }
   }
 
   describe("create()") {
     it("repository returns inserted item") {
-      every { lrmItemRepository.insert(ofType(LrmItemRequest::class)) } returns lrmItemMockResponse
+      every { mockLrmItemRepository.insert(ofType(LrmItemRequest::class)) } returns lrmItemMockResponse
       lrmItemService.create(lrmItemRequest)
-      verify(exactly = 1) { lrmItemRepository.insert(lrmItemRequest) }
+      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest) }
     }
   }
 
   describe("deleteSingleById()") {
-    it("item repository returns 0 deleted records") {
-      every { lrmItemRepository.deleteById(id) } returns 0
-      assertThrows<ItemDeleteException> {
-        lrmItemService.deleteSingleById(id)
-      }.cause.shouldBeInstanceOf<ItemNotFoundException>()
+    it("repository returns 0 deleted records") {
+      every { mockLrmItemRepository.deleteById(id) } returns 0
+      shouldThrow<ItemDeleteException> { lrmItemService.deleteSingleById(id) }
+        .cause.shouldBeInstanceOf<ItemNotFoundException>()
     }
 
-    it("item repository returns > 1 deleted records") {
-      every { lrmItemRepository.deleteById(id) } returns 2
-      assertThrows<ItemDeleteException> {
-        lrmItemService.deleteSingleById(id)
-      }.cause.shouldBeNull()
+    it("repository returns > 1 deleted records") {
+      every { mockLrmItemRepository.deleteById(id) } returns 2
+      shouldThrow<ItemDeleteException> { lrmItemService.deleteSingleById(id) }
+        .cause.shouldBeNull()
     }
 
-    it("item repository returns 1 deleted record") {
-      every { lrmItemRepository.findByIdOrNull(id) } returns lrmItemMockResponse
-      every { lrmItemRepository.deleteById(id) } returns 1
+    it("repository returns 1 deleted record") {
+      every { mockLrmItemRepository.findByIdOrNull(id) } returns lrmItemMockResponse
+      every { mockLrmItemRepository.deleteById(id) } returns 1
       lrmItemService.deleteSingleById(id)
-      verify(exactly = 1) { lrmItemRepository.deleteById(id) }
+      verify(exactly = 1) { mockLrmItemRepository.deleteById(id) }
     }
   }
 
   describe("findAll()") {
-    it("items are returned") {
-      every { lrmItemRepository.findAll() } returns listOf(lrmItemMockResponse)
+    it("all are returned") {
+      every { mockLrmItemRepository.findAll() } returns listOf(lrmItemMockResponse)
       lrmItemService.findAll()
-      verify(exactly = 1) { lrmItemRepository.findAll() }
+      verify(exactly = 1) { mockLrmItemRepository.findAll() }
     }
   }
 
   describe("findAllAndLists()") {
-    it("items are returned") {
-      every { lrmItemRepository.findAllAndLists() } returns listOf(lrmItemMockResponse)
+    it("all and lists are returned") {
+      every { mockLrmItemRepository.findAllAndLists() } returns listOf(lrmItemMockResponse)
       lrmItemService.findAllAndLists()
-      verify(exactly = 1) { lrmItemRepository.findAllAndLists() }
+      verify(exactly = 1) { mockLrmItemRepository.findAllAndLists() }
+    }
+  }
+
+  describe("removeFromList()") {
+
+    it("removed from list") {
+      every { mockLrmItemRepository.removeItemFromList(any(), any()) } returns 1
+      lrmItemService.removeFromList(1, 2)
+      verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
+    }
+
+    it("item not found") {
+      every { mockLrmItemRepository.removeItemFromList(any(), any()) } returns 0
+      every { mockLrmItemRepository.findByIdOrNull(any()) } returns null
+      val exception = shouldThrow<ItemRemoveFromListException> { lrmItemService.removeFromList(1, 2) }
+      exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
+      verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
+      verify(exactly = 0) { mockLrmListRepository.findByIdOrNull(2L) }
+    }
+
+    it("list not found") {
+      every { mockLrmItemRepository.removeItemFromList(any(), any()) } returns 0
+      every { mockLrmItemRepository.findByIdOrNull(any()) } returns lrmItemMockResponse
+      every { mockLrmListRepository.findByIdOrNull(any()) } returns null
+      val exception = shouldThrow<ItemRemoveFromListException> { lrmItemService.removeFromList(1, 2) }
+      exception.cause.shouldBeInstanceOf<ListNotFoundException>()
+      verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(2L) }
+    }
+
+    it("item is not associated with the list") {
+      every { mockLrmItemRepository.removeItemFromList(1L, 2L) } returns 0
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
+      every { mockLrmListRepository.findByIdOrNull(2L) } returns lrmListMockResponse
+      val exception = shouldThrow<ItemRemoveFromListException> { lrmItemService.removeFromList(1, 2) }
+      exception.cause.shouldBeNull()
+      verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(2L) }
+    }
+
+    it("item is associated with the list multiple times") {
+      every { mockLrmItemRepository.removeItemFromList(1L, 2L) } returns 2
+      val exception = shouldThrow<ItemRemoveFromListException> { lrmItemService.removeFromList(1, 2) }
+      exception.cause.shouldBeNull()
+      verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
     }
   }
 
   afterTest {
-    clearMocks(lrmItemRepository)
+    clearAllMocks()
+  }
+
+  afterSpec {
+    unmockkAll()
   }
 })

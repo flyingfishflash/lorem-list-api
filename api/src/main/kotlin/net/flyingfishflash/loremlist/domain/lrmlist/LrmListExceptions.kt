@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus
 class ListNotFoundException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.NOT_FOUND,
   title = TITLE,
-  message = "List not found for id $id",
+  detail = "List not found for id $id",
   cause = cause,
   responseMessage = "List not found for id $id",
 ) {
@@ -18,7 +18,7 @@ class ListNotFoundException(id: Long, cause: Throwable? = null) : AbstractApiExc
 class ListInsertException(cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.BAD_REQUEST,
   title = TITLE,
-  message = "Problem inserting a new list",
+  detail = "Problem inserting a new list",
   cause = cause,
   responseMessage = "Problem inserting a new list",
 ) {
@@ -30,7 +30,7 @@ class ListInsertException(cause: Throwable? = null) : AbstractApiException(
 class ListUpdateException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.BAD_REQUEST,
   title = TITLE,
-  message = "Problem updating list id $id",
+  detail = "Problem updating list id $id",
   cause = cause,
   responseMessage = "Problem updating list id $id",
 ) {
@@ -42,7 +42,7 @@ class ListUpdateException(id: Long, cause: Throwable? = null) : AbstractApiExcep
 class ListDeleteException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.BAD_REQUEST,
   title = TITLE,
-  message = "Problem deleting list id $id",
+  detail = "Problem deleting list id $id",
   cause = cause,
   responseMessage = "Problem deleting list id $id",
 ) {

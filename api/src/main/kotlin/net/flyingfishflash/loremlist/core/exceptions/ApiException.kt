@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus
 class ApiException(httpStatus: HttpStatus, title: String?, detail: String, cause: Throwable) : AbstractApiException(
   httpStatus = httpStatus,
   title = title ?: TITLE,
-  message = detail,
+  detail = detail,
   cause = cause,
   responseMessage = detail,
 ) {

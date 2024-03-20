@@ -45,6 +45,18 @@ data class ResponseProblem(
     content = apiProblemDetail,
   )
 
+  /** Create an API ResponseProblem from an ApiProblem
+   * @return ResponseProblem
+   */
+  constructor(apiProblemDetail: ApiProblemDetail, responseMessage: String, request: HttpServletRequest) : this(
+    disposition = DispositionOfProblem.calcDisposition(apiProblemDetail.status),
+    method = request.method.lowercase(),
+    instance = request.requestURI.toString(),
+    message = responseMessage,
+    size = calcSize(apiProblemDetail),
+    content = apiProblemDetail,
+  )
+
   /** Create an API ResponseProblem from a Spring ProblemDetail
    * @return ResponseProblem
    */
