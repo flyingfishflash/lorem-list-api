@@ -1,6 +1,5 @@
 package net.flyingfishflash.loremlist.domain.lrmitem
 
-import io.kotest.assertions.any
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.nulls.shouldBeNull
