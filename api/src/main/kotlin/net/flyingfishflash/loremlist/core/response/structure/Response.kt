@@ -40,6 +40,7 @@ data class ResponseProblem(
     disposition = DispositionOfProblem.calcDisposition(apiProblemDetail.status),
     method = request.method.lowercase(),
     instance = request.requestURI.toString(),
+    // TODO: FIX ME
     message = "from response problem constructor",
     size = calcSize(apiProblemDetail),
     content = apiProblemDetail,
@@ -64,6 +65,7 @@ data class ResponseProblem(
     disposition = DispositionOfProblem.calcDisposition(problemDetail.status),
     method = request.method.name().lowercase(),
     instance = request.uri.path.lowercase(),
+    // TODO: FIX ME
     message = "from response problem constructor",
     size = calcSize(problemDetail),
     content = ApiProblemDetail(problemDetail),
