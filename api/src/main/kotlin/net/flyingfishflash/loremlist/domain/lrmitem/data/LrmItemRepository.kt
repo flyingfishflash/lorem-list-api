@@ -63,12 +63,11 @@ class LrmItemRepository {
         },
       )
 
-    val itemsAndLists = resultRows
-      .map {
-        it.toLrmItem()
-      }.distinct().map {
-        it.copy(lists = listsByItems[it.id]?.toSet() ?: setOf())
-      }
+    val itemsAndLists = resultRows.map {
+      it.toLrmItem()
+    }.distinct().map {
+      it.copy(lists = listsByItems[it.id]?.toSet() ?: setOf())
+    }
 
     return itemsAndLists
   }
@@ -78,6 +77,37 @@ class LrmItemRepository {
       .where { repositoryTable.id eq id }
       .map { it.toLrmItem() }
       .firstOrNull()
+
+  fun findByIdOrNullAndLists(id: Long): LrmItem? {
+    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
+      .select(
+        repositoryTable.id,
+        repositoryTable.name,
+        repositoryTable.created,
+        repositoryTable.description,
+        repositoryTable.quantity,
+        LrmListTable.id,
+        LrmListTable.name,
+      ).where { repositoryTable.id eq id }
+      .toList()
+
+    if (resultRows.isEmpty()) return null
+
+    val listsByItems = resultRows
+      .filter {
+        @Suppress("SENSELESS_COMPARISON")
+        it[LrmListTable.id] != null
+      }.map {
+        LrmListSuccinct(
+          id = it[LrmListTable.id].value,
+          name = it[LrmListTable.name],
+        )
+      }
+
+    val itemAndLists = resultRows.first().toLrmItem().copy(lists = listsByItems.toSet())
+
+    return itemAndLists
+  }
 
   fun insert(lrmItemRequest: LrmItemRequest): LrmItem {
     val id =
