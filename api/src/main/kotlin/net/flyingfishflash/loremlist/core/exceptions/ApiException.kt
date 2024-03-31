@@ -2,7 +2,7 @@ package net.flyingfishflash.loremlist.core.exceptions
 
 import org.springframework.http.HttpStatus
 
-class ApiException(httpStatus: HttpStatus, title: String?, detail: String, cause: Throwable) : AbstractApiException(
+class ApiException(httpStatus: HttpStatus, title: String?, detail: String, cause: Throwable? = null) : AbstractApiException(
   httpStatus = httpStatus,
   title = title ?: TITLE,
   detail = detail,
