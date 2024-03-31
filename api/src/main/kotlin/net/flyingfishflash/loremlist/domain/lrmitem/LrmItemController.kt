@@ -128,6 +128,35 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     return ResponseEntity(response, responseStatus)
   }
 
+  @Operation(summary = "Retrieve a single item and optionally exclude the lists it's associated with")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "404",
+        description = "Item Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class, example = "lasjkdflkjDSF"))],
+      ),
+      ApiResponse(
+        responseCode = "200",
+        description = "Item Found",
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+    ],
+  )
+  @GetMapping("/{id}")
+  fun findById(
+    @PathVariable("id") @Min(1) id: Long,
+    @RequestParam(defaultValue = false.toString()) withLists: Boolean,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<LrmItem>> {
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "retrieved an item and it's associated lists"
+    val responseContent = if (withLists) lrmItemService.findByIdAndLists(id) else lrmItemService.findById(id)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { "response as json: " + Json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
   @PostMapping("/{id}/move-to-list")
   @Operation(summary = "Move Item to List")
   fun moveToList(
