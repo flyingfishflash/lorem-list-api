@@ -2,15 +2,17 @@ package net.flyingfishflash.loremlist.domain.lrmitem
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.ints.exactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.unmockkAll
 import io.mockk.verify
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
@@ -54,9 +56,15 @@ class LrmItemServiceTests : DescribeSpec({
 
   describe("addToList()") {
     it("added to list") {
-      every { mockLrmItemRepository.addItemToList(1L, 1L) } just runs
-      lrmItemService.addToList(itemId = 1, listId = 1)
+      every { mockLrmItemRepository.addItemToList(1L, 1L) } just Runs
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns LrmItem(id = 1L, name = lrmItemName)
+      every { mockLrmListRepository.findByIdOrNull(1L) } returns LrmList(id = 1L, name = lrmListName)
+      val response = lrmItemService.addToList(itemId = 1, listId = 1)
+      response.first.shouldBeEqual(lrmItemName)
+      response.second.shouldBeEqual(lrmListName)
       verify(exactly = 1) { mockLrmItemRepository.addItemToList(1L, 1L) }
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(1L) }
     }
 
     it("item not found") {

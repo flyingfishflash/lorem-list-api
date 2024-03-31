@@ -51,10 +51,10 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     @Min(1) @RequestBody listId: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    lrmItemService.addToList(itemId = id, listId = listId)
+    val serviceResponse = lrmItemService.addToList(itemId = id, listId = listId)
     val responseStatus = HttpStatus.OK
-    val responseMessage = "assigned list item to list"
-    val responseContent = ApiMessage("assigned list item to list")
+    val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
+    val responseContent = ApiMessage(responseMessage)
     val response = ResponseSuccess(responseContent, responseMessage, request)
     return ResponseEntity(response, responseStatus)
   }

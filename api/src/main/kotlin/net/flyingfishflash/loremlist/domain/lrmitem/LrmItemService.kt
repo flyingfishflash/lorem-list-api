@@ -18,9 +18,10 @@ import java.sql.SQLIntegrityConstraintViolationException
 class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListRepository: LrmListRepository) {
   private val logger = KotlinLogging.logger {}
 
-  fun addToList(itemId: Long, listId: Long) {
+  fun addToList(itemId: Long, listId: Long): Pair<String, String> {
     try {
       lrmItemRepository.addItemToList(listId, itemId)
+      return Pair(findById(itemId).name, lrmListRepository.findByIdOrNull(listId)!!.name)
     } catch (ex: ExposedSQLException) {
       when (val original = (ex as? ExposedSQLException)?.cause) {
         is SQLIntegrityConstraintViolationException -> {
