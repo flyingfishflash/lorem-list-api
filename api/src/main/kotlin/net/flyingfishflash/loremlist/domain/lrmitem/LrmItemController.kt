@@ -121,7 +121,11 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<List<LrmItem>>> {
     val responseStatus = HttpStatus.OK
-    val responseMessage = "retrieved all items"
+    val responseMessage = if (withLists) {
+      "retrieved all items and the lists each item is associated with."
+    } else {
+      "retrieved all items"
+    }
     val responseContent = if (withLists) lrmItemService.findAllAndLists() else lrmItemService.findAll()
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { "response as json: " + Json.encodeToString(response) }
@@ -150,7 +154,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmItem>> {
     val responseStatus = HttpStatus.OK
-    val responseMessage = "retrieved an item and it's associated lists"
+    val responseMessage = if (withLists) "retrieved item id $id and it's associated lists" else "retrieved item id $id"
     val responseContent = if (withLists) lrmItemService.findByIdAndLists(id) else lrmItemService.findById(id)
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { "response as json: " + Json.encodeToString(response) }
