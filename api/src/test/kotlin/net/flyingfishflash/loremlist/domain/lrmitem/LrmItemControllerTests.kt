@@ -15,6 +15,7 @@ import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProble
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpMethod
@@ -46,6 +47,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     val lrmItemMockResponseWithEmptyLists =
       LrmItem(id = 0, name = lrmItemName, description = lrmItemDescription, lists = setOf())
     val lrmItemRequest = LrmItemRequest(lrmItemName, lrmItemDescription)
+    val lrmListName = "Lorem List Name"
     val id = 1L
 
     describe("/items") {
@@ -313,9 +315,66 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/items/{id}/add-to-list") {
       describe("post") {
-        it("item is added to list") { TODO() }
-        it("item is not found") { TODO() }
-        it("list is not found") { TODO() }
+        it("item is added to list") {
+          every { lrmItemService.addToList(id, 2L) } returns Pair(lrmItemName, lrmListName)
+          val instance = "/items/$id/add-to-list"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(2)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("Assigned item '$lrmItemName' to list '$lrmListName'.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.message") { value("Assigned item '$lrmItemName' to list '$lrmListName'.") }
+          }
+          verify(exactly = 1) { lrmItemService.addToList(id, 2L) }
+        }
+
+        it("item is not found") {
+          every { lrmItemService.addToList(id, 2L) } throws ItemNotFoundException(id)
+          val instance = "/items/$id/add-to-list"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(2)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("Item id $id could not be found.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ItemNotFoundException.TITLE) }
+            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
+            jsonPath("$.content.detail") { value("Item id $id could not be found.") }
+          }
+          verify(exactly = 1) { lrmItemService.addToList(id, 2L) }
+        }
+
+        it("list is not found") {
+          every { lrmItemService.addToList(id, 2L) } throws ListNotFoundException(id)
+          val instance = "/items/$id/add-to-list"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(2)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("List id $id could not be found.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
+            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
+            jsonPath("$.content.detail") { value("List id $id could not be found.") }
+          }
+          verify(exactly = 1) { lrmItemService.addToList(id, 2L) }
+        }
       }
     }
 
