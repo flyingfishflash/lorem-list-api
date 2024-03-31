@@ -208,12 +208,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-          jsonPath("$.message") { value("List not found for id $id") }
+          jsonPath("$.message") { value("List id $id could not be found.") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
           jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          jsonPath("$.content.detail") { value("List not found for id $id") }
+          jsonPath("$.content.detail") { value("List id $id could not be found.") }
         }
         verify(exactly = 1) { lrmListService.deleteSingleById(id) }
       }
@@ -249,12 +249,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("List not found for id $id") }
+          jsonPath("$.message") { value("List id $id could not be found.") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
           jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          jsonPath("$.content.detail") { value("List not found for id $id") }
+          jsonPath("$.content.detail") { value("List id $id could not be found.") }
         }
         verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
       }
@@ -290,12 +290,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("List not found for id $id") }
+          jsonPath("$.message") { value("List id $id could not be found.") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
           jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          jsonPath("$.content.detail") { value("List not found for id $id") }
+          jsonPath("$.content.detail") { value("List id $id could not be found.") }
         }
         verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
       }
@@ -330,12 +330,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("List not found for id $id") }
+          jsonPath("$.message") { value("List id $id could not be found.") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
           jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          jsonPath("$.content.detail") { value("List not found for id $id") }
+          jsonPath("$.content.detail") { value("List id $id could not be found.") }
         }
         verify(exactly = 1) { lrmListService.findByIdOrListNotFoundException(id) }
       }
@@ -399,12 +399,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-          jsonPath("$.message") { value("List not found for id $id") }
+          jsonPath("$.message") { value("List id $id could not be found.") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
           jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          jsonPath("$.content.detail") { value("List not found for id $id") }
+          jsonPath("$.content.detail") { value("List id $id could not be found.") }
         }
         verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmListDescription)) }
       }

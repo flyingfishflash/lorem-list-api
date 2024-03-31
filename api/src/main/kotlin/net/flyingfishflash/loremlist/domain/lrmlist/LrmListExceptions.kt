@@ -6,9 +6,9 @@ import org.springframework.http.HttpStatus
 class ListNotFoundException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.NOT_FOUND,
   title = TITLE,
-  detail = "List not found for id $id",
+  detail = "List id $id could not be found.",
   cause = cause,
-  responseMessage = "List not found for id $id",
+  responseMessage = "List id $id could not be found.",
 ) {
   companion object {
     const val TITLE = "List Not Found"
