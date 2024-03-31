@@ -160,6 +160,14 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
+  describe("findById()") {
+    it("item is returned") {
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
+      lrmItemService.findById(1L)
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
+    }
+  }
+
   describe("findByIdAndLists()") {
     it("item and lists are returned") {
       every { mockLrmItemRepository.findByIdOrNullAndLists(1L) } returns lrmItemMockResponse
