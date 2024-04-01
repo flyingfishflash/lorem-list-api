@@ -389,9 +389,66 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/items/{id}/remove-from-list") {
       describe("post") {
-        it("item is removed from list") { TODO() }
-        it("item is not found") { TODO() }
-        it("list is not found") { TODO() }
+        it("item is removed from list") {
+          every { lrmItemService.removeFromList(id, 2L) } returns Pair(lrmItemName, lrmListName)
+          val instance = "/items/$id/remove-from-list"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(2)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("Removed item '$lrmItemName' from list '$lrmListName'.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.message") { value("Removed item '$lrmItemName' from list '$lrmListName'.") }
+          }
+          verify(exactly = 1) { lrmItemService.removeFromList(id, 2L) }
+        }
+
+        it("item is not found") {
+          every { lrmItemService.removeFromList(id, 2L) } throws ItemNotFoundException(id)
+          val instance = "/items/$id/remove-from-list"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(2)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("Item id $id could not be found.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ItemNotFoundException.TITLE) }
+            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
+            jsonPath("$.content.detail") { value("Item id $id could not be found.") }
+          }
+          verify(exactly = 1) { lrmItemService.removeFromList(id, 2L) }
+        }
+
+        it("list is not found") {
+          every { lrmItemService.removeFromList(id, 2L) } throws ListNotFoundException(id)
+          val instance = "/items/$id/remove-from-list"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(2)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("List id $id could not be found.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
+            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
+            jsonPath("$.content.detail") { value("List id $id could not be found.") }
+          }
+          verify(exactly = 1) { lrmItemService.removeFromList(id, 2L) }
+        }
       }
     }
   }

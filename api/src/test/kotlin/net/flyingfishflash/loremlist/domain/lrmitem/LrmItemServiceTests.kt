@@ -186,9 +186,13 @@ class LrmItemServiceTests : DescribeSpec({
   describe("removeFromList()") {
 
     it("removed from list") {
-      every { mockLrmItemRepository.removeItemFromList(any(), any()) } returns 1
-      lrmItemService.removeFromList(1, 2)
-      verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
+      every { mockLrmItemRepository.removeItemFromList(1L, 2L) } returns 1
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
+      every { mockLrmListRepository.findByIdOrNull(2L) } returns lrmListMockResponse
+      lrmItemService.removeFromList(1L, 2L)
+      verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1L, 2L) }
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(2L) }
     }
 
     it("item not found") {

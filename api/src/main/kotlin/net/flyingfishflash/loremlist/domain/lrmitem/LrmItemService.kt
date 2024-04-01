@@ -91,43 +91,49 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
     removeFromList(itemId = itemId, listId = fromListId)
   }
 
-  fun removeFromList(itemId: Long, listId: Long) {
+  fun removeFromList(itemId: Long, listId: Long): Pair<String, String> {
     val deletedCount = lrmItemRepository.removeItemFromList(itemId, listId)
-    if (deletedCount < 1) {
-      if (lrmItemRepository.findByIdOrNull(itemId) == null) {
-        throw ItemRemoveFromListException(
-          itemId,
-          listId,
-          ItemNotFoundException(itemId),
-          responseMessage = "Item id $itemId could not be removed from list id $listId " +
-            "because item id $itemId could not be found",
-        )
-      } else if (lrmListRepository.findByIdOrNull(listId) == null) {
-        throw ItemRemoveFromListException(
-          itemId,
-          listId,
-          ListNotFoundException(listId),
-          responseMessage = "Item id $itemId could not be removed from list id $listId " +
-            "because list id $listId could not be found",
-        )
-      } else {
+    when {
+      deletedCount == 1 -> {
+        return Pair(findById(itemId).name, lrmListRepository.findByIdOrNull(listId)!!.name)
+      }
+      deletedCount < 1 -> {
+        if (lrmItemRepository.findByIdOrNull(itemId) == null) {
+          throw ItemRemoveFromListException(
+            itemId,
+            listId,
+            ItemNotFoundException(itemId),
+            responseMessage = "Item id $itemId could not be removed from list id $listId " +
+              "because item id $itemId could not be found",
+          )
+        } else if (lrmListRepository.findByIdOrNull(listId) == null) {
+          throw ItemRemoveFromListException(
+            itemId,
+            listId,
+            ListNotFoundException(listId),
+            responseMessage = "Item id $itemId could not be removed from list id $listId " +
+              "because list id $listId could not be found",
+          )
+        } else {
+          throw ItemRemoveFromListException(
+            itemId,
+            listId,
+            null,
+            "Item id $itemId exists and list id $listId exists but 0 records were deleted.",
+            "Item id $itemId is not associated with list id $listId",
+          )
+        }
+      }
+      else -> {
+        // TODO: Ensure the transaction is rolled back if an exception is thrown
         throw ItemRemoveFromListException(
           itemId,
           listId,
           null,
-          "Item id $itemId exists and list id $listId exists but 0 records were deleted.",
-          "Item id $itemId is not associated with list id $listId",
+          "Delete transaction rolled back because the count of deleted records was > 1.",
+          "Item id $itemId is associated with list id $listId multiple times.",
         )
       }
-    } else if (deletedCount > 1) {
-      // TODO: Ensure the transaction is rolled back if an exception is thrown
-      throw ItemRemoveFromListException(
-        itemId,
-        listId,
-        null,
-        "Delete transaction rolled back because the count of deleted records was > 1.",
-        "Item id $itemId is associated with list id $listId multiple times.",
-      )
     }
   }
 }

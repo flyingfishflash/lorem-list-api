@@ -188,10 +188,10 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     @Min(1) @RequestBody listId: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    lrmItemService.removeFromList(itemId = id, listId = listId)
+    val serviceResponse = lrmItemService.removeFromList(itemId = id, listId = listId)
     val responseStatus = HttpStatus.OK
-    val responseMessage = "removed list item from list"
-    val responseContent = ApiMessage("removed list item from list")
+    val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
+    val responseContent = ApiMessage(responseMessage)
     val response = ResponseSuccess(responseContent, responseMessage, request)
     return ResponseEntity(response, responseStatus)
   }
