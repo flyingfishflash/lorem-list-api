@@ -45,7 +45,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
   private val logger = KotlinLogging.logger {}
 
   @PostMapping("/{id}/add-to-list")
-  @Operation(summary = "Assign Item to List")
+  @Operation(summary = "Assign an item to a list")
   fun addToList(
     @PathVariable("id") @Min(1) id: Long,
     @Min(1) @RequestBody listId: Long,
@@ -59,7 +59,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Create a new item")
+  @Operation(summary = "Create an item")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -106,7 +106,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Retrieve all items details and optionally the lists the item belongs to")
+  @Operation(summary = "Retrieve all items and optionally include the id and name of each list they're associated with")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -132,7 +132,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Retrieve a single item and optionally exclude the lists it's associated with")
+  @Operation(summary = "Retrieve a single item and optionally include the id and name of each list it's associated with")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -162,7 +162,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
   }
 
   @PostMapping("/{id}/move-to-list")
-  @Operation(summary = "Move Item to List")
+  @Operation(summary = "Move an item to a list")
   fun moveToList(
     @PathVariable("id") @Min(1) id: Long,
     @RequestBody moveToListRequest: LrmItemMoveToListRequest,
@@ -182,7 +182,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
   }
 
   @PostMapping("/{id}/remove-from-list")
-  @Operation(summary = "Remove Item from List")
+  @Operation(summary = "Remove an item from a list")
   fun removeFromList(
     @PathVariable("id") @Min(1) id: Long,
     @Min(1) @RequestBody listId: Long,
