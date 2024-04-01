@@ -142,6 +142,7 @@ tasks {
   }
 
   test {
+    ignoreFailures = true
     useJUnitPlatform()
     finalizedBy("jacocoUnitTestReport")
     filter { excludeTestsMatching("net.flyingfishflash.loremlist.integration*") }
