@@ -12,8 +12,10 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
+import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRepository
@@ -183,8 +185,32 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("removeFromList()") {
+  describe("moveToList()") {
+    it("item is moved from one list to another list") {
+      val spy = spyk(LrmItemService(mockLrmItemRepository, mockLrmListRepository))
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
+      every { mockLrmListRepository.findByIdOrNull(2L) } returns lrmListMockResponse
+      every { mockLrmListRepository.findByIdOrNull(3L) } returns lrmListMockResponse
+      every { spy.addToList(any(), any()) } returns Pair("1L", "3L")
+      every { spy.removeFromList(any(), any()) } returns Pair("1L", "2L")
+      spy.moveToList(1L, 2L, 3L)
+      verify(exactly = 1) { spy.addToList(1L, 3L) }
+      verify(exactly = 1) { spy.removeFromList(1L, 2L) }
+    }
 
+    it("anticipated api exception with cause of type abstract api exception") {
+      val spy = spyk(LrmItemService(mockLrmItemRepository, mockLrmListRepository))
+      every { mockLrmItemRepository.addItemToList(3L, 1L) } throws exposedSQLExceptionConstraintViolation
+      every { mockLrmItemRepository.findByIdOrNull(1L) } returns null
+      shouldThrow<ApiException> {
+        spy.moveToList(1L, 2L, 3L)
+      }.cause.shouldBeInstanceOf<AbstractApiException>()
+      verify(exactly = 1) { spy.addToList(any(), any()) }
+      verify(exactly = 0) { spy.removeFromList(any(), any()) }
+    }
+  }
+
+  describe("removeFromList()") {
     it("removed from list") {
       every { mockLrmItemRepository.removeItemFromList(1L, 2L) } returns 1
       every { mockLrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse

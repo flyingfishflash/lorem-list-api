@@ -11,9 +11,11 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemMoveToListRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
@@ -44,11 +46,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     val lrmItemName = "Lorem Item Name"
     val lrmItemDescription = "Lorem Item Description"
     val lrmItemMockResponse = LrmItem(id = 0, name = lrmItemName, description = lrmItemDescription)
-    val lrmItemMockResponseWithEmptyLists =
-      LrmItem(id = 0, name = lrmItemName, description = lrmItemDescription, lists = setOf())
+    val lrmItemMockResponseWithEmptyLists = lrmItemMockResponse.copy(lists = setOf())
     val lrmItemRequest = LrmItemRequest(lrmItemName, lrmItemDescription)
     val lrmListName = "Lorem List Name"
     val id = 1L
+    val lrmItemMoveToListRequest = LrmItemMoveToListRequest(2, 3)
 
     describe("/items") {
       describe("get") {
@@ -380,10 +382,51 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/items/{id}/move-to-list") {
       describe("post") {
-        it("item is added to destination list") { TODO() }
-        it("item is removed from source list") { TODO() }
-        it("item is not found") { TODO() }
-        it("list is not found") { TODO() }
+        it("item is moved from one list to another list") {
+          val fromListName = "List A"
+          val toListName = "List B"
+          every { lrmItemService.moveToList(id, 2L, 3L) } returns Triple(lrmItemName, fromListName, toListName)
+          val instance = "/items/$id/move-to-list"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(lrmItemMoveToListRequest)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("Moved item '$lrmItemName' from list '$fromListName' to list '$toListName'.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.message") { value("Moved item '$lrmItemName' from list '$fromListName' to list '$toListName'.") }
+          }
+          verify(exactly = 1) { lrmItemService.moveToList(id, 2L, 3L) }
+        }
+
+        it("item is not found") {
+          val fromListName = "List A"
+          val toListName = "List B"
+          every { lrmItemService.moveToList(id, 2L, 3L) } throws ApiException(HttpStatus.BAD_REQUEST, "zzz", "sssss")
+          val instance = "/items/$id/move-to-list"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(lrmItemMoveToListRequest)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("Moved item '$lrmItemName' from list '$fromListName' to list '$toListName'.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.message") { value("Moved item '$lrmItemName' from list '$fromListName' to list '$toListName'.") }
+          }
+          verify(exactly = 1) { lrmItemService.moveToList(id, 2L, 3L) }
+        }
+
+        it("source list is not found") { TODO() }
+
+        it("destination list is not found") { TODO() }
       }
     }
 

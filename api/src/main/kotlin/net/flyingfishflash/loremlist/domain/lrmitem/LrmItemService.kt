@@ -1,6 +1,7 @@
 package net.flyingfishflash.loremlist.domain.lrmitem
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRepository
@@ -86,9 +87,24 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
 
   fun findByIdAndLists(id: Long): LrmItem = lrmItemRepository.findByIdOrNullAndLists(id) ?: throw ItemNotFoundException(id)
 
-  fun moveToList(itemId: Long, fromListId: Long, toListId: Long) {
-    addToList(itemId = itemId, listId = toListId)
-    removeFromList(itemId = itemId, listId = fromListId)
+  fun moveToList(itemId: Long, fromListId: Long, toListId: Long): Triple<String, String, String> {
+    try {
+      addToList(itemId = itemId, listId = toListId)
+      removeFromList(itemId = itemId, listId = fromListId)
+    } catch (exception: AbstractApiException) {
+      throw ApiException(
+        HttpStatus.BAD_REQUEST,
+        "Api Exception",
+        "Item id $itemId was not moved from list id $fromListId list id $toListId: " +
+          (exception.cause?.message ?: "api exception cause detail not available"),
+        exception,
+      )
+    }
+    return Triple(
+      findById(itemId).name,
+      lrmListRepository.findByIdOrNull(fromListId)!!.name,
+      lrmListRepository.findByIdOrNull(toListId)!!.name,
+    )
   }
 
   fun removeFromList(itemId: Long, listId: Long): Pair<String, String> {

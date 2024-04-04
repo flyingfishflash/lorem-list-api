@@ -168,13 +168,14 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     @RequestBody moveToListRequest: LrmItemMoveToListRequest,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    lrmItemService.moveToList(
+    val serviceResponse = lrmItemService.moveToList(
       itemId = id,
       fromListId = moveToListRequest.fromListId,
       toListId = moveToListRequest.toListId,
     )
-    val responseMessage = "moved item id $id from list id ${moveToListRequest.fromListId}" +
-      " to list id ${moveToListRequest.toListId}"
+    val responseMessage = "Moved item '${serviceResponse.first}'" +
+      " from list '${serviceResponse.second}'" +
+      " to list '${serviceResponse.third}'."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessage(responseMessage)
     val response = ResponseSuccess(responseContent, responseMessage, request)
