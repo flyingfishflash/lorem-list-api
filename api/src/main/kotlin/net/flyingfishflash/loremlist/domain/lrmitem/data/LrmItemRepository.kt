@@ -36,7 +36,7 @@ class LrmItemRepository {
       .map { it.toLrmItem() }
       .toList()
 
-  fun findAllAndLists(): List<LrmItem> {
+  fun findAllIncludeLists(): List<LrmItem> {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
       .select(
         repositoryTable.id,
@@ -78,7 +78,7 @@ class LrmItemRepository {
       .map { it.toLrmItem() }
       .firstOrNull()
 
-  fun findByIdOrNullAndLists(id: Long): LrmItem? {
+  fun findByIdOrNullIncludeLists(id: Long): LrmItem? {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
       .select(
         repositoryTable.id,

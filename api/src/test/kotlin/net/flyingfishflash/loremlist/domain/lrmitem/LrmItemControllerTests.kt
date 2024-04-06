@@ -79,10 +79,10 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           verify(exactly = 1) { lrmItemService.findAll() }
         }
 
-        it("items are found ?withLists=false") {
+        it("items are found ?includeLists=false") {
           val mockReturn = listOf(lrmItemMockResponse)
           every { lrmItemService.findAll() } returns mockReturn
-          val instance = "/items?withLists=false"
+          val instance = "/items?includeLists=false"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
@@ -103,10 +103,10 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           verify(exactly = 1) { lrmItemService.findAll() }
         }
 
-        it("items are found ?withLists=true") {
+        it("items are found ?includeLists=true") {
           val mockReturn = listOf(lrmItemMockResponseWithEmptyLists)
-          every { lrmItemService.findAllAndLists() } returns mockReturn
-          val instance = "/items?withLists=true"
+          every { lrmItemService.findAllIncludeLists() } returns mockReturn
+          val instance = "/items?includeLists=true"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
@@ -125,7 +125,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               isEmpty()
             }
           }
-          verify(exactly = 1) { lrmItemService.findAllAndLists() }
+          verify(exactly = 1) { lrmItemService.findAllIncludeLists() }
         }
       }
 
@@ -248,9 +248,9 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           verify(exactly = 1) { lrmItemService.findById(id) }
         }
 
-        it("item is found ?withLists=false") {
+        it("item is found ?includeLists=false") {
           every { lrmItemService.findById(id) } returns lrmItemMockResponse
-          val instance = "/items/$id?withLists=false"
+          val instance = "/items/$id?includeLists=false"
           mockMvc.get(instance).andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
@@ -266,9 +266,9 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           verify(exactly = 1) { lrmItemService.findById(id) }
         }
 
-        it("item is found ?withLists=true") {
-          every { lrmItemService.findByIdAndLists(id) } returns lrmItemMockResponseWithEmptyLists
-          val instance = "/items/$id?withLists=true"
+        it("item is found ?includeLists=true") {
+          every { lrmItemService.findByIdIncludeLists(id) } returns lrmItemMockResponseWithEmptyLists
+          val instance = "/items/$id?includeLists=true"
           mockMvc.get(instance).andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
@@ -284,7 +284,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               isEmpty()
             }
           }
-          verify(exactly = 1) { lrmItemService.findByIdAndLists(id) }
+          verify(exactly = 1) { lrmItemService.findByIdIncludeLists(id) }
         }
 
         it("item is not found") {

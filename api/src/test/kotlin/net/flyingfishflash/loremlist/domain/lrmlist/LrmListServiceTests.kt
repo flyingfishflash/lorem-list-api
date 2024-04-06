@@ -69,24 +69,24 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("findAllListsAndItems()") {
     it("lists are returned") {
-      every { lrmListRepository.findAllListsAndItems() } returns listOf(lrmListMockResponse)
-      lrmListService.findAllListsAndItems()
-      verify(exactly = 1) { lrmListRepository.findAllListsAndItems() }
+      every { lrmListRepository.findAllIncludeItems() } returns listOf(lrmListMockResponse)
+      lrmListService.findAllIncludeItems()
+      verify(exactly = 1) { lrmListRepository.findAllIncludeItems() }
     }
   }
 
   describe("findByIdOrListNotFoundExceptionListAndItems()") {
     it("list is found and returned") {
-      every { lrmListRepository.findByIdOrNullListAndItems(id) } returns lrmListMockResponse
-      val result = lrmListService.findByIdOrListNotFoundExceptionListAndItems(id)
+      every { lrmListRepository.findByIdOrNullIncludeItems(id) } returns lrmListMockResponse
+      val result = lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id)
       result.shouldBe(lrmListMockResponse)
-      verify(exactly = 1) { lrmListRepository.findByIdOrNullListAndItems(id) }
+      verify(exactly = 1) { lrmListRepository.findByIdOrNullIncludeItems(id) }
     }
 
     it("list is not found") {
-      every { lrmListRepository.findByIdOrNullListAndItems(id) } returns null
+      every { lrmListRepository.findByIdOrNullIncludeItems(id) } returns null
       assertThrows<ListNotFoundException> {
-        lrmListService.findByIdOrListNotFoundExceptionListAndItems(id)
+        lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id)
       }
     }
   }

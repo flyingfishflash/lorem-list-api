@@ -40,7 +40,7 @@ class LrmListRepository {
       .toList()
 
   // TODO Paging Query
-  fun findAllListsAndItems(): List<LrmList> {
+  fun findAllIncludeItems(): List<LrmList> {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .select(
         repositoryTable.id,
@@ -92,7 +92,7 @@ class LrmListRepository {
         )
       }
 
-  fun findByIdOrNullListAndItems(id: Long): LrmList? {
+  fun findByIdOrNullIncludeItems(id: Long): LrmList? {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .select(
         repositoryTable.id,

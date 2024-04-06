@@ -117,16 +117,16 @@ class LrmItemController(val lrmItemService: LrmItemService) {
   )
   @GetMapping
   fun findAll(
-    @RequestParam(defaultValue = false.toString()) withLists: Boolean,
+    @RequestParam(defaultValue = false.toString()) includeLists: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<List<LrmItem>>> {
     val responseStatus = HttpStatus.OK
-    val responseMessage = if (withLists) {
+    val responseMessage = if (includeLists) {
       "retrieved all items and the lists each item is associated with."
     } else {
       "retrieved all items"
     }
-    val responseContent = if (withLists) lrmItemService.findAllAndLists() else lrmItemService.findAll()
+    val responseContent = if (includeLists) lrmItemService.findAllIncludeLists() else lrmItemService.findAll()
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { "response as json: " + Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
@@ -150,12 +150,12 @@ class LrmItemController(val lrmItemService: LrmItemService) {
   @GetMapping("/{id}")
   fun findById(
     @PathVariable("id") @Min(1) id: Long,
-    @RequestParam(defaultValue = false.toString()) withLists: Boolean,
+    @RequestParam(defaultValue = false.toString()) includeLists: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmItem>> {
     val responseStatus = HttpStatus.OK
-    val responseMessage = if (withLists) "retrieved item id $id and it's associated lists" else "retrieved item id $id"
-    val responseContent = if (withLists) lrmItemService.findByIdAndLists(id) else lrmItemService.findById(id)
+    val responseMessage = if (includeLists) "retrieved item id $id and it's associated lists" else "retrieved item id $id"
+    val responseContent = if (includeLists) lrmItemService.findByIdIncludeLists(id) else lrmItemService.findById(id)
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { "response as json: " + Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)

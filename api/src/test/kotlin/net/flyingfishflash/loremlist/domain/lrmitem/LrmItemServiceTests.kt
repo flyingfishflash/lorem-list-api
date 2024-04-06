@@ -163,9 +163,9 @@ class LrmItemServiceTests : DescribeSpec({
 
   describe("findAllAndLists()") {
     it("all and lists are returned") {
-      every { mockLrmItemRepository.findAllAndLists() } returns listOf(lrmItemMockResponse)
-      lrmItemService.findAllAndLists()
-      verify(exactly = 1) { mockLrmItemRepository.findAllAndLists() }
+      every { mockLrmItemRepository.findAllIncludeLists() } returns listOf(lrmItemMockResponse)
+      lrmItemService.findAllIncludeLists()
+      verify(exactly = 1) { mockLrmItemRepository.findAllIncludeLists() }
     }
   }
 
@@ -179,9 +179,9 @@ class LrmItemServiceTests : DescribeSpec({
 
   describe("findByIdAndLists()") {
     it("item and lists are returned") {
-      every { mockLrmItemRepository.findByIdOrNullAndLists(1L) } returns lrmItemMockResponse
-      lrmItemService.findByIdAndLists(1L)
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullAndLists(1L) }
+      every { mockLrmItemRepository.findByIdOrNullIncludeLists(1L) } returns lrmItemMockResponse
+      lrmItemService.findByIdIncludeLists(1L)
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(1L) }
     }
   }
 

@@ -69,11 +69,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists?withItems=false http get") {
+    describe("/lists?includeItems=false http get") {
       it("lists are found") {
         val mockReturn = listOf(lrmListMockResponse)
         every { lrmListService.findAll() } returns mockReturn
-        val instance = "/lists?withItems=false"
+        val instance = "/lists?includeItems=false"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -95,11 +95,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists?withItems=true http get") {
+    describe("/lists?includeItems=true http get") {
       it("lists and items are found") {
         val mockReturn = listOf(lrmListMockResponseWithEmptyItems)
-        every { lrmListService.findAllListsAndItems() } returns mockReturn
-        val instance = "/lists?withItems=true"
+        every { lrmListService.findAllIncludeItems() } returns mockReturn
+        val instance = "/lists?includeItems=true"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -118,7 +118,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             isEmpty()
           }
         }
-        verify(exactly = 1) { lrmListService.findAllListsAndItems() }
+        verify(exactly = 1) { lrmListService.findAllIncludeItems() }
       }
     }
 
@@ -221,7 +221,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/1 http get") {
       it("list is found") {
-        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } returns lrmListMockResponseWithEmptyItems
+        every { lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id) } returns lrmListMockResponseWithEmptyItems
         val instance = "/lists/$id"
         mockMvc.get(instance).andExpect {
           status { isOk() }
@@ -238,11 +238,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             isEmpty()
           }
         }
-        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
+        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id) }
       }
 
       it("list is not found") {
-        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } throws ListNotFoundException(id)
+        every { lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id) } throws ListNotFoundException(id)
         val instance = "/lists/$id"
         mockMvc.get(instance).andExpect {
           status { isNotFound() }
@@ -256,15 +256,15 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           jsonPath("$.content.detail") { value("List id $id could not be found.") }
         }
-        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
+        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id) }
       }
     }
 
-    describe("/lists/1?withItems=true http get") {
+    describe("/lists/1?includeItems=true http get") {
       it("list is found") {
-        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } returns lrmListMockResponseWithEmptyItems
-        val instance = "/lists/$id?withItems=true"
-        mockMvc.get("/lists/$id?withItems=true").andExpect {
+        every { lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id) } returns lrmListMockResponseWithEmptyItems
+        val instance = "/lists/$id?includeItems=true"
+        mockMvc.get("/lists/$id?includeItems=true").andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
@@ -279,12 +279,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             isEmpty()
           }
         }
-        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
+        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id) }
       }
 
       it("list is not found") {
-        every { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) } throws ListNotFoundException(id)
-        val instance = "/lists/$id?withItems=true"
+        every { lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id) } throws ListNotFoundException(id)
+        val instance = "/lists/$id?includeItems=true"
         mockMvc.get(instance).andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_JSON) }
@@ -297,14 +297,14 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           jsonPath("$.content.detail") { value("List id $id could not be found.") }
         }
-        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionListAndItems(id) }
+        verify(exactly = 1) { lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id) }
       }
     }
 
-    describe("/lists/1?withItems=false http get") {
+    describe("/lists/1?includeItems=false http get") {
       it("list is found") {
         every { lrmListService.findByIdOrListNotFoundException(id) } returns lrmListMockResponse
-        val instance = "/lists/$id?withItems=false"
+        val instance = "/lists/$id?includeItems=false"
         mockMvc.get(instance).andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
@@ -324,7 +324,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
       it("list is not found") {
         every { lrmListService.findByIdOrListNotFoundException(id) } throws ListNotFoundException(id)
-        val instance = "/lists/$id?withItems=false"
+        val instance = "/lists/$id?includeItems=false"
         mockMvc.get(instance).andExpect {
           status { isNotFound() }
           content { contentType(MediaType.APPLICATION_JSON) }

@@ -81,11 +81,11 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
 
   fun findAll(): List<LrmItem> = lrmItemRepository.findAll()
 
-  fun findAllAndLists(): List<LrmItem> = lrmItemRepository.findAllAndLists()
+  fun findAllIncludeLists(): List<LrmItem> = lrmItemRepository.findAllIncludeLists()
 
   fun findById(id: Long): LrmItem = lrmItemRepository.findByIdOrNull(id) ?: throw ItemNotFoundException(id)
 
-  fun findByIdAndLists(id: Long): LrmItem = lrmItemRepository.findByIdOrNullAndLists(id) ?: throw ItemNotFoundException(id)
+  fun findByIdIncludeLists(id: Long): LrmItem = lrmItemRepository.findByIdOrNullIncludeLists(id) ?: throw ItemNotFoundException(id)
 
   fun moveToList(itemId: Long, fromListId: Long, toListId: Long): Triple<String, String, String> {
     try {

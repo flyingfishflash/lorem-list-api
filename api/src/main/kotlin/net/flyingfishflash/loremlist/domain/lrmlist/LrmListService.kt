@@ -75,11 +75,11 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
 
   fun findAll(): List<LrmList> = lrmListRepository.findAll()
 
-  fun findAllListsAndItems(): List<LrmList> = lrmListRepository.findAllListsAndItems()
+  fun findAllIncludeItems(): List<LrmList> = lrmListRepository.findAllIncludeItems()
 
   fun findByIdOrListNotFoundException(id: Long): LrmList = lrmListRepository.findByIdOrNull(id) ?: throw ListNotFoundException(id)
 
-  fun findByIdOrListNotFoundExceptionListAndItems(id: Long): LrmList {
-    return lrmListRepository.findByIdOrNullListAndItems(id) ?: throw ListNotFoundException(id)
+  fun findByIdOrListNotFoundExceptionIncludeItems(id: Long): LrmList {
+    return lrmListRepository.findByIdOrNullIncludeItems(id) ?: throw ListNotFoundException(id)
   }
 }

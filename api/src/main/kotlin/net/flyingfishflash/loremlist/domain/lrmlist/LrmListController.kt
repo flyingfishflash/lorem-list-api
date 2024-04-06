@@ -101,10 +101,10 @@ class LrmListController(private val lrmListService: LrmListService) {
   )
   @GetMapping
   fun findAll(
-    @RequestParam(defaultValue = false.toString()) withItems: Boolean,
+    @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
-    val responseContent = if (withItems) lrmListService.findAllListsAndItems() else lrmListService.findAll()
+    val responseContent = if (includeItems) lrmListService.findAllIncludeItems() else lrmListService.findAll()
     val response = ResponseSuccess(responseContent, "the message", request)
     logger.info { "response as json: " + Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
@@ -128,12 +128,12 @@ class LrmListController(private val lrmListService: LrmListService) {
   @GetMapping("/{id}")
   fun findById(
     @PathVariable("id") @Min(1) id: Long,
-    @RequestParam(defaultValue = true.toString()) withItems: Boolean,
+    @RequestParam(defaultValue = true.toString()) includeItems: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmList>> {
     val responseContent =
-      if (withItems) {
-        lrmListService.findByIdOrListNotFoundExceptionListAndItems(id)
+      if (includeItems) {
+        lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id)
       } else {
         lrmListService.findByIdOrListNotFoundException(id)
       }
