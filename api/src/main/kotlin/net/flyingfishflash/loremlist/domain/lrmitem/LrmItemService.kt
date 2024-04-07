@@ -24,38 +24,53 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
       lrmItemRepository.addItemToList(listId, itemId)
       return Pair(findById(itemId).name, lrmListRepository.findByIdOrNull(listId)!!.name)
     } catch (ex: ExposedSQLException) {
-      when (val original = (ex as? ExposedSQLException)?.cause) {
+      when (val original = ex.cause) {
         is SQLIntegrityConstraintViolationException -> {
           logger.error { original.toString() }
           when {
-            lrmItemRepository.findByIdOrNull(itemId) == null -> throw ItemAddToListException(
-              itemId,
-              listId,
-              ItemNotFoundException(itemId),
-              null,
-              "Item id $itemId could not be added to list id $listId because the item couldn't be found",
-            )
-            lrmListRepository.findByIdOrNull(listId) == null -> throw ItemAddToListException(
-              itemId,
-              listId,
-              ListNotFoundException(listId),
-              null,
-              "Item id $itemId could not be added to list id $listId because the list couldn't be found",
-            )
+            lrmItemRepository.findByIdOrNull(itemId) == null -> {
+              val cause = ItemNotFoundException(id = itemId, cause = original)
+              throw ApiException(
+                httpStatus = cause.httpStatus,
+                title = null,
+                detail = "Item id $itemId could not be added to list id $listId because the item couldn't be found",
+                cause = cause,
+              )
+            }
+            lrmListRepository.findByIdOrNull(listId) == null -> {
+              val cause = ListNotFoundException(id = listId, cause = original)
+              throw ApiException(
+                httpStatus = cause.httpStatus,
+                title = null,
+                detail = "Item id $itemId could not be added to list id $listId because the list couldn't be found",
+                cause = cause,
+              )
+            }
             original.message?.contains("Unique index or primary key violation") == true ->
-              throw ItemAddToListException(
-                itemId,
-                listId,
-                original,
-                original.message,
-                "Item id $itemId could not be added to list id $listId because it's already been added.",
+              throw ApiException(
+                httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
+                title = null,
+                detail = "Item id $itemId could not be added to list id $listId because it's already been added.",
+                cause = original,
+
               )
             else -> {
-              throw ItemAddToListException(itemId, listId, original, original.message, "Unanticipated sql integrity constraint violation")
+              throw ApiException(
+                httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
+                title = null,
+                detail = "Item id $itemId could not be added to list id $listId because of an " +
+                  "unanticipated sql integrity constraint violation.",
+                cause = original,
+              )
             }
           }
         }
-        else -> throw ApiException(HttpStatus.INTERNAL_SERVER_ERROR, null, ex.message.toString(), ex)
+        else -> throw ApiException(
+          httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+          title = null,
+          detail = "Item id $itemId could not be added to list id $listId because of a sql exception with an undefined cause.",
+          cause = ex,
+        )
       }
     }
   }
@@ -91,12 +106,22 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
     try {
       addToList(itemId = itemId, listId = toListId)
       removeFromList(itemId = itemId, listId = fromListId)
-    } catch (exception: AbstractApiException) {
+    } catch (exception: ApiException) {
+      if (exception.cause != null) {
+        throw ApiException(
+          httpStatus = if (exception.cause is AbstractApiException) exception.cause.httpStatus else HttpStatus.INTERNAL_SERVER_ERROR,
+          title = null,
+          detail = "Item was not moved: " + exception.message,
+          cause = exception.cause,
+        )
+      } else {
+        throw exception
+      }
+    } catch (exception: Exception) {
       throw ApiException(
-        HttpStatus.BAD_REQUEST,
-        "Api Exception",
-        "Item id $itemId was not moved from list id $fromListId list id $toListId: " +
-          (exception.cause?.message ?: "api exception cause detail not available"),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        title = null,
+        detail = "Item was not moved: " + (exception.message ?: "exception cause detail not available"),
         exception,
       )
     }

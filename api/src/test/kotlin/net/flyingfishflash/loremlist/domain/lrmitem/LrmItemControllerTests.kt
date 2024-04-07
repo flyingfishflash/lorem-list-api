@@ -403,30 +403,24 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           verify(exactly = 1) { lrmItemService.moveToList(id, 2L, 3L) }
         }
 
-        it("item is not found") {
-          val fromListName = "List A"
-          val toListName = "List B"
-          every { lrmItemService.moveToList(id, 2L, 3L) } throws ApiException(HttpStatus.BAD_REQUEST, "zzz", "sssss")
+        it("item is not moved") {
+          every { lrmItemService.moveToList(id, 2L, 3L) } throws
+            ApiException(HttpStatus.I_AM_A_TEAPOT, "Api Exception Title", "Api Exception Detail")
           val instance = "/items/$id/move-to-list"
           mockMvc.post(instance) {
             content = Json.encodeToString(lrmItemMoveToListRequest)
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
-            status { isOk() }
+            status { isIAmATeapot() }
             content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("Moved item '$lrmItemName' from list '$fromListName' to list '$toListName'.") }
+            jsonPath("$.message") { value("Api Exception Detail") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.message") { value("Moved item '$lrmItemName' from list '$fromListName' to list '$toListName'.") }
           }
           verify(exactly = 1) { lrmItemService.moveToList(id, 2L, 3L) }
         }
-
-        it("source list is not found") { TODO() }
-
-        it("destination list is not found") { TODO() }
       }
     }
 
