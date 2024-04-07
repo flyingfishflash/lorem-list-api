@@ -90,7 +90,8 @@ sonarqube {
       "src/main/kotlin/net/flyingfishflash/loremlist/LoremListApplication.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/core/configuration/**," +
         "src/main/kotlin/net/flyingfishflash/loremlist/**/dto/*," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/*/*/*Configuration.kt",
+        "src/main/kotlin/net/flyingfishflash/loremlist/*/*/*Configuration.kt," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/domain/*/data/*Repository.kt,",
     )
   }
 }
