@@ -117,6 +117,7 @@ spotless {
         mapOf(
           "indent_size" to 2,
           "ktlint_code_style" to "intellij_idea",
+          "max_line_length" to 140,
         ),
       )
   }

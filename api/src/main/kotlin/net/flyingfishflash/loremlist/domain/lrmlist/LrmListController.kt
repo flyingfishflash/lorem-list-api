@@ -55,10 +55,7 @@ class LrmListController(private val lrmListService: LrmListService) {
     ],
   )
   @PostMapping
-  fun create(
-    @Valid @RequestBody lrmListRequest: LrmListRequest,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<LrmList>> {
+  fun create(@Valid @RequestBody lrmListRequest: LrmListRequest, request: HttpServletRequest): ResponseEntity<ResponseSuccess<LrmList>> {
     val responseStatus = HttpStatus.OK
     val responseContent = lrmListService.create(lrmListRequest)
     val responseMessage = "created new list"
@@ -79,10 +76,7 @@ class LrmListController(private val lrmListService: LrmListService) {
     ],
   )
   @DeleteMapping("/{id}")
-  fun delete(
-    @PathVariable("id") @Min(1) id: Long,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
+  fun delete(@PathVariable("id") @Min(1) id: Long, request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessage>> {
     lrmListService.deleteSingleById(id)
     val response = ResponseSuccess(ApiMessage("content"), "deleted list id $id", request)
     logger.info { "response as json: " + Json.encodeToString(response) }

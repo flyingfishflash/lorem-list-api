@@ -106,7 +106,9 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockSQLIntegrityConstraintViolationException.message } returns null
       val exception = shouldThrow<ApiException> { lrmItemService.addToList(itemId = 1, listId = 1) }
       exception.cause.shouldBeInstanceOf<SQLIntegrityConstraintViolationException>()
-      exception.responseMessage.shouldBe("Item id 1 could not be added to list id 1 because of an unanticipated sql integrity constraint violation.")
+      exception.responseMessage.shouldBe(
+        "Item id 1 could not be added to list id 1 because of an unanticipated sql integrity constraint violation.",
+      )
       verify(exactly = 1) { mockLrmItemRepository.addItemToList(1L, 1L) }
     }
 

@@ -27,10 +27,7 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
   }
 
   @Suppress("kotlin:S3776")
-  fun patch(
-    id: Long,
-    patchRequest: Map<String, Any>,
-  ): Pair<LrmList, Boolean> {
+  fun patch(id: Long, patchRequest: Map<String, Any>): Pair<LrmList, Boolean> {
     var patched = false
     val lrmList = lrmListRepository.findByIdOrNull(id)
     if (lrmList == null) {

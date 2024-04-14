@@ -22,8 +22,7 @@ import org.springframework.context.annotation.Configuration
 )
 class ExposedConfig {
   @Bean
-  fun databaseConfig() =
-    DatabaseConfig {
-      useNestedTransactions = true
-    }
+  fun databaseConfig() = DatabaseConfig {
+    useNestedTransactions = true
+  }
 }

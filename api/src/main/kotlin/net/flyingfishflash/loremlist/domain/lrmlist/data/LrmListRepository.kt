@@ -29,15 +29,14 @@ class LrmListRepository {
 
   fun deleteById(id: Long): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
 
-  fun findAll(): List<LrmList> =
-    repositoryTable.select(
-      repositoryTable.id,
-      repositoryTable.name,
-      repositoryTable.description,
-      repositoryTable.created,
-    )
-      .map { it.toLrmlist() }
-      .toList()
+  fun findAll(): List<LrmList> = repositoryTable.select(
+    repositoryTable.id,
+    repositoryTable.name,
+    repositoryTable.description,
+    repositoryTable.created,
+  )
+    .map { it.toLrmlist() }
+    .toList()
 
   // TODO Paging Query
   fun findAllIncludeItems(): List<LrmList> {

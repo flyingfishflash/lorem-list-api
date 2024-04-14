@@ -11,28 +11,27 @@ import org.springframework.boot.runApplication
 @SpringBootApplication
 class LoremListApplication
 
-fun Any?.toJsonElement(): JsonElement =
-  when (this) {
-    null -> JsonNull
-    is Map<*, *> -> toJsonElement()
-    is Collection<*> -> toJsonElement()
-    is ByteArray -> this.toList().toJsonElement()
-    is CharArray -> this.toList().toJsonElement()
-    is ShortArray -> this.toList().toJsonElement()
-    is IntArray -> this.toList().toJsonElement()
-    is LongArray -> this.toList().toJsonElement()
-    is FloatArray -> this.toList().toJsonElement()
-    is DoubleArray -> this.toList().toJsonElement()
-    is BooleanArray -> this.toList().toJsonElement()
-    is Array<*> -> toJsonElement()
-    is Boolean -> JsonPrimitive(this)
-    is Number -> JsonPrimitive(this)
-    is String -> JsonPrimitive(this)
-    is Enum<*> -> JsonPrimitive(this.toString())
-    else -> {
-      throw IllegalStateException("Can't serialize unknown type: $this")
-    }
+fun Any?.toJsonElement(): JsonElement = when (this) {
+  null -> JsonNull
+  is Map<*, *> -> toJsonElement()
+  is Collection<*> -> toJsonElement()
+  is ByteArray -> this.toList().toJsonElement()
+  is CharArray -> this.toList().toJsonElement()
+  is ShortArray -> this.toList().toJsonElement()
+  is IntArray -> this.toList().toJsonElement()
+  is LongArray -> this.toList().toJsonElement()
+  is FloatArray -> this.toList().toJsonElement()
+  is DoubleArray -> this.toList().toJsonElement()
+  is BooleanArray -> this.toList().toJsonElement()
+  is Array<*> -> toJsonElement()
+  is Boolean -> JsonPrimitive(this)
+  is Number -> JsonPrimitive(this)
+  is String -> JsonPrimitive(this)
+  is Enum<*> -> JsonPrimitive(this.toString())
+  else -> {
+    throw IllegalStateException("Can't serialize unknown type: $this")
   }
+}
 
 fun Map<*, *>.toJsonElement(): JsonElement {
   val map = mutableMapOf<String, JsonElement>()

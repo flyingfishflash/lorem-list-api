@@ -111,13 +111,12 @@ data class ResponseSuccess<T>(
 /** Calculate the number of items included in the content
  * return Int
  */
-private fun calcSize(content: Any?): Int =
-  when (content) {
-    null -> 0
-    is Collection<*> -> content.size
-    is Map<*, *> -> content.size
-    else -> 1
-  }
+private fun calcSize(content: Any?): Int = when (content) {
+  null -> 0
+  is Collection<*> -> content.size
+  is Map<*, *> -> content.size
+  else -> 1
+}
 
 /** Potentially can be used, but not necessary in this implementation */
 // class ApiResponseSerializer<T>(private val serializer: KSerializer<T>) : KSerializer<Response<T>> {

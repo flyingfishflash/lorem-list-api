@@ -25,16 +25,15 @@ class LrmItemRepository {
 
   fun deleteById(id: Long): Int = repositoryTable.deleteWhere { repositoryTable.id eq LrmListItemTable.id }
 
-  fun findAll(): List<LrmItem> =
-    repositoryTable.select(
-      repositoryTable.id,
-      repositoryTable.name,
-      repositoryTable.description,
-      repositoryTable.created,
-      repositoryTable.quantity,
-    )
-      .map { it.toLrmItem() }
-      .toList()
+  fun findAll(): List<LrmItem> = repositoryTable.select(
+    repositoryTable.id,
+    repositoryTable.name,
+    repositoryTable.description,
+    repositoryTable.created,
+    repositoryTable.quantity,
+  )
+    .map { it.toLrmItem() }
+    .toList()
 
   fun findAllIncludeLists(): List<LrmItem> {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
@@ -72,11 +71,10 @@ class LrmItemRepository {
     return itemsAndLists
   }
 
-  fun findByIdOrNull(id: Long): LrmItem? =
-    repositoryTable.selectAll()
-      .where { repositoryTable.id eq id }
-      .map { it.toLrmItem() }
-      .firstOrNull()
+  fun findByIdOrNull(id: Long): LrmItem? = repositoryTable.selectAll()
+    .where { repositoryTable.id eq id }
+    .map { it.toLrmItem() }
+    .firstOrNull()
 
   fun findByIdOrNullIncludeLists(id: Long): LrmItem? {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
@@ -128,10 +126,7 @@ class LrmItemRepository {
     return lrmListItem
   }
 
-  fun addItemToList(
-    listId: Long,
-    itemId: Long,
-  ) {
+  fun addItemToList(listId: Long, itemId: Long) {
     LrmListsItemsTable.insert {
       it[list] = listId
       it[item] = itemId

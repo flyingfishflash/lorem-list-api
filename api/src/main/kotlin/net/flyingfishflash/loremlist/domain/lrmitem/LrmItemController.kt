@@ -69,10 +69,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     ],
   )
   @PostMapping
-  fun create(
-    @Valid @RequestBody lrmItemRequest: LrmItemRequest,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<LrmItem>> {
+  fun create(@Valid @RequestBody lrmItemRequest: LrmItemRequest, request: HttpServletRequest): ResponseEntity<ResponseSuccess<LrmItem>> {
     val responseStatus = HttpStatus.OK
     val responseContent = lrmItemService.create(lrmItemRequest)
     val responseMessage = "created new item"
@@ -93,10 +90,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     ],
   )
   @DeleteMapping("/{id}")
-  fun delete(
-    @PathVariable("id") @Min(1) id: Long,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
+  fun delete(@PathVariable("id") @Min(1) id: Long, request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessage>> {
     lrmItemService.deleteSingleById(id)
     val responseStatus = HttpStatus.OK
     val responseMessage = "deleted item id $id"

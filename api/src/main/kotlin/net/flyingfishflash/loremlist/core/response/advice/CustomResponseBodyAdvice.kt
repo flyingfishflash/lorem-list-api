@@ -23,10 +23,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice
 class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
   private val logger = KotlinLogging.logger {}
 
-  override fun supports(
-    returnType: MethodParameter,
-    converterType: Class<out HttpMessageConverter<*>>,
-  ): Boolean {
+  override fun supports(returnType: MethodParameter, converterType: Class<out HttpMessageConverter<*>>): Boolean {
     // exclude swagger from beforeBodyWrite
     return (returnType.declaringClass.toString() != "class org.springdoc.webmvc.ui.SwaggerWelcomeWebMvc") &&
       (returnType.method?.name != "openapiJson")
