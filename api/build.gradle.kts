@@ -23,7 +23,7 @@ val ciPlatform: String by rootProject.extra
 val ciPipelineId: String by rootProject.extra
 
 val exposedVersion = "0.48.0"
-val flywayVersion = "10.10.0"
+val flywayVersion = "10.11.0"
 val kotestVersion = "5.8.1"
 val kotestExtensionsSpringVersion = "1.1.3"
 val kotlinLoggingVersion = "6.0.9"
@@ -40,6 +40,7 @@ dependencies {
 //  https://github.com/oshai/kotlin-logging/releases
   implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
   implementation("jakarta.validation:jakarta.validation-api")
+//  https://github.com/flyway/flyway/releases
   implementation("org.flywaydb:flyway-core:$flywayVersion")
   implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
   implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
