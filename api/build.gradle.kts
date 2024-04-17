@@ -30,7 +30,7 @@ val kotlinLoggingVersion = "6.0.9"
 val kotlinxDateTimeVersion = "0.5.0"
 val kotlinxSerializationJson = "1.6.3"
 val postgresqlVersion = "42.7.3"
-val springDocOpenApiStarterWebmvcUiVersion = "2.4.0"
+val springDocOpenApiStarterWebmvcUiVersion = "2.5.0"
 val springmockkVersion = "4.0.2"
 
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
@@ -49,6 +49,7 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJson")
+//  https://github.com/springdoc/springdoc-openapi/releases
   implementation(
     "org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocOpenApiStarterWebmvcUiVersion",
   )
