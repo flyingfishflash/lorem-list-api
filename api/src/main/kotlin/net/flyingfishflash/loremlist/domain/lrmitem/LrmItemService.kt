@@ -156,6 +156,7 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
               "because list id $listId could not be found",
           )
         } else {
+          // TODO: response message not propogating
           throw ItemRemoveFromListException(
             itemId,
             listId,
