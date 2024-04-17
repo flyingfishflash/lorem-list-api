@@ -26,7 +26,7 @@ val exposedVersion = "0.48.0"
 val flywayVersion = "10.10.0"
 val kotestVersion = "5.8.1"
 val kotestExtensionsSpringVersion = "1.1.3"
-val kotlinLoggingVersion = "6.0.3"
+val kotlinLoggingVersion = "6.0.9"
 val kotlinxDateTimeVersion = "0.5.0"
 val kotlinxSerializationJson = "1.6.3"
 val postgresqlVersion = "42.7.3"
@@ -37,6 +37,7 @@ configurations { compileOnly { extendsFrom(configurations.annotationProcessor.ge
 
 dependencies {
 //  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+//  https://github.com/oshai/kotlin-logging/releases
   implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
   implementation("jakarta.validation:jakarta.validation-api")
   implementation("org.flywaydb:flyway-core:$flywayVersion")
