@@ -7,7 +7,7 @@ plugins {
   id("com.diffplug.spotless")
   id("io.spring.dependency-management") version "1.1.4"
 //  id("org.graalvm.buildtools.native") version "0.9.28"
-  id("org.springframework.boot") version "3.2.3"
+  id("org.springframework.boot") version "3.2.4"
   id("org.springdoc.openapi-gradle-plugin") version "1.8.0"
   kotlin("jvm") version "1.9.22"
   kotlin("plugin.jpa") version "1.9.22"
@@ -56,6 +56,7 @@ dependencies {
   implementation(
     "org.springdoc:springdoc-openapi-starter-common:$springDocOpenApiStarterWebmvcUiVersion",
   )
+//  https://github.com/spring-projects/spring-boot/releases
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   //  implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-validation")
