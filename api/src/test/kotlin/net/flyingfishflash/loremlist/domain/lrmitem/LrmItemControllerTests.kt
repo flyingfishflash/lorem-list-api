@@ -405,7 +405,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
         it("item is not moved") {
           every { lrmItemService.moveToList(id, 2L, 3L) } throws
-            ApiException(HttpStatus.I_AM_A_TEAPOT, "Api Exception Title", "Api Exception Detail")
+            ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, title = "Api Exception Title", responseMessage = "Api Exception Detail")
           val instance = "/items/$id/move-to-list"
           mockMvc.post(instance) {
             content = Json.encodeToString(lrmItemMoveToListRequest)

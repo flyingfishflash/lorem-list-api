@@ -32,8 +32,7 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
               val cause = ItemNotFoundException(id = itemId, cause = original)
               throw ApiException(
                 httpStatus = cause.httpStatus,
-                title = null,
-                detail = "Item id $itemId could not be added to list id $listId because the item couldn't be found",
+                responseMessage = "Item id $itemId could not be added to list id $listId because the item couldn't be found",
                 cause = cause,
               )
             }
@@ -41,24 +40,21 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
               val cause = ListNotFoundException(id = listId, cause = original)
               throw ApiException(
                 httpStatus = cause.httpStatus,
-                title = null,
-                detail = "Item id $itemId could not be added to list id $listId because the list couldn't be found",
+                responseMessage = "Item id $itemId could not be added to list id $listId because the list couldn't be found",
                 cause = cause,
               )
             }
             original.message?.contains("Unique index or primary key violation") == true ->
               throw ApiException(
                 httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-                title = null,
-                detail = "Item id $itemId could not be added to list id $listId because it's already been added.",
+                responseMessage = "Item id $itemId could not be added to list id $listId because it's already been added.",
                 cause = original,
 
               )
             else -> {
               throw ApiException(
                 httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-                title = null,
-                detail = "Item id $itemId could not be added to list id $listId because of an " +
+                responseMessage = "Item id $itemId could not be added to list id $listId because of an " +
                   "unanticipated sql integrity constraint violation.",
                 cause = original,
               )
@@ -67,8 +63,7 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
         }
         else -> throw ApiException(
           httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
-          title = null,
-          detail = "Item id $itemId could not be added to list id $listId because of a sql exception with an undefined cause.",
+          responseMessage = "Item id $itemId could not be added to list id $listId because of a sql exception with an undefined cause.",
           cause = ex,
         )
       }
@@ -110,8 +105,7 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
       if (exception.cause != null) {
         throw ApiException(
           httpStatus = if (exception.cause is AbstractApiException) exception.cause.httpStatus else HttpStatus.INTERNAL_SERVER_ERROR,
-          title = null,
-          detail = "Item was not moved: " + exception.message,
+          responseMessage = "Item was not moved: " + exception.message,
           cause = exception.cause,
         )
       } else {
@@ -119,10 +113,9 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
       }
     } catch (exception: Exception) {
       throw ApiException(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        title = null,
-        detail = "Item was not moved: " + (exception.message ?: "exception cause detail not available"),
-        exception,
+        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+        responseMessage = "Item was not moved: " + (exception.message ?: "exception cause detail not available"),
+        cause = exception,
       )
     }
     return Triple(

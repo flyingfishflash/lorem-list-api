@@ -264,7 +264,8 @@ class LrmItemServiceTests : DescribeSpec({
 
     it("anticipated api exception with root cause not of type api exception") {
       val spy = spyk(LrmItemService(mockLrmItemRepository, mockLrmListRepository))
-      every { mockLrmItemRepository.addItemToList(3L, 1L) } throws ApiException(HttpStatus.I_AM_A_TEAPOT, null, "Lorem Ipsum", Exception())
+      every { mockLrmItemRepository.addItemToList(3L, 1L) } throws
+        ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, cause = Exception())
       every { mockLrmItemRepository.findByIdOrNull(1L) } returns null
       val exception = shouldThrow<ApiException> { spy.moveToList(1L, 2L, 3L) }
       exception.cause.shouldBeInstanceOf<Exception>()
@@ -275,7 +276,8 @@ class LrmItemServiceTests : DescribeSpec({
 
     it("anticipated api exception with no root cause") {
       val spy = spyk(LrmItemService(mockLrmItemRepository, mockLrmListRepository))
-      every { mockLrmItemRepository.addItemToList(3L, 1L) } throws ApiException(HttpStatus.I_AM_A_TEAPOT, null, "Lorem Ipsum")
+      every { mockLrmItemRepository.addItemToList(3L, 1L) } throws
+        ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT)
       every { mockLrmItemRepository.findByIdOrNull(1L) } returns null
       val exception = shouldThrow<ApiException> { spy.moveToList(1L, 2L, 3L) }
       exception.cause.shouldBeNull()
