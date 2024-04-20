@@ -4,8 +4,6 @@ import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
-import net.flyingfishflash.loremlist.domain.lrmitem.ItemInsertException
-import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Sequence
@@ -107,7 +105,7 @@ class LrmItemRepository {
     return itemAndLists
   }
 
-  fun insert(lrmItemRequest: LrmItemRequest): LrmItem {
+  fun insert(lrmItemRequest: LrmItemRequest): Long {
     val id =
       repositoryTable
         .insertAndGetId {
@@ -118,12 +116,7 @@ class LrmItemRepository {
           it[quantity] = lrmItemRequest.quantity
         }
 
-    val lrmListItem =
-      repositoryTable.selectAll()
-        .where { repositoryTable.id eq id }
-        .map { it.toLrmItem() }
-        .singleOrNull() ?: throw ItemInsertException(cause = ItemNotFoundException(id.value))
-    return lrmListItem
+    return id.value
   }
 
   fun addItemToList(listId: Long, itemId: Long) {

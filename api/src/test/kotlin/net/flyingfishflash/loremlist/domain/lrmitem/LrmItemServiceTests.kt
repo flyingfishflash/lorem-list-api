@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -41,6 +42,11 @@ class LrmItemServiceTests : DescribeSpec({
   val mockSQLIntegrityConstraintViolationException = mockk<SQLIntegrityConstraintViolationException>()
   val exposedSQLExceptionConstraintViolation = ExposedSQLException(
     cause = mockSQLIntegrityConstraintViolationException,
+    transaction = mockTransaction,
+    contexts = mockContexts,
+  )
+  val exposedSQLExceptionGeneric = ExposedSQLException(
+    cause = SQLException("Cause of ExposedSQLException"),
     transaction = mockTransaction,
     contexts = mockContexts,
   )
@@ -139,11 +145,6 @@ class LrmItemServiceTests : DescribeSpec({
     }
 
     it("unanticipated exposed sql exception") {
-      val exposedSQLExceptionGeneric = ExposedSQLException(
-        cause = SQLException("Cause of ExposedSQLException"),
-        transaction = mockTransaction,
-        contexts = mockContexts,
-      )
       every { mockLrmItemRepository.addItemToList(1L, 1L) } throws exposedSQLExceptionGeneric
       every { mockContexts[0].statement } returns mockk<Statement<String>>()
       every { mockContexts[0].statement.type } returns mockk<StatementType>()
@@ -156,9 +157,23 @@ class LrmItemServiceTests : DescribeSpec({
   }
 
   describe("create()") {
-    it("repository returns inserted item") {
-      every { mockLrmItemRepository.insert(ofType(LrmItemRequest::class)) } returns lrmItemMockResponse
+    it("repository returns inserted item id") {
+      every { mockLrmItemRepository.insert(ofType(LrmItemRequest::class)) } returns id
+      every { mockLrmItemRepository.findByIdOrNull(id) } returns lrmItemMockResponse
       lrmItemService.create(lrmItemRequest)
+      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest) }
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
+    }
+
+    it("repository throws exposed sql exception") {
+      every { mockLrmItemRepository.insert(ofType(LrmItemRequest::class)) } throws exposedSQLExceptionGeneric
+      val exception = shouldThrow<ApiException> { lrmItemService.create(lrmItemRequest) }
+      exception.cause.shouldBeInstanceOf<ExposedSQLException>()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.message.shouldNotBeNull().shouldBeEqual("Item could not be inserted.")
+      exception.responseMessage.shouldBeEqual("Item could not be inserted.")
+      exception.title.shouldBeEqual("API Exception")
+      println(exception)
       verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest) }
     }
   }

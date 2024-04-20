@@ -21,23 +21,6 @@ class ItemNotFoundException(
   }
 }
 
-class ItemInsertException(
-  cause: Throwable? = null,
-  message: String? = null,
-  responseMessage: String? = null,
-) : AbstractApiException(
-  cause = cause,
-  httpStatus = HttpStatus.BAD_REQUEST,
-  detail = message ?: DEFAULT_MESSAGE,
-  responseMessage = responseMessage ?: DEFAULT_MESSAGE,
-  title = TITLE,
-) {
-  companion object {
-    const val TITLE = "Item Insert Exception"
-    const val DEFAULT_MESSAGE = "Item could not be inserted."
-  }
-}
-
 class ItemDeleteException(
   id: Long,
   cause: Throwable? = null,

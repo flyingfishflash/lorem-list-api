@@ -151,6 +151,26 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           verify(exactly = 1) { lrmItemService.create(lrmItemRequest) }
         }
 
+        it("item is not created") {
+          println(Json.encodeToString(lrmItemRequest))
+          every { lrmItemService.create(lrmItemRequest) } throws ApiException(HttpStatus.INTERNAL_SERVER_ERROR)
+          val instance = "/items"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(lrmItemRequest)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isInternalServerError() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.ERROR.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("API Exception") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.detail") { value("API Exception") }
+          }
+          verify(exactly = 1) { lrmItemService.create(lrmItemRequest) }
+        }
+
         it("requested item name is an empty string") {
           val instance = "/items"
           mockMvc.post(instance) {

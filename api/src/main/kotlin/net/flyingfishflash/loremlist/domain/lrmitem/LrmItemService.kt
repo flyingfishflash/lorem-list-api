@@ -70,7 +70,19 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
     }
   }
 
-  fun create(lrmItemRequest: LrmItemRequest): LrmItem = lrmItemRepository.insert(lrmItemRequest)
+  fun create(lrmItemRequest: LrmItemRequest): LrmItem {
+    try {
+      val id = lrmItemRepository.insert(lrmItemRequest)
+      return findById(id)
+    } catch (cause: Exception) {
+      throw ApiException(
+        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+        cause = cause,
+        message = "Item could not be inserted.",
+        responseMessage = "Item could not be inserted.",
+      )
+    }
+  }
 
   fun deleteSingleById(id: Long) {
     val deletedCount = lrmItemRepository.deleteById(id)
