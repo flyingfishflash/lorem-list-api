@@ -28,9 +28,7 @@ fun Any?.toJsonElement(): JsonElement = when (this) {
   is Number -> JsonPrimitive(this)
   is String -> JsonPrimitive(this)
   is Enum<*> -> JsonPrimitive(this.toString())
-  else -> {
-    throw IllegalStateException("Can't serialize unknown type: $this")
-  }
+  else -> error("Can't serialize unknown type: $this")
 }
 
 fun Map<*, *>.toJsonElement(): JsonElement {
