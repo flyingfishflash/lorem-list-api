@@ -19,7 +19,7 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
   fun create(lrmListRequest: LrmListRequest): LrmList {
     try {
       val id = lrmListRepository.insert(lrmListRequest)
-      return findByIdOrListNotFoundException(id)
+      return findById(id)
     } catch (cause: Exception) {
       throw ApiException(
         httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
@@ -89,9 +89,9 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
 
   fun findAllIncludeItems(): List<LrmList> = lrmListRepository.findAllIncludeItems()
 
-  fun findByIdOrListNotFoundException(id: Long): LrmList = lrmListRepository.findByIdOrNull(id) ?: throw ListNotFoundException(id)
+  fun findById(id: Long): LrmList = lrmListRepository.findByIdOrNull(id) ?: throw ListNotFoundException(id)
 
-  fun findByIdOrListNotFoundExceptionIncludeItems(id: Long): LrmList {
+  fun findByIdIncludeItems(id: Long): LrmList {
     return lrmListRepository.findByIdOrNullIncludeItems(id) ?: throw ListNotFoundException(id)
   }
 }

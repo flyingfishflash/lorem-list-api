@@ -106,7 +106,7 @@ class LrmListServiceTests : DescribeSpec({
   describe("findByIdOrListNotFoundExceptionListAndItems()") {
     it("list is found and returned") {
       every { lrmListRepository.findByIdOrNullIncludeItems(id) } returns lrmListMockResponse
-      val result = lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id)
+      val result = lrmListService.findByIdIncludeItems(id)
       result.shouldBe(lrmListMockResponse)
       verify(exactly = 1) { lrmListRepository.findByIdOrNullIncludeItems(id) }
     }
@@ -114,7 +114,7 @@ class LrmListServiceTests : DescribeSpec({
     it("list is not found") {
       every { lrmListRepository.findByIdOrNullIncludeItems(id) } returns null
       assertThrows<ListNotFoundException> {
-        lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id)
+        lrmListService.findByIdIncludeItems(id)
       }
     }
   }
@@ -122,7 +122,7 @@ class LrmListServiceTests : DescribeSpec({
   describe("findByIdOrListNotFoundException()") {
     it("list is found and returned") {
       every { lrmListRepository.findByIdOrNull(id) } returns lrmListMockResponse
-      val result = lrmListService.findByIdOrListNotFoundException(id)
+      val result = lrmListService.findById(id)
       result.shouldBe(lrmListMockResponse)
       verify(exactly = 1) { lrmListRepository.findByIdOrNull(id) }
     }
@@ -130,7 +130,7 @@ class LrmListServiceTests : DescribeSpec({
     it("list is not found") {
       every { lrmListRepository.findByIdOrNull(id) } returns null
       assertThrows<ListNotFoundException> {
-        lrmListService.findByIdOrListNotFoundException(id)
+        lrmListService.findById(id)
       }
     }
   }

@@ -127,9 +127,9 @@ class LrmListController(private val lrmListService: LrmListService) {
   ): ResponseEntity<ResponseSuccess<LrmList>> {
     val responseContent =
       if (includeItems) {
-        lrmListService.findByIdOrListNotFoundExceptionIncludeItems(id)
+        lrmListService.findByIdIncludeItems(id)
       } else {
-        lrmListService.findByIdOrListNotFoundException(id)
+        lrmListService.findById(id)
       }
     val response = ResponseSuccess(responseContent, "retrieved list $id", request)
     logger.info { Json.encodeToString(response) }
