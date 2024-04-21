@@ -33,7 +33,7 @@ fun Any?.toJsonElement(): JsonElement = when (this) {
 
 fun Map<*, *>.toJsonElement(): JsonElement {
   val map = mutableMapOf<String, JsonElement>()
-  this.forEach { key, value ->
+  this.forEach { (key, value) ->
     key as String
     map[key] = value.toJsonElement()
   }
