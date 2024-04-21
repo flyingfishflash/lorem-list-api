@@ -181,14 +181,18 @@ class LrmItemServiceTests : DescribeSpec({
   describe("deleteSingleById()") {
     it("repository returns 0 deleted records") {
       every { mockLrmItemRepository.deleteById(id) } returns 0
-      shouldThrow<ItemDeleteException> { lrmItemService.deleteSingleById(id) }
-        .cause.shouldBeInstanceOf<ItemNotFoundException>()
+      val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(id) }
+      exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
+      exception.httpStatus.shouldBe(HttpStatus.BAD_REQUEST)
+      exception.title.shouldBeEqual("API Exception")
     }
 
     it("repository returns > 1 deleted records") {
       every { mockLrmItemRepository.deleteById(id) } returns 2
-      shouldThrow<ItemDeleteException> { lrmItemService.deleteSingleById(id) }
-        .cause.shouldBeNull()
+      val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(id) }
+      exception.cause.shouldBeNull()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.title.shouldBeEqual("API Exception")
     }
 
     it("repository returns 1 deleted record") {

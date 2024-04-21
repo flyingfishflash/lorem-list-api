@@ -87,15 +87,15 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
   fun deleteSingleById(id: Long) {
     val deletedCount = lrmItemRepository.deleteById(id)
     if (deletedCount < 1) {
-      throw ItemDeleteException(
-        id = id,
+      throw ApiException(
+        httpStatus = HttpStatus.BAD_REQUEST,
         cause = ItemNotFoundException(id = id),
         responseMessage = "Item id $id was not deleted because it could be found to delete.",
       )
     } else if (deletedCount > 1) {
       // TODO: Ensure the transaction is rolled back if an exception is thrown
-      throw ItemDeleteException(
-        id = id,
+      throw ApiException(
+        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         responseMessage = "More than one item with id $id were found. No items have been deleted.",
       )
     }

@@ -21,24 +21,6 @@ class ItemNotFoundException(
   }
 }
 
-class ItemDeleteException(
-  id: Long,
-  cause: Throwable? = null,
-  message: String? = null,
-  responseMessage: String? = null,
-) : AbstractApiException(
-  cause = cause,
-  httpStatus = HttpStatus.BAD_REQUEST,
-  detail = message ?: defaultMessage(id),
-  responseMessage = responseMessage ?: defaultMessage(id),
-  title = TITLE,
-) {
-  companion object {
-    const val TITLE = "Item Delete Exception"
-    fun defaultMessage(id: Long) = "Item id $id could not be deleted."
-  }
-}
-
 class ItemRemoveFromListException(
   itemId: Long,
   listId: Long,
