@@ -141,23 +141,4 @@ class LrmItemRepository {
       quantity = this[LrmListItemTable.quantity],
     )
   }
-
-//  private fun Iterable<ResultRow>.toLrmItemsWithLists(): List<LrmItem> =
-//    fold(initial = mutableMapOf<Long, LrmItem>(), operation = { map, resultRow ->
-//      val item = resultRow.toLrmItem()
-//      val listId = resultRow.getOrNull(LrmListTable.id)
-//      val listSuccinct = listId?.let { LrmListSuccinct(id = it.value, name = resultRow[LrmListTable.name]) }
-//      val current = map.getOrDefault(item.id, item)
-//      // if lists is null return an empty set otherwise add create a list of non-null items
-//      // so a serialized list explicitly returns [] when a list has no items otherwise the items key will not be rendered
-//      map[item.id] = current.copy(
-//        lists =
-//        if (current.lists != null) {
-//          current.lists.plus(listOfNotNull(listSuccinct))
-//        } else {
-//          setOf()
-//        },
-//      )
-//      map
-//    }).values.toList()
 }

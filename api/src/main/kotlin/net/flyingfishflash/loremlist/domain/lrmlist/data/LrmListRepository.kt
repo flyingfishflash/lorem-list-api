@@ -169,16 +169,4 @@ class LrmListRepository {
       description = this[repositoryTable.description],
     )
   }
-
-//  private fun Iterable<ResultRow>.toLrmListsWithItems(): List<LrmList> =
-//    fold(initial = mutableMapOf<Long, LrmList>(), operation = { map, resultRow ->
-//      val list = resultRow.toLrmList()
-//      val itemId = resultRow.getOrNull(LrmListItemTable.id)
-//      val item = itemId?.let { resultRow.toLrmListItem() }
-//      val current = map.getOrDefault(list.id, list)
-//      // if items is null return an empty set otherwise add create a list of non-null items
-//      // so a serialized list explicitly returns [] when a list has no items otherwise the items key will not be rendered
-//      map[list.id] = current.copyWith(items = if (current.items != null) current.items.plus(listOfNotNull(item)) else setOf())
-//      map
-//    }).values.toList()
 }
