@@ -145,40 +145,33 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository, val lrmListReposi
       }
       deletedCount < 1 -> {
         if (lrmItemRepository.findByIdOrNull(itemId) == null) {
-          throw ItemRemoveFromListException(
-            itemId,
-            listId,
-            ItemNotFoundException(itemId),
+          throw ApiException(
+            httpStatus = HttpStatus.BAD_REQUEST,
+            cause = ItemNotFoundException(itemId),
             responseMessage = "Item id $itemId could not be removed from list id $listId " +
               "because item id $itemId could not be found",
           )
         } else if (lrmListRepository.findByIdOrNull(listId) == null) {
-          throw ItemRemoveFromListException(
-            itemId,
-            listId,
-            ListNotFoundException(listId),
+          throw ApiException(
+            httpStatus = HttpStatus.BAD_REQUEST,
+            cause = ListNotFoundException(listId),
             responseMessage = "Item id $itemId could not be removed from list id $listId " +
               "because list id $listId could not be found",
           )
         } else {
-          // TODO: response message not propogating
-          throw ItemRemoveFromListException(
-            itemId,
-            listId,
-            null,
-            "Item id $itemId exists and list id $listId exists but 0 records were deleted.",
-            "Item id $itemId is not associated with list id $listId",
+          throw ApiException(
+            httpStatus = HttpStatus.BAD_REQUEST,
+            message = "Item id $itemId exists and list id $listId exists but 0 records were deleted.",
+            responseMessage = "Item id $itemId is not associated with list id $listId",
           )
         }
       }
       else -> {
         // TODO: Ensure the transaction is rolled back if an exception is thrown
-        throw ItemRemoveFromListException(
-          itemId,
-          listId,
-          null,
-          "Delete transaction rolled back because the count of deleted records was > 1.",
-          "Item id $itemId is associated with list id $listId multiple times.",
+        throw ApiException(
+          httpStatus = HttpStatus.BAD_REQUEST,
+          message = "Delete transaction rolled back because the count of deleted records was > 1.",
+          responseMessage = "Item id $itemId is associated with list id $listId multiple times.",
         )
       }
     }

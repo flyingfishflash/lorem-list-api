@@ -320,7 +320,7 @@ class LrmItemServiceTests : DescribeSpec({
     it("item not found") {
       every { mockLrmItemRepository.removeItemFromList(any(), any()) } returns 0
       every { mockLrmItemRepository.findByIdOrNull(any()) } returns null
-      val exception = shouldThrow<ItemRemoveFromListException> { lrmItemService.removeFromList(1, 2) }
+      val exception = shouldThrow<ApiException> { lrmItemService.removeFromList(1, 2) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
@@ -331,7 +331,7 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.removeItemFromList(any(), any()) } returns 0
       every { mockLrmItemRepository.findByIdOrNull(any()) } returns lrmItemMockResponse
       every { mockLrmListRepository.findByIdOrNull(any()) } returns null
-      val exception = shouldThrow<ItemRemoveFromListException> { lrmItemService.removeFromList(1, 2) }
+      val exception = shouldThrow<ApiException> { lrmItemService.removeFromList(1, 2) }
       exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
@@ -342,7 +342,7 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.removeItemFromList(1L, 2L) } returns 0
       every { mockLrmItemRepository.findByIdOrNull(1L) } returns lrmItemMockResponse
       every { mockLrmListRepository.findByIdOrNull(2L) } returns lrmListMockResponse
-      val exception = shouldThrow<ItemRemoveFromListException> { lrmItemService.removeFromList(1, 2) }
+      val exception = shouldThrow<ApiException> { lrmItemService.removeFromList(1, 2) }
       exception.cause.shouldBeNull()
       verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
@@ -351,7 +351,7 @@ class LrmItemServiceTests : DescribeSpec({
 
     it("item is associated with the list multiple times") {
       every { mockLrmItemRepository.removeItemFromList(1L, 2L) } returns 2
-      val exception = shouldThrow<ItemRemoveFromListException> { lrmItemService.removeFromList(1, 2) }
+      val exception = shouldThrow<ApiException> { lrmItemService.removeFromList(1, 2) }
       exception.cause.shouldBeNull()
       verify(exactly = 1) { mockLrmItemRepository.removeItemFromList(1, 2) }
     }
