@@ -60,7 +60,7 @@ class LrmListController(private val lrmListService: LrmListService) {
     val responseContent = lrmListService.create(lrmListRequest)
     val responseMessage = "created new list"
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { "response as json: " + Json.encodeToString(response) }
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -79,7 +79,7 @@ class LrmListController(private val lrmListService: LrmListService) {
   fun delete(@PathVariable("id") @Min(1) id: Long, request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessage>> {
     lrmListService.deleteSingleById(id)
     val response = ResponseSuccess(ApiMessage("content"), "deleted list id $id", request)
-    logger.info { "response as json: " + Json.encodeToString(response) }
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity<ResponseSuccess<ApiMessage>>(response, HttpStatus.OK)
   }
 
@@ -100,7 +100,7 @@ class LrmListController(private val lrmListService: LrmListService) {
   ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
     val responseContent = if (includeItems) lrmListService.findAllIncludeItems() else lrmListService.findAll()
     val response = ResponseSuccess(responseContent, "the message", request)
-    logger.info { "response as json: " + Json.encodeToString(response) }
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
   }
 
@@ -132,7 +132,7 @@ class LrmListController(private val lrmListService: LrmListService) {
         lrmListService.findByIdOrListNotFoundException(id)
       }
     val response = ResponseSuccess(responseContent, "retrieved list $id", request)
-    logger.info { "response as json: " + Json.encodeToString(response) }
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
   }
 
@@ -172,7 +172,7 @@ class LrmListController(private val lrmListService: LrmListService) {
       response = ResponseSuccess(responseContent, "not patched", request)
       responseEntity = ResponseEntity(response, HttpStatus.NO_CONTENT)
     }
-    logger.info { "response as json: " + Json.encodeToString(response) }
+    logger.info { Json.encodeToString(response) }
     return responseEntity
   }
 }

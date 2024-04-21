@@ -47,18 +47,18 @@ class CustomResponseBodyAdvice : ResponseBodyAdvice<Any?> {
       // --
       o is Throwable && o !is ErrorResponseException -> {
         applicationResponse = ResponseProblem(ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR), serverHttpRequest)
-        logger.info { "response as json: " + Json.encodeToString(applicationResponse) }
+        logger.info { Json.encodeToString(applicationResponse) }
       }
       // --
       o is ErrorResponseException -> {
         applicationResponse = ResponseProblem(problemDetail = o.body, serverHttpRequest)
-        logger.info { "response as json: " + Json.encodeToString(applicationResponse) }
+        logger.info { Json.encodeToString(applicationResponse) }
       }
       // --
       o is ProblemDetail -> {
         val responseProblem = ResponseProblem(problemDetail = o, serverHttpRequest)
         applicationResponse = responseProblem
-        logger.info { "response as json: " + Json.encodeToString(responseProblem) }
+        logger.info { Json.encodeToString(responseProblem) }
       }
       // --
       methodParameter.containingClass.isAnnotationPresent(RestController::class.java) &&

@@ -74,7 +74,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     val responseContent = lrmItemService.create(lrmItemRequest)
     val responseMessage = "created new item"
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { "response as json: " + Json.encodeToString(response) }
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -96,7 +96,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     val responseMessage = "deleted item id $id"
     val responseContent = ApiMessage("content")
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { "response as json: " + Json.encodeToString(response) }
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -122,7 +122,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     }
     val responseContent = if (includeLists) lrmItemService.findAllIncludeLists() else lrmItemService.findAll()
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { "response as json: " + Json.encodeToString(response) }
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -151,7 +151,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     val responseMessage = if (includeLists) "retrieved item id $id and it's associated lists" else "retrieved item id $id"
     val responseContent = if (includeLists) lrmItemService.findByIdIncludeLists(id) else lrmItemService.findById(id)
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { "response as json: " + Json.encodeToString(response) }
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
