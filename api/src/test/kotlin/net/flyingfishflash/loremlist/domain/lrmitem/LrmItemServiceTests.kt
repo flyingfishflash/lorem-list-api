@@ -173,7 +173,6 @@ class LrmItemServiceTests : DescribeSpec({
       exception.message.shouldNotBeNull().shouldBeEqual("Item could not be inserted.")
       exception.responseMessage.shouldBeEqual("Item could not be inserted.")
       exception.title.shouldBeEqual("API Exception")
-      println(exception)
       verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest) }
     }
   }
