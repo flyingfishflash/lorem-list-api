@@ -1,7 +1,10 @@
 package net.flyingfishflash.loremlist.domain.lrmlist
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.clearMocks
@@ -9,10 +12,16 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import jakarta.validation.ConstraintViolationException
+import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
+import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.statements.StatementContext
 import org.junit.jupiter.api.assertThrows
+import org.springframework.http.HttpStatus
+import java.sql.SQLException
 
 /**
  * LrmListService Unit Tests
@@ -21,7 +30,14 @@ class LrmListServiceTests : DescribeSpec({
 
   val lrmListRepository = mockk<LrmListRepository>()
   val lrmListService = LrmListService(lrmListRepository)
-
+  val mockTransaction = mockk<Transaction>()
+  val mockStatementContext = mockk<StatementContext>()
+  val mockContexts = listOf(mockStatementContext)
+  val exposedSQLExceptionGeneric = ExposedSQLException(
+    cause = SQLException("Cause of ExposedSQLException"),
+    transaction = mockTransaction,
+    contexts = mockContexts,
+  )
   val lrmListName = "Lorem List Name"
   val lrmListDescription = "Lorem List Description"
   val lrmListMockResponse = LrmList(id = 0, name = lrmListName, description = lrmListDescription)
@@ -29,10 +45,22 @@ class LrmListServiceTests : DescribeSpec({
   val id = 1L
 
   describe("create()") {
-    it("repository returns inserted list") {
-      every { lrmListRepository.insert(ofType(LrmListRequest::class)) } returns lrmListMockResponse
+    it("repository returns inserted list id") {
+      every { lrmListRepository.insert(ofType(LrmListRequest::class)) } returns id
+      every { lrmListRepository.findByIdOrNull(id) } returns lrmListMockResponse
       lrmListService.create(lrmListRequest)
-      verify(exactly = 1) { lrmListRepository.insert(lrmListRequest) }
+      verify(exactly = 1) { lrmListRepository.insert(ofType(LrmListRequest::class)) }
+      verify(exactly = 1) { lrmListRepository.findByIdOrNull(any()) }
+    }
+
+    it("repository throws exposed sql exception") {
+      every { lrmListRepository.insert(ofType(LrmListRequest::class)) } throws exposedSQLExceptionGeneric
+      val exception = shouldThrow<ApiException> { lrmListService.create(lrmListRequest) }
+      exception.cause.shouldBeInstanceOf<ExposedSQLException>()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.message.shouldNotBeNull().shouldBeEqual("List could not be created.")
+      exception.responseMessage.shouldBeEqual("List could not be created.")
+      exception.title.shouldBeEqual("API Exception")
     }
   }
 

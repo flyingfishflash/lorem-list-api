@@ -15,18 +15,6 @@ class ListNotFoundException(id: Long, cause: Throwable? = null) : AbstractApiExc
   }
 }
 
-class ListInsertException(cause: Throwable? = null) : AbstractApiException(
-  httpStatus = HttpStatus.BAD_REQUEST,
-  title = TITLE,
-  detail = "Problem inserting a new list",
-  cause = cause,
-  responseMessage = "Problem inserting a new list",
-) {
-  companion object {
-    const val TITLE = "List Insert Exception"
-  }
-}
-
 class ListUpdateException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.BAD_REQUEST,
   title = TITLE,

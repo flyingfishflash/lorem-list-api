@@ -3,17 +3,32 @@ package net.flyingfishflash.loremlist.domain.lrmlist
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
+import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListConverter
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
 class LrmListService(val lrmListRepository: LrmListRepository) {
-  fun create(lrmListRequest: LrmListRequest): LrmList = lrmListRepository.insert(lrmListRequest)
+
+  fun create(lrmListRequest: LrmListRequest): LrmList {
+    try {
+      val id = lrmListRepository.insert(lrmListRequest)
+      return findByIdOrListNotFoundException(id)
+    } catch (cause: Exception) {
+      throw ApiException(
+        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+        cause = cause,
+        message = "List could not be created.",
+        responseMessage = "List could not be created.",
+      )
+    }
+  }
 
   fun deleteSingleById(id: Long) {
     val deletedCount = lrmListRepository.deleteById(id)

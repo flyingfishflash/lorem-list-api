@@ -8,7 +8,6 @@ import net.flyingfishflash.loremlist.domain.LrmListTable.description
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmlist.ListInsertException
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.ListUpdateException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
@@ -18,7 +17,6 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.nextLongVal
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
 
@@ -129,7 +127,7 @@ class LrmListRepository {
     return listWithItems
   }
 
-  fun insert(lrmListRequest: LrmListRequest): LrmList {
+  fun insert(lrmListRequest: LrmListRequest): Long {
     val id =
       repositoryTable
         .insertAndGetId {
@@ -139,12 +137,7 @@ class LrmListRepository {
           it[description] = lrmListRequest.description
         }
 
-    val lrmList =
-      repositoryTable.selectAll()
-        .where { repositoryTable.id eq id }
-        .map { it.toLrmlist() }
-        .singleOrNull() ?: throw ListInsertException(cause = ListNotFoundException(id.value))
-    return lrmList
+    return id.value
   }
 
   fun update(lrmList: LrmList): LrmList {
