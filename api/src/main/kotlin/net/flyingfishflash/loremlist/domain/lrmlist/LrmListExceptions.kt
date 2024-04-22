@@ -15,18 +15,6 @@ class ListNotFoundException(id: Long, cause: Throwable? = null) : AbstractApiExc
   }
 }
 
-class ListUpdateException(id: Long, cause: Throwable? = null) : AbstractApiException(
-  httpStatus = HttpStatus.BAD_REQUEST,
-  title = TITLE,
-  detail = "Problem updating list id $id",
-  cause = cause,
-  responseMessage = "Problem updating list id $id",
-) {
-  companion object {
-    const val TITLE = "List Update Exception"
-  }
-}
-
 class ListDeleteException(id: Long, cause: Throwable? = null) : AbstractApiException(
   httpStatus = HttpStatus.BAD_REQUEST,
   title = TITLE,

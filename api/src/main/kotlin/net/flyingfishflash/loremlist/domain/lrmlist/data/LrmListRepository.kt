@@ -8,8 +8,6 @@ import net.flyingfishflash.loremlist.domain.LrmListTable.description
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
-import net.flyingfishflash.loremlist.domain.lrmlist.ListUpdateException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Sequence
@@ -140,18 +138,14 @@ class LrmListRepository {
     return id.value
   }
 
-  fun update(lrmList: LrmList): LrmList {
+  fun update(lrmList: LrmList): Int {
     val updatedCount =
       repositoryTable.update({ repositoryTable.id eq lrmList.id }) {
         it[name] = lrmList.name
         it[description] = lrmList.description
       }
 
-    if (updatedCount == 1) {
-      return findByIdOrNull(lrmList.id) ?: throw ListUpdateException(id = lrmList.id, cause = ListNotFoundException(lrmList.id))
-    } else {
-      throw ListUpdateException(id = lrmList.id)
-    }
+    return updatedCount
   }
 
   private fun ResultRow.toLrmlist(): LrmList {

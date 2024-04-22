@@ -2,14 +2,16 @@ package net.flyingfishflash.loremlist.domain.lrmlist
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.clearMocks
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import io.mockk.verify
 import jakarta.validation.ConstraintViolationException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
@@ -30,31 +32,31 @@ class LrmListServiceTests : DescribeSpec({
 
   val lrmListRepository = mockk<LrmListRepository>()
   val lrmListService = LrmListService(lrmListRepository)
-  val mockTransaction = mockk<Transaction>()
-  val mockStatementContext = mockk<StatementContext>()
-  val mockContexts = listOf(mockStatementContext)
-  val exposedSQLExceptionGeneric = ExposedSQLException(
+
+  val lrmListRequest = LrmListRequest("Lorem List Name", "Lorem List Description")
+
+  fun lrmList(): LrmList = LrmList(id = 0, name = lrmListRequest.name, description = lrmListRequest.description)
+
+  fun exposedSQLExceptionGeneric(): ExposedSQLException = ExposedSQLException(
     cause = SQLException("Cause of ExposedSQLException"),
-    transaction = mockTransaction,
-    contexts = mockContexts,
+    transaction = mockk<Transaction>(relaxed = true),
+    contexts = listOf(mockk<StatementContext>(relaxed = true)),
   )
-  val lrmListName = "Lorem List Name"
-  val lrmListDescription = "Lorem List Description"
-  val lrmListMockResponse = LrmList(id = 0, name = lrmListName, description = lrmListDescription)
-  val lrmListRequest = LrmListRequest(lrmListName, lrmListDescription)
-  val id = 1L
+
+  afterEach { clearAllMocks() }
+  afterSpec { unmockkAll() }
 
   describe("create()") {
     it("repository returns inserted list id") {
-      every { lrmListRepository.insert(ofType(LrmListRequest::class)) } returns id
-      every { lrmListRepository.findByIdOrNull(id) } returns lrmListMockResponse
+      every { lrmListRepository.insert(ofType(LrmListRequest::class)) } returns 1L
+      every { lrmListRepository.findByIdOrNull(1L) } returns lrmList()
       lrmListService.create(lrmListRequest)
       verify(exactly = 1) { lrmListRepository.insert(ofType(LrmListRequest::class)) }
       verify(exactly = 1) { lrmListRepository.findByIdOrNull(any()) }
     }
 
     it("repository throws exposed sql exception") {
-      every { lrmListRepository.insert(ofType(LrmListRequest::class)) } throws exposedSQLExceptionGeneric
+      every { lrmListRepository.insert(ofType(LrmListRequest::class)) } throws exposedSQLExceptionGeneric()
       val exception = shouldThrow<ApiException> { lrmListService.create(lrmListRequest) }
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -66,30 +68,30 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("delete()") {
     it("list repository returns 0 deleted records") {
-      every { lrmListRepository.deleteById(id) } returns 0
+      every { lrmListRepository.deleteById(1) } returns 0
       assertThrows<ListDeleteException> {
-        lrmListService.deleteSingleById(id)
+        lrmListService.deleteSingleById(1)
       }.cause.shouldBeInstanceOf<ListNotFoundException>()
     }
 
     it("list repository returns > 1 deleted records") {
-      every { lrmListRepository.deleteById(id) } returns 2
+      every { lrmListRepository.deleteById(1) } returns 2
       assertThrows<ListDeleteException> {
-        lrmListService.deleteSingleById(id)
+        lrmListService.deleteSingleById(1)
       }.cause.shouldBeNull()
     }
 
     it("list repository returns 1 deleted record") {
-      every { lrmListRepository.findByIdOrNull(id) } returns lrmListMockResponse
-      every { lrmListRepository.deleteById(id) } returns 1
-      lrmListService.deleteSingleById(id)
-      verify(exactly = 1) { lrmListRepository.deleteById(id) }
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { lrmListRepository.deleteById(1) } returns 1
+      lrmListService.deleteSingleById(1)
+      verify(exactly = 1) { lrmListRepository.deleteById(1) }
     }
   }
 
   describe("findAll()") {
     it("lists are returned") {
-      every { lrmListRepository.findAll() } returns listOf(lrmListMockResponse)
+      every { lrmListRepository.findAll() } returns listOf(lrmList())
       lrmListService.findAll()
       verify(exactly = 1) { lrmListRepository.findAll() }
     }
@@ -97,7 +99,7 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("findAllListsAndItems()") {
     it("lists are returned") {
-      every { lrmListRepository.findAllIncludeItems() } returns listOf(lrmListMockResponse)
+      every { lrmListRepository.findAllIncludeItems() } returns listOf(lrmList())
       lrmListService.findAllIncludeItems()
       verify(exactly = 1) { lrmListRepository.findAllIncludeItems() }
     }
@@ -105,80 +107,127 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("findByIdOrListNotFoundExceptionListAndItems()") {
     it("list is found and returned") {
-      every { lrmListRepository.findByIdOrNullIncludeItems(id) } returns lrmListMockResponse
-      val result = lrmListService.findByIdIncludeItems(id)
-      result.shouldBe(lrmListMockResponse)
-      verify(exactly = 1) { lrmListRepository.findByIdOrNullIncludeItems(id) }
+      every { lrmListRepository.findByIdOrNullIncludeItems(1) } returns lrmList()
+      val result = lrmListService.findByIdIncludeItems(1)
+      result.shouldBe(lrmList())
+      verify(exactly = 1) { lrmListRepository.findByIdOrNullIncludeItems(1) }
     }
 
     it("list is not found") {
-      every { lrmListRepository.findByIdOrNullIncludeItems(id) } returns null
+      every { lrmListRepository.findByIdOrNullIncludeItems(1) } returns null
       assertThrows<ListNotFoundException> {
-        lrmListService.findByIdIncludeItems(id)
+        lrmListService.findByIdIncludeItems(1)
       }
     }
   }
 
   describe("findByIdOrListNotFoundException()") {
     it("list is found and returned") {
-      every { lrmListRepository.findByIdOrNull(id) } returns lrmListMockResponse
-      val result = lrmListService.findById(id)
-      result.shouldBe(lrmListMockResponse)
-      verify(exactly = 1) { lrmListRepository.findByIdOrNull(id) }
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      val result = lrmListService.findById(1)
+      result.shouldBe(lrmList())
+      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
     }
 
     it("list is not found") {
-      every { lrmListRepository.findByIdOrNull(id) } returns null
+      every { lrmListRepository.findByIdOrNull(1) } returns null
       assertThrows<ListNotFoundException> {
-        lrmListService.findById(id)
+        lrmListService.findById(1)
       }
     }
   }
 
   describe("patch()") {
     it("list is not found") {
-      every { lrmListRepository.findByIdOrNull(id) } returns null
-      assertThrows<ListNotFoundException> {
-        lrmListService.patch(id, mapOf("name" to "lorum ipsum"))
-      }
+      every { lrmListRepository.findByIdOrNull(1) } returns null
+      shouldThrow<ListNotFoundException> { lrmListService.patch(1, mapOf("name" to "lorum ipsum")) }
     }
 
     it("update name") {
       val expectedName = "patched lorem list"
-      every { lrmListRepository.findByIdOrNull(id) } returns lrmListMockResponse
-      every { lrmListRepository.update(ofType(LrmList::class)) } returns lrmListMockResponse
-      val patchedLrmList = lrmListService.patch(id, mapOf("name" to expectedName)).first
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { lrmListRepository.update(ofType(LrmList::class)) } returns 1
+      val patchedLrmList = lrmListService.patch(1, mapOf("name" to expectedName)).first
       patchedLrmList.name.shouldBe(expectedName)
-      verify(exactly = 1) { lrmListRepository.findByIdOrNull(id) }
+      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
       verify(exactly = 1) { lrmListRepository.update(ofType(LrmList::class)) }
+    }
+
+    it("update name and description to current values") {
+      val expectedName = lrmList().name
+      val expectedDescription = lrmList().description
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { lrmListRepository.update(ofType(LrmList::class)) } returns 1
+      val patchResponse = lrmListService.patch(1, mapOf("name" to expectedName, "description" to (expectedDescription ?: "")))
+      patchResponse.second.shouldBeFalse()
+      patchResponse.first.name.shouldBe(expectedName)
+      patchResponse.first.description.shouldBe(expectedDescription)
+      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 0) { lrmListRepository.update(ofType(LrmList::class)) }
     }
 
     it("update description") {
       val expectedDescription = "patched lorem list description"
-      every { lrmListRepository.findByIdOrNull(id) } returns lrmListMockResponse
-      every { lrmListRepository.update(ofType(LrmList::class)) } returns lrmListMockResponse
-      val patchedLrmList = lrmListService.patch(id, mapOf("description" to expectedDescription)).first
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { lrmListRepository.update(ofType(LrmList::class)) } returns 1
+      val patchedLrmList = lrmListService.patch(1, mapOf("description" to expectedDescription)).first
       patchedLrmList.description.shouldBe(expectedDescription)
-      verify(exactly = 1) { lrmListRepository.findByIdOrNull(id) }
+      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
       verify(exactly = 1) { lrmListRepository.update(ofType(LrmList::class)) }
     }
 
-    it("update an undefined list property") {
-      every { lrmListRepository.findByIdOrNull(id) } returns lrmListMockResponse
-      assertThrows<IllegalArgumentException> {
-        lrmListService.patch(id, mapOf("undefined property" to "irrelevant value"))
-      }
-    }
-
     it("update description to '  '") {
-      every { lrmListRepository.findByIdOrNull(id) } returns lrmListMockResponse
-      assertThrows<ConstraintViolationException> {
-        lrmListService.patch(id, mapOf("description" to "  "))
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      shouldThrow<ConstraintViolationException> { lrmListService.patch(1, mapOf("description" to "  ")) }
+    }
+
+    it("update an undefined list property") {
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      shouldThrow<IllegalArgumentException> {
+        lrmListService.patch(1, mapOf("undefined property" to "irrelevant value"))
       }
     }
-  }
 
-  afterTest {
-    clearMocks(lrmListRepository)
+    it("update no properties") {
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      val patchReturn = lrmListService.patch(1, mapOf())
+      patchReturn.first.shouldBeEqual(lrmList())
+      patchReturn.second.shouldBeFalse()
+      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 0) { lrmListRepository.update(ofType(LrmList::class)) }
+    }
+
+    it("repository updates more than 1 record") {
+      val expectedName = "patched lorem list"
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { lrmListRepository.update(ofType(LrmList::class)) } returns 2
+      val exception = shouldThrow<ApiException> { lrmListService.patch(1, mapOf("name" to expectedName)).first }
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeNull()
+      exception.detail.shouldBeEqual(
+        "List id ${lrmList().id} could not be updated. 2 records would have been updated rather than 1.",
+      )
+      exception.responseMessage.shouldBeEqual(
+        "List id ${lrmList().id} could not be updated. 2 records would have been updated rather than 1.",
+      )
+      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 1) { lrmListRepository.update(ofType(LrmList::class)) }
+    }
+
+    it("repository throws exposed sql exception") {
+      val expectedName = "patched lorem list"
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { lrmListRepository.update(ofType(LrmList::class)) } throws exposedSQLExceptionGeneric()
+      val exception = shouldThrow<ApiException> { lrmListService.patch(1, mapOf("name" to expectedName)).first }
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<ExposedSQLException>()
+      exception.detail.shouldBeEqual(
+        "List id ${lrmList().id} could not be updated. " +
+          "The list was found and patch request is valid but an exception was thrown by the list repository.",
+      )
+      exception.responseMessage.shouldBeEqual("List id ${lrmList().id} could not be updated.")
+      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 1) { lrmListRepository.update(ofType(LrmList::class)) }
+    }
   }
 })

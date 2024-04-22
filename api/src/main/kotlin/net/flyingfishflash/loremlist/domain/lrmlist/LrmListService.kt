@@ -78,10 +78,30 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
         if (violations.isNotEmpty()) {
           throw ConstraintViolationException(violations)
         }
-        lrmListRepository.update(LrmListConverter.toLrmList(lrmListRequest, lrmList))
+
+        val updatedCount: Int
+
+        try {
+          updatedCount = lrmListRepository.update(LrmListConverter.toLrmList(lrmListRequest, lrmList))
+        } catch (exception: Exception) {
+          throw ApiException(
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+            cause = exception,
+            message = "List id ${lrmList.id} could not be updated. The list was found and patch request is valid" +
+              " but an exception was thrown by the list repository.",
+            responseMessage = "List id ${lrmList.id} could not be updated.",
+          )
+        }
+
+        if (updatedCount != 1) {
+          throw ApiException(
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+            message = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
+            responseMessage = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
+          )
+        }
       }
     }
-    // map entity model to response model
     return Pair(lrmList, patched)
   }
 
