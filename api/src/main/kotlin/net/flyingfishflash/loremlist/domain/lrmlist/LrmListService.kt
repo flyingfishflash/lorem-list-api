@@ -31,13 +31,26 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
   }
 
   fun deleteSingleById(id: Long) {
-    val deletedCount = lrmListRepository.deleteById(id)
+    val deletedCount: Int
+    try {
+      deletedCount = lrmListRepository.deleteById(id)
+    } catch (cause: Exception) {
+      throw ApiException(
+        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+        cause = cause,
+        message = "List $id could not be deleted.",
+        responseMessage = "List $id could not be deleted.",
+      )
+    }
     if (deletedCount < 1) {
-      throw ListDeleteException(id = id, cause = ListNotFoundException(id))
+      throw ListNotFoundException(id)
     } else if (deletedCount > 1) {
-      // TODO: The exception should capture a message that more than one record was deleted
       // TODO: Ensure the transaction is rolled back if an exception is thrown
-      throw ListDeleteException(id = id)
+      throw ApiException(
+        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+        message = "List id $id could not be deleted. $deletedCount records would have been updated rather than 1.",
+        responseMessage = "List id $id could not be deleted. $deletedCount records would have been updated rather than 1.",
+      )
     }
   }
 

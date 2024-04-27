@@ -14,15 +14,3 @@ class ListNotFoundException(id: Long, cause: Throwable? = null) : AbstractApiExc
     const val TITLE = "List Not Found"
   }
 }
-
-class ListDeleteException(id: Long, cause: Throwable? = null) : AbstractApiException(
-  httpStatus = HttpStatus.BAD_REQUEST,
-  title = TITLE,
-  detail = "Problem deleting list id $id",
-  cause = cause,
-  responseMessage = "Problem deleting list id $id",
-) {
-  companion object {
-    const val TITLE = "List Delete Exception"
-  }
-}

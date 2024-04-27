@@ -47,7 +47,7 @@ class LrmListServiceTests : DescribeSpec({
   afterSpec { unmockkAll() }
 
   describe("create()") {
-    it("repository returns inserted list id") {
+    it("list repository returns inserted list id") {
       every { lrmListRepository.insert(ofType(LrmListRequest::class)) } returns 1L
       every { lrmListRepository.findByIdOrNull(1L) } returns lrmList()
       lrmListService.create(lrmListRequest)
@@ -55,7 +55,7 @@ class LrmListServiceTests : DescribeSpec({
       verify(exactly = 1) { lrmListRepository.findByIdOrNull(any()) }
     }
 
-    it("repository throws exposed sql exception") {
+    it("list repository throws exposed sql exception") {
       every { lrmListRepository.insert(ofType(LrmListRequest::class)) } throws exposedSQLExceptionGeneric()
       val exception = shouldThrow<ApiException> { lrmListService.create(lrmListRequest) }
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
@@ -69,14 +69,14 @@ class LrmListServiceTests : DescribeSpec({
   describe("delete()") {
     it("list repository returns 0 deleted records") {
       every { lrmListRepository.deleteById(1) } returns 0
-      assertThrows<ListDeleteException> {
+      assertThrows<ListNotFoundException> {
         lrmListService.deleteSingleById(1)
-      }.cause.shouldBeInstanceOf<ListNotFoundException>()
+      }.cause.shouldBeNull()
     }
 
     it("list repository returns > 1 deleted records") {
       every { lrmListRepository.deleteById(1) } returns 2
-      assertThrows<ListDeleteException> {
+      assertThrows<ApiException> {
         lrmListService.deleteSingleById(1)
       }.cause.shouldBeNull()
     }
@@ -86,6 +86,16 @@ class LrmListServiceTests : DescribeSpec({
       every { lrmListRepository.deleteById(1) } returns 1
       lrmListService.deleteSingleById(1)
       verify(exactly = 1) { lrmListRepository.deleteById(1) }
+    }
+
+    it("list repository throws exposed sql exception") {
+      every { lrmListRepository.deleteById(1) } throws exposedSQLExceptionGeneric()
+      val exception = shouldThrow<ApiException> { lrmListService.deleteSingleById(1) }
+      exception.cause.shouldBeInstanceOf<ExposedSQLException>()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.message.shouldNotBeNull().shouldBeEqual("List 1 could not be deleted.")
+      exception.responseMessage.shouldBeEqual("List 1 could not be deleted.")
+      exception.title.shouldBeEqual("API Exception")
     }
   }
 
@@ -197,7 +207,7 @@ class LrmListServiceTests : DescribeSpec({
       verify(exactly = 0) { lrmListRepository.update(ofType(LrmList::class)) }
     }
 
-    it("repository updates more than 1 record") {
+    it("list repository updates more than 1 record") {
       val expectedName = "patched lorem list"
       every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
       every { lrmListRepository.update(ofType(LrmList::class)) } returns 2
@@ -214,7 +224,7 @@ class LrmListServiceTests : DescribeSpec({
       verify(exactly = 1) { lrmListRepository.update(ofType(LrmList::class)) }
     }
 
-    it("repository throws exposed sql exception") {
+    it("list repository throws exposed sql exception") {
       val expectedName = "patched lorem list"
       every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
       every { lrmListRepository.update(ofType(LrmList::class)) } throws exposedSQLExceptionGeneric()
