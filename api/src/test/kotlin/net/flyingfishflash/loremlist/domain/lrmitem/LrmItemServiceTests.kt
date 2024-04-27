@@ -224,6 +224,11 @@ class LrmItemServiceTests : DescribeSpec({
       lrmItemService.findById(1L)
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1L) }
     }
+
+    it("item is not returned") {
+      every { mockLrmItemRepository.findByIdOrNull(1) } returns null
+      shouldThrow<ItemNotFoundException> { lrmItemService.findById(1) }
+    }
   }
 
   describe("findByIdAndLists()") {
@@ -231,6 +236,11 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findByIdOrNullIncludeLists(1L) } returns lrmItemMockResponse
       lrmItemService.findByIdIncludeLists(1L)
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(1L) }
+    }
+
+    it("item is not returned") {
+      every { mockLrmItemRepository.findByIdOrNullIncludeLists(1) } returns null
+      shouldThrow<ItemNotFoundException> { lrmItemService.findByIdIncludeLists(1) }
     }
   }
 
