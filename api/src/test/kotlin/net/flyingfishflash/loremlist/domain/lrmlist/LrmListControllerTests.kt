@@ -4,8 +4,10 @@ import com.ninjasquad.springmockk.MockkBean
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.mockk.Runs
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
+import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -35,16 +37,17 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
   init {
 
-    val lrmListName = "Lorem List Name"
-    val lrmListDescription = "Lorem List Description"
-    val lrmListMockResponse = LrmList(id = 0, name = lrmListName, description = lrmListDescription)
-    val lrmListMockResponseWithEmptyItems = LrmList(id = 0, name = lrmListName, description = lrmListDescription, items = setOf())
-    val lrmListRequest = LrmListRequest(lrmListName, lrmListDescription)
-    val id = 1L
+    val id: Long = 1
+    val lrmListRequest = LrmListRequest("Lorem List Name", "Lorem List Description")
+    fun lrmList(): LrmList = LrmList(id = 0, name = lrmListRequest.name, description = lrmListRequest.description)
+    fun lrmListWithEmptyItems(): LrmList = lrmList().copy(items = setOf())
+
+    afterEach { clearAllMocks() }
+    afterSpec { unmockkAll() }
 
     describe("/lists http get") {
       it("lists are found") {
-        val mockReturn = listOf(lrmListMockResponse)
+        val mockReturn = listOf(lrmList())
         every { lrmListService.findAll() } returns mockReturn
         val instance = "/lists"
         mockMvc.get(instance) {
@@ -59,8 +62,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.size") { value(mockReturn.size) }
           jsonPath("$.content") { exists() }
           jsonPath("$.content") { isArray() }
-          jsonPath("$.content.[0].name") { value(lrmListName) }
-          jsonPath("$.content.[0].description") { value(lrmListDescription) }
+          jsonPath("$.content.[0].name") { value(lrmList().name) }
+          jsonPath("$.content.[0].description") { value(lrmList().description) }
           jsonPath("$.content.[0].items") {
             doesNotExist()
           }
@@ -71,7 +74,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists?includeItems=false http get") {
       it("lists are found") {
-        val mockReturn = listOf(lrmListMockResponse)
+        val mockReturn = listOf(lrmList())
         every { lrmListService.findAll() } returns mockReturn
         val instance = "/lists?includeItems=false"
         mockMvc.get(instance) {
@@ -85,8 +88,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(mockReturn.size) }
           jsonPath("$.content") { isArray() }
-          jsonPath("$.content.[0].name") { value(lrmListName) }
-          jsonPath("$.content.[0].description") { value(lrmListDescription) }
+          jsonPath("$.content.[0].name") { value(lrmList().name) }
+          jsonPath("$.content.[0].description") { value(lrmList().description) }
           jsonPath("$.content.[0].items") {
             doesNotExist()
           }
@@ -97,7 +100,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists?includeItems=true http get") {
       it("lists and items are found") {
-        val mockReturn = listOf(lrmListMockResponseWithEmptyItems)
+        val mockReturn = listOf(lrmListWithEmptyItems())
         every { lrmListService.findAllIncludeItems() } returns mockReturn
         val instance = "/lists?includeItems=true"
         mockMvc.get(instance) {
@@ -111,8 +114,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(mockReturn.size) }
           jsonPath("$.content") { isArray() }
-          jsonPath("$.content.[0].name") { value(lrmListName) }
-          jsonPath("$.content.[0].description") { value(lrmListDescription) }
+          jsonPath("$.content.[0].name") { value(lrmList().name) }
+          jsonPath("$.content.[0].description") { value(lrmList().description) }
           jsonPath("$.content.[0].items") {
             isArray()
             isEmpty()
@@ -125,7 +128,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/lists http post") {
       it("list is created") {
         println(Json.encodeToString(lrmListRequest))
-        every { lrmListService.create(lrmListRequest) } returns lrmListMockResponse
+        every { lrmListService.create(lrmListRequest) } returns lrmList()
         val instance = "/lists"
         mockMvc.post(instance) {
           content = Json.encodeToString(lrmListRequest)
@@ -138,8 +141,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.message") { value("created new list") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.description") { value(lrmListDescription) }
-          jsonPath("$.content.name") { value(lrmListName) }
+          jsonPath("$.content.description") { value(lrmList().description) }
+          jsonPath("$.content.name") { value(lrmList().name) }
         }
         verify(exactly = 1) { lrmListService.create(lrmListRequest) }
       }
@@ -147,7 +150,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       it("requested list name is an empty string") {
         val instance = "/lists"
         mockMvc.post(instance) {
-          content = Json.encodeToString(LrmListRequest("", lrmListDescription))
+          content = Json.encodeToString(LrmListRequest("", lrmList().description))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isBadRequest() }
@@ -166,7 +169,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       it("requested list description is an empty string") {
         val instance = "/lists"
         mockMvc.post(instance) {
-          content = Json.encodeToString(LrmListRequest(lrmListName, ""))
+          content = Json.encodeToString(LrmListRequest(lrmList().name, ""))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isBadRequest() }
@@ -221,7 +224,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/1 http get") {
       it("list is found") {
-        every { lrmListService.findByIdIncludeItems(id) } returns lrmListMockResponseWithEmptyItems
+        every { lrmListService.findByIdIncludeItems(id) } returns lrmListWithEmptyItems()
         val instance = "/lists/$id"
         mockMvc.get(instance).andExpect {
           status { isOk() }
@@ -231,8 +234,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.message") { value("retrieved list $id") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.description") { value(lrmListDescription) }
-          jsonPath("$.content.name") { value(lrmListName) }
+          jsonPath("$.content.description") { value(lrmList().description) }
+          jsonPath("$.content.name") { value(lrmList().name) }
           jsonPath("$.content.items") {
             isArray()
             isEmpty()
@@ -262,7 +265,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/1?includeItems=true http get") {
       it("list is found") {
-        every { lrmListService.findByIdIncludeItems(id) } returns lrmListMockResponseWithEmptyItems
+        every { lrmListService.findByIdIncludeItems(id) } returns lrmListWithEmptyItems()
         val instance = "/lists/$id?includeItems=true"
         mockMvc.get("/lists/$id?includeItems=true").andExpect {
           status { isOk() }
@@ -272,8 +275,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.message") { value("retrieved list $id") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.description") { value(lrmListDescription) }
-          jsonPath("$.content.name") { value(lrmListName) }
+          jsonPath("$.content.description") { value(lrmList().description) }
+          jsonPath("$.content.name") { value(lrmList().name) }
           jsonPath("$.content.items") {
             isArray()
             isEmpty()
@@ -303,7 +306,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/1?includeItems=false http get") {
       it("list is found") {
-        every { lrmListService.findById(id) } returns lrmListMockResponse
+        every { lrmListService.findById(id) } returns lrmList()
         val instance = "/lists/$id?includeItems=false"
         mockMvc.get(instance).andExpect {
           status { isOk() }
@@ -313,8 +316,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.message") { value("retrieved list $id") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.description") { value(lrmListDescription) }
-          jsonPath("$.content.name") { value(lrmListName) }
+          jsonPath("$.content.description") { value(lrmList().description) }
+          jsonPath("$.content.name") { value(lrmList().name) }
           jsonPath("$.content.items") {
             doesNotExist()
           }
@@ -343,10 +346,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/1 http patch") {
       it("list is found and updated") {
-        every { lrmListService.patch(id, any()) } returns Pair(lrmListMockResponse, true)
+        every { lrmListService.patch(id, any()) } returns Pair(lrmList(), true)
         val instance = "/lists/$id"
         mockMvc.patch(instance) {
-          content = Json.encodeToString(mapOf("name" to lrmListName))
+          content = Json.encodeToString(mapOf("name" to lrmList().name))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -356,20 +359,20 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.message") { value("patched") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.description") { value(lrmListDescription) }
-          jsonPath("$.content.name") { value(lrmListName) }
+          jsonPath("$.content.description") { value(lrmList().description) }
+          jsonPath("$.content.name") { value(lrmList().name) }
           jsonPath("$.content.items") {
             doesNotExist()
           }
         }
-        verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmListName)) }
+        verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmList().name)) }
       }
 
       it("list is found and not updated") {
-        every { lrmListService.patch(id, any()) } returns Pair(lrmListMockResponse, false)
+        every { lrmListService.patch(id, any()) } returns Pair(lrmList(), false)
         val instance = "/lists/$id"
         mockMvc.patch(instance) {
-          content = Json.encodeToString(mapOf("name" to lrmListDescription))
+          content = Json.encodeToString(mapOf("name" to lrmList().name))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNoContent() }
@@ -379,20 +382,20 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.message") { value("not patched") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.description") { value(lrmListDescription) }
-          jsonPath("$.content.name") { value(lrmListName) }
+          jsonPath("$.content.description") { value(lrmList().description) }
+          jsonPath("$.content.name") { value(lrmList().name) }
           jsonPath("$.content.items") {
             doesNotExist()
           }
         }
-        verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmListDescription)) }
+        verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmList().name)) }
       }
 
       it("list is not found") {
         every { lrmListService.patch(id, any()) } throws ListNotFoundException(id)
         val instance = "/lists/$id"
         mockMvc.patch(instance) {
-          content = Json.encodeToString(mapOf("name" to lrmListDescription))
+          content = Json.encodeToString(mapOf("name" to lrmList().name))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
@@ -406,7 +409,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           jsonPath("$.content.detail") { value("List id $id could not be found.") }
         }
-        verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmListDescription)) }
+        verify(exactly = 1) { lrmListService.patch(id, mapOf("name" to lrmList().name)) }
       }
     }
   }
