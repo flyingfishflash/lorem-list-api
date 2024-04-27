@@ -15,6 +15,7 @@ import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
+import net.flyingfishflash.loremlist.domain.common.CommonService
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemMoveToListRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
@@ -41,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController
 )
 @RestController
 @RequestMapping("/items")
-class LrmItemController(val lrmItemService: LrmItemService) {
+class LrmItemController(val lrmItemService: LrmItemService, val commonService: CommonService) {
   private val logger = KotlinLogging.logger {}
 
   @PostMapping("/{id}/add-to-list")
@@ -51,7 +52,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     @Min(1) @RequestBody listId: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = lrmItemService.addToList(itemId = id, listId = listId)
+    val serviceResponse = commonService.addToList(itemId = id, listId = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -162,7 +163,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     @RequestBody moveToListRequest: LrmItemMoveToListRequest,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = lrmItemService.moveToList(
+    val serviceResponse = commonService.moveToList(
       itemId = id,
       fromListId = moveToListRequest.fromListId,
       toListId = moveToListRequest.toListId,
@@ -183,7 +184,7 @@ class LrmItemController(val lrmItemService: LrmItemService) {
     @Min(1) @RequestBody listId: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = lrmItemService.removeFromList(itemId = id, listId = listId)
+    val serviceResponse = commonService.removeFromList(itemId = id, listId = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
