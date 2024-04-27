@@ -210,7 +210,7 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("findAllAndLists()") {
+  describe("findAllIncludeLists()") {
     it("all and lists are returned") {
       every { mockLrmItemRepository.findAllIncludeLists() } returns listOf(lrmItem())
       lrmItemService.findAllIncludeLists()
@@ -231,7 +231,7 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("findByIdAndLists()") {
+  describe("findByIdIncludeLists()") {
     it("item and lists are returned") {
       every { mockLrmItemRepository.findByIdOrNullIncludeLists(1) } returns lrmItem()
       lrmItemService.findByIdIncludeLists(1)

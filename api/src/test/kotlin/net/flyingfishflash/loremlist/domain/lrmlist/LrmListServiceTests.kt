@@ -107,7 +107,7 @@ class LrmListServiceTests : DescribeSpec({
     }
   }
 
-  describe("findAllListsAndItems()") {
+  describe("findAllIncludeItems()") {
     it("lists are returned") {
       every { lrmListRepository.findAllIncludeItems() } returns listOf(lrmList())
       lrmListService.findAllIncludeItems()
@@ -115,7 +115,7 @@ class LrmListServiceTests : DescribeSpec({
     }
   }
 
-  describe("findByIdOrListNotFoundExceptionListAndItems()") {
+  describe("findByIdIncludeItems()") {
     it("list is found and returned") {
       every { lrmListRepository.findByIdOrNullIncludeItems(1) } returns lrmList()
       val result = lrmListService.findByIdIncludeItems(1)
@@ -131,7 +131,7 @@ class LrmListServiceTests : DescribeSpec({
     }
   }
 
-  describe("findByIdOrListNotFoundException()") {
+  describe("findById()") {
     it("list is found and returned") {
       every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
       val result = lrmListService.findById(1)
