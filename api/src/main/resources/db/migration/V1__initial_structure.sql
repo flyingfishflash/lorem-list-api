@@ -6,6 +6,7 @@ create sequence list_sequence start with 1 increment by 1;
 create table item (
   created timestamp with time zone not null,
   id bigserial not null,
+  uuid uuid not null,
   quantity bigint,
   description varchar(2048),
   name varchar(64) not null,
@@ -15,6 +16,7 @@ create table item (
 create table list (
   created timestamp with time zone not null,
   id bigserial not null,
+  uuid uuid not null,
   description varchar(2048),
   name varchar(64) not null,
   primary key (id)
@@ -25,6 +27,9 @@ create table lists_items (
   list_id bigint not null,
   primary key (item_id, list_id)
 );
+
+create unique index item_uuid on item (uuid);
+create unique index list_uuid on list (uuid);
 
 alter table
   if exists lists_items

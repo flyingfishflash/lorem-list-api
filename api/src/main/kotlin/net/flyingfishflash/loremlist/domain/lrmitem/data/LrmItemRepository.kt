@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.nextLongVal
 import org.jetbrains.exposed.sql.selectAll
 import org.springframework.stereotype.Repository
+import java.util.UUID
 
 @Repository
 class LrmItemRepository {
@@ -25,6 +26,7 @@ class LrmItemRepository {
 
   fun findAll(): List<LrmItem> = repositoryTable.select(
     repositoryTable.id,
+    repositoryTable.uuid,
     repositoryTable.name,
     repositoryTable.description,
     repositoryTable.created,
@@ -37,6 +39,7 @@ class LrmItemRepository {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
       .select(
         repositoryTable.id,
+        repositoryTable.uuid,
         repositoryTable.name,
         repositoryTable.created,
         repositoryTable.description,
@@ -55,6 +58,7 @@ class LrmItemRepository {
         valueTransform = {
           LrmListSuccinct(
             id = it[LrmListTable.id].value,
+            uuid = it[LrmListTable.uuid],
             name = it[LrmListTable.name],
           )
         },
@@ -78,6 +82,7 @@ class LrmItemRepository {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
       .select(
         repositoryTable.id,
+        repositoryTable.uuid,
         repositoryTable.name,
         repositoryTable.created,
         repositoryTable.description,
@@ -96,6 +101,7 @@ class LrmItemRepository {
       }.map {
         LrmListSuccinct(
           id = it[LrmListTable.id].value,
+          uuid = it[LrmListTable.uuid],
           name = it[LrmListTable.name],
         )
       }
@@ -110,6 +116,7 @@ class LrmItemRepository {
       repositoryTable
         .insertAndGetId {
           it[id] = listSequence.nextLongVal()
+          it[uuid] = UUID.randomUUID()
           it[created] = now()
           it[name] = lrmItemRequest.name
           it[description] = lrmItemRequest.description
@@ -134,11 +141,12 @@ class LrmItemRepository {
 
   fun ResultRow.toLrmItem(): LrmItem {
     return LrmItem(
-      id = this[LrmListItemTable.id].value,
-      created = this[LrmListItemTable.created],
-      name = this[LrmListItemTable.name],
-      description = this[LrmListItemTable.description],
-      quantity = this[LrmListItemTable.quantity],
+      id = this[repositoryTable.id].value,
+      uuid = this[repositoryTable.uuid],
+      created = this[repositoryTable.created],
+      name = this[repositoryTable.name],
+      description = this[repositoryTable.description],
+      quantity = this[repositoryTable.quantity],
     )
   }
 }

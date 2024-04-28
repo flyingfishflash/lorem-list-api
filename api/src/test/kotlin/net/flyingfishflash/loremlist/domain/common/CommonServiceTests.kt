@@ -31,6 +31,7 @@ import org.jetbrains.exposed.sql.statements.StatementType
 import org.springframework.http.HttpStatus
 import java.sql.SQLException
 import java.sql.SQLIntegrityConstraintViolationException
+import java.util.UUID
 
 class CommonServiceTests : DescribeSpec({
   val mockLrmItemRepository = mockk<LrmItemRepository>()
@@ -38,8 +39,10 @@ class CommonServiceTests : DescribeSpec({
   val commonService = CommonService(mockLrmItemRepository, mockLrmListRepository)
 
   val lrmItemRequest = LrmItemRequest("Lorem Item Name", "Lorem Item Description")
-  fun lrmItem(): LrmItem = LrmItem(id = 0, name = lrmItemRequest.name, description = lrmItemRequest.description)
-  fun lrmList(): LrmList = LrmList(id = 0, name = "Lorem List Name", description = "Lorem List Description")
+  val itemUuid = UUID.randomUUID()
+  val listUuid = UUID.randomUUID()
+  fun lrmItem(): LrmItem = LrmItem(id = 0, uuid = itemUuid, name = lrmItemRequest.name, description = lrmItemRequest.description)
+  fun lrmList(): LrmList = LrmList(id = 0, uuid = listUuid, name = "Lorem List Name", description = "Lorem List Description")
 
   fun exposedSQLExceptionConstraintViolation(): ExposedSQLException = ExposedSQLException(
     cause = mockk<SQLIntegrityConstraintViolationException>(),

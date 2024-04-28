@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
+import java.util.UUID
 
 /**
  * LrmListController Unit Tests
@@ -38,8 +39,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
   init {
 
     val id: Long = 1
+    val listUuid = UUID.randomUUID()
     val lrmListRequest = LrmListRequest("Lorem List Name", "Lorem List Description")
-    fun lrmList(): LrmList = LrmList(id = 0, name = lrmListRequest.name, description = lrmListRequest.description)
+    fun lrmList(): LrmList = LrmList(id = 0, uuid = listUuid, name = lrmListRequest.name, description = lrmListRequest.description)
     fun lrmListWithEmptyItems(): LrmList = lrmList().copy(items = setOf())
 
     afterEach { clearAllMocks() }

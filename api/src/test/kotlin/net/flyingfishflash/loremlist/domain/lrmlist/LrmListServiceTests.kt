@@ -24,6 +24,7 @@ import org.jetbrains.exposed.sql.statements.StatementContext
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpStatus
 import java.sql.SQLException
+import java.util.UUID
 
 /**
  * LrmListService Unit Tests
@@ -35,7 +36,8 @@ class LrmListServiceTests : DescribeSpec({
 
   val lrmListRequest = LrmListRequest("Lorem List Name", "Lorem List Description")
 
-  fun lrmList(): LrmList = LrmList(id = 0, name = lrmListRequest.name, description = lrmListRequest.description)
+  val listUuid = UUID.randomUUID()
+  fun lrmList(): LrmList = LrmList(id = 0, uuid = listUuid, name = lrmListRequest.name, description = lrmListRequest.description)
 
   fun exposedSQLExceptionGeneric(): ExposedSQLException = ExposedSQLException(
     cause = SQLException("Cause of ExposedSQLException"),

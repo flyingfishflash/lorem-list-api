@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.nextLongVal
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
+import java.util.UUID
 
 @Repository
 class LrmListRepository {
@@ -27,6 +28,7 @@ class LrmListRepository {
 
   fun findAll(): List<LrmList> = repositoryTable.select(
     repositoryTable.id,
+    repositoryTable.uuid,
     repositoryTable.name,
     repositoryTable.description,
     repositoryTable.created,
@@ -39,10 +41,12 @@ class LrmListRepository {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .select(
         repositoryTable.id,
+        repositoryTable.uuid,
         repositoryTable.created,
         repositoryTable.name,
         repositoryTable.description,
         LrmListItemTable.id,
+        LrmListItemTable.uuid,
         LrmListItemTable.created,
         LrmListItemTable.name,
         LrmListItemTable.description,
@@ -59,6 +63,7 @@ class LrmListRepository {
         valueTransform = {
           LrmItem(
             id = it[LrmListItemTable.id].value,
+            uuid = it[LrmListItemTable.uuid],
             created = it[LrmListItemTable.created],
             name = it[LrmListItemTable.name],
             description = it[LrmListItemTable.description],
@@ -75,31 +80,39 @@ class LrmListRepository {
     return listsAndItems
   }
 
-  fun findByIdOrNull(id: Long): LrmList? =
-    repositoryTable.select(repositoryTable.id, repositoryTable.name, repositoryTable.description, repositoryTable.created)
-      .where { LrmListTable.id eq id }
-      .firstOrNull()?.let {
-        LrmList(
-          id = it[LrmListTable.id].value,
-          created = it[created],
-          name = it[name],
-          description = it[description],
-        )
-      }
+  fun findByIdOrNull(id: Long): LrmList? = repositoryTable.select(
+    repositoryTable.id,
+    repositoryTable.uuid,
+    repositoryTable.name,
+    repositoryTable.description,
+    repositoryTable.created,
+  )
+    .where { repositoryTable.id eq id }
+    .firstOrNull()?.let {
+      LrmList(
+        id = it[repositoryTable.id].value,
+        uuid = it[repositoryTable.uuid],
+        created = it[created],
+        name = it[name],
+        description = it[description],
+      )
+    }
 
   fun findByIdOrNullIncludeItems(id: Long): LrmList? {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .select(
         repositoryTable.id,
+        repositoryTable.uuid,
         repositoryTable.created,
         repositoryTable.name,
         repositoryTable.description,
         LrmListItemTable.id,
+        LrmListItemTable.uuid,
         LrmListItemTable.created,
         LrmListItemTable.name,
         LrmListItemTable.description,
         LrmListItemTable.quantity,
-      ).where { LrmListTable.id eq id }.toList()
+      ).where { repositoryTable.id eq id }.toList()
 
     val listItems = resultRows
       .asSequence()
@@ -110,6 +123,7 @@ class LrmListRepository {
       .map {
         LrmItem(
           id = it[LrmListItemTable.id].value,
+          uuid = it[LrmListItemTable.uuid],
           created = it[LrmListItemTable.created],
           name = it[LrmListItemTable.name],
           description = it[LrmListItemTable.description],
@@ -130,6 +144,7 @@ class LrmListRepository {
       repositoryTable
         .insertAndGetId {
           it[id] = listSequence.nextLongVal()
+          it[uuid] = UUID.randomUUID()
           it[created] = now()
           it[name] = lrmListRequest.name
           it[description] = lrmListRequest.description
@@ -151,6 +166,7 @@ class LrmListRepository {
   private fun ResultRow.toLrmlist(): LrmList {
     return LrmList(
       id = this[repositoryTable.id].value,
+      uuid = this[repositoryTable.uuid],
       created = this[repositoryTable.created],
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
