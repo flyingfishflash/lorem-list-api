@@ -107,6 +107,15 @@ class LrmListServiceTests : DescribeSpec({
       lrmListService.findAll()
       verify(exactly = 1) { lrmListRepository.findAll() }
     }
+
+    it("list repository throws exception") {
+      every { lrmListRepository.findAll() } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmListService.findAll() }
+      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.message.shouldBe("Lists could not be retrieved.")
+      exception.responseMessage.shouldBe("Lists could not be retrieved.")
+    }
   }
 
   describe("findAllIncludeItems()") {
@@ -114,6 +123,41 @@ class LrmListServiceTests : DescribeSpec({
       every { lrmListRepository.findAllIncludeItems() } returns listOf(lrmList())
       lrmListService.findAllIncludeItems()
       verify(exactly = 1) { lrmListRepository.findAllIncludeItems() }
+    }
+
+    it("list repository throws exception") {
+      every { lrmListRepository.findAllIncludeItems() } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmListService.findAllIncludeItems() }
+      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.message.shouldBe("Lists (including associated items) could not be retrieved.")
+      exception.responseMessage.shouldBe("Lists (including associated items) could not be retrieved.")
+    }
+  }
+
+  describe("findById()") {
+    it("list is found and returned") {
+      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
+      val result = lrmListService.findById(1)
+      result.shouldBe(lrmList())
+      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
+    }
+
+    it("list is not found") {
+      every { lrmListRepository.findByIdOrNull(1) } returns null
+      assertThrows<ListNotFoundException> {
+        lrmListService.findById(1)
+      }
+    }
+
+    it("list repository throws exception") {
+      every { lrmListRepository.findByIdOrNull(1) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmListService.findById(1) }
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.message.shouldNotBeNull().shouldBeEqual("List id 1 could not be retrieved.")
+      exception.responseMessage.shouldBeEqual("List id 1 could not be retrieved.")
+      exception.title.shouldBeEqual("API Exception")
     }
   }
 
@@ -131,21 +175,15 @@ class LrmListServiceTests : DescribeSpec({
         lrmListService.findByIdIncludeItems(1)
       }
     }
-  }
 
-  describe("findById()") {
-    it("list is found and returned") {
-      every { lrmListRepository.findByIdOrNull(1) } returns lrmList()
-      val result = lrmListService.findById(1)
-      result.shouldBe(lrmList())
-      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
-    }
-
-    it("list is not found") {
-      every { lrmListRepository.findByIdOrNull(1) } returns null
-      assertThrows<ListNotFoundException> {
-        lrmListService.findById(1)
-      }
+    it("list repository throws exception") {
+      every { lrmListRepository.findByIdOrNullIncludeItems(1) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmListService.findByIdIncludeItems(1) }
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.message.shouldNotBeNull().shouldBeEqual("List id 1 (including associated items) could not be retrieved.")
+      exception.responseMessage.shouldBeEqual("List id 1 (including associated items) could not be retrieved.")
+      exception.title.shouldBeEqual("API Exception")
     }
   }
 

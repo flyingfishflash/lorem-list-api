@@ -82,6 +82,15 @@ class LrmItemServiceTests : DescribeSpec({
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.title.shouldBeEqual("API Exception")
     }
+
+    it("item repository throws exception") {
+      every { mockLrmItemRepository.deleteById(1) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(1) }
+      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.message.shouldBe("Item id 1 could not be deleted.")
+      exception.responseMessage.shouldBe("Item id 1 could not be deleted.")
+    }
   }
 
   describe("findAll()") {
@@ -90,6 +99,15 @@ class LrmItemServiceTests : DescribeSpec({
       lrmItemService.findAll()
       verify(exactly = 1) { mockLrmItemRepository.findAll() }
     }
+
+    it("item repository throws exception") {
+      every { mockLrmItemRepository.findAll() } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findAll() }
+      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.message.shouldBe("Items could not be retrieved.")
+      exception.responseMessage.shouldBe("Items could not be retrieved.")
+    }
   }
 
   describe("findAllIncludeLists()") {
@@ -97,6 +115,15 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findAllIncludeLists() } returns listOf(lrmItem())
       lrmItemService.findAllIncludeLists()
       verify(exactly = 1) { mockLrmItemRepository.findAllIncludeLists() }
+    }
+
+    it("item repository throws exception") {
+      every { mockLrmItemRepository.findAllIncludeLists() } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findAllIncludeLists() }
+      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.message.shouldBe("Items (including associated lists) could not be retrieved.")
+      exception.responseMessage.shouldBe("Items (including associated lists) could not be retrieved.")
     }
   }
 
@@ -111,6 +138,15 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findByIdOrNull(1) } returns null
       shouldThrow<ItemNotFoundException> { lrmItemService.findById(1) }
     }
+
+    it("item repository throws exception") {
+      every { mockLrmItemRepository.findByIdOrNull(1) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findById(1) }
+      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.message.shouldBe("Item id 1 could not be retrieved.")
+      exception.responseMessage.shouldBe("Item id 1 could not be retrieved.")
+    }
   }
 
   describe("findByIdIncludeLists()") {
@@ -123,6 +159,15 @@ class LrmItemServiceTests : DescribeSpec({
     it("item is not returned") {
       every { mockLrmItemRepository.findByIdOrNullIncludeLists(1) } returns null
       shouldThrow<ItemNotFoundException> { lrmItemService.findByIdIncludeLists(1) }
+    }
+
+    it("item repository throws exception") {
+      every { mockLrmItemRepository.findByIdOrNullIncludeLists(1) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findByIdIncludeLists(1) }
+      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.message.shouldBe("Item id 1 (including associated lists) could not be retrieved.")
+      exception.responseMessage.shouldBe("Item id 1 (including associated lists) could not be retrieved.")
     }
   }
 })
