@@ -66,8 +66,19 @@ data class ResponseProblem(
     disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(problemDetail.status)),
     method = request.method.name().lowercase(),
     instance = request.uri.path.lowercase(),
-    // TODO: FIX ME
-    message = "from response problem constructor",
+    message = problemDetail.detail ?: "no detail available for this problem",
+    size = calcSize(problemDetail),
+    content = ApiProblemDetail(problemDetail),
+  )
+
+  /** Create an API ResponseProblem from a Spring ProblemDetail
+   * @return ResponseProblem
+   */
+  constructor(problemDetail: ProblemDetail, responseMessage: String?, request: ServerHttpRequest) : this(
+    disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(problemDetail.status)),
+    method = request.method.name().lowercase(),
+    instance = request.uri.path.lowercase(),
+    message = responseMessage ?: problemDetail.detail ?: "no detail available for this problem",
     size = calcSize(problemDetail),
     content = ApiProblemDetail(problemDetail),
   )
