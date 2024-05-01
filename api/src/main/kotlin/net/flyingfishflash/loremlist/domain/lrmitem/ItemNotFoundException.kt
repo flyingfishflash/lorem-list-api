@@ -7,13 +7,12 @@ class ItemNotFoundException(
   id: Long,
   cause: Throwable? = null,
   message: String? = null,
-  responseMessage: String? = null,
 ) : AbstractApiException(
-  cause = cause,
   httpStatus = HttpStatus.NOT_FOUND,
-  detail = message ?: defaultMessage(id),
-  responseMessage = responseMessage ?: defaultMessage(id),
   title = TITLE,
+  cause = cause,
+  detail = message ?: defaultMessage(id),
+  responseMessage = defaultMessage(id),
 ) {
   companion object {
     const val TITLE = "Item Not Found Exception"
