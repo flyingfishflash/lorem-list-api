@@ -50,9 +50,9 @@ enum class DispositionOfProblem : Disposition {
 
   companion object {
     /** Calculate the disposition of the API Event from the Http status */
-    fun calcDisposition(httpStatus: Int) = when {
-      HttpStatus.valueOf(httpStatus).is4xxClientError -> FAILURE
-      HttpStatus.valueOf(httpStatus).is5xxServerError -> ERROR
+    fun calcDisposition(httpStatus: HttpStatus) = when {
+      httpStatus.is4xxClientError -> FAILURE
+      httpStatus.is5xxServerError -> ERROR
       else -> UNDEFINED
     }
   }

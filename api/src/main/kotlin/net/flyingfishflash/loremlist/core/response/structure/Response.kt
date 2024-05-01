@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
+import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.server.ServerHttpRequest
 import java.util.UUID
@@ -37,7 +38,7 @@ data class ResponseProblem(
    * @return ResponseProblem
    */
   constructor(apiProblemDetail: ApiProblemDetail, request: HttpServletRequest) : this(
-    disposition = DispositionOfProblem.calcDisposition(apiProblemDetail.status),
+    disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(apiProblemDetail.status)),
     method = request.method.lowercase(),
     instance = request.requestURI.toString(),
     // TODO: FIX ME
@@ -50,7 +51,7 @@ data class ResponseProblem(
    * @return ResponseProblem
    */
   constructor(apiProblemDetail: ApiProblemDetail, responseMessage: String, request: HttpServletRequest) : this(
-    disposition = DispositionOfProblem.calcDisposition(apiProblemDetail.status),
+    disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(apiProblemDetail.status)),
     method = request.method.lowercase(),
     instance = request.requestURI.toString(),
     message = responseMessage,
@@ -62,7 +63,7 @@ data class ResponseProblem(
    * @return ResponseProblem
    */
   constructor(problemDetail: ProblemDetail, request: ServerHttpRequest) : this(
-    disposition = DispositionOfProblem.calcDisposition(problemDetail.status),
+    disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(problemDetail.status)),
     method = request.method.name().lowercase(),
     instance = request.uri.path.lowercase(),
     // TODO: FIX ME
