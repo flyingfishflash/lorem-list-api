@@ -26,6 +26,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 
 /**
@@ -326,11 +327,70 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
 
       describe("patch") {
-        it("item is found and updated") { TODO() }
+        it("item is found and updated") {
+          every { lrmItemService.patch(id, any()) } returns Pair(lrmItem(), true)
+          val instance = "/items/$id"
+          mockMvc.patch(instance) {
+            content = Json.encodeToString(mapOf("name" to lrmItem().name))
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
+            jsonPath("$.message") { value("patched") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.description") { value(lrmItem().description) }
+            jsonPath("$.content.name") { value(lrmItem().name) }
+            jsonPath("$.content.items") {
+              doesNotExist()
+            }
+          }
+          verify(exactly = 1) { lrmItemService.patch(id, mapOf("name" to lrmItem().name)) }
+        }
 
-        it("item is found and not updated") { TODO() }
+        it("item is found and not updated") {
+          every { lrmItemService.patch(id, any()) } returns Pair(lrmItem(), false)
+          val instance = "/items/$id"
+          mockMvc.patch(instance) {
+            content = Json.encodeToString(mapOf("name" to lrmItem().name))
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNoContent() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
+            jsonPath("$.message") { value("not patched") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.description") { value(lrmItem().description) }
+            jsonPath("$.content.name") { value(lrmItem().name) }
+            jsonPath("$.content.items") { doesNotExist() }
+          }
+          verify(exactly = 1) { lrmItemService.patch(id, mapOf("name" to lrmItem().name)) }
+        }
 
-        it("item is not found") { TODO() }
+        it("item is not found") {
+          every { lrmItemService.patch(id, any()) } throws ListNotFoundException(id)
+          val instance = "/items/$id"
+          mockMvc.patch(instance) {
+            content = Json.encodeToString(mapOf("name" to lrmItem().name))
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
+            jsonPath("$.message") { value("List id $id could not be found.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
+            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
+            jsonPath("$.content.detail") { value("List id $id could not be found.") }
+          }
+          verify(exactly = 1) { lrmItemService.patch(id, mapOf("name" to lrmItem().name)) }
+        }
       }
     }
 

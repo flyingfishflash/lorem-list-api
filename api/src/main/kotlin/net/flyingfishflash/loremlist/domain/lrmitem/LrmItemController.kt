@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -174,6 +175,46 @@ class LrmItemController(val lrmItemService: LrmItemService, val commonService: C
     val responseContent = ApiMessage(responseMessage)
     val response = ResponseSuccess(responseContent, responseMessage, request)
     return ResponseEntity(response, responseStatus)
+  }
+
+  @Operation(summary = "Update an item")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Item Updated",
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+      ApiResponse(
+        responseCode = "204",
+        description = "Item Not Updated",
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Item Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  @PatchMapping("/{id}")
+  fun patch(
+    @PathVariable("id") @Min(1) id: Long,
+    @RequestBody patchRequest: Map<String, Any>,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<LrmItem>> {
+    val (responseContent, patched) = lrmItemService.patch(id, patchRequest)
+    val response: ResponseSuccess<*>
+    val responseEntity: ResponseEntity<ResponseSuccess<LrmItem>>
+    if (patched) {
+      response = ResponseSuccess(responseContent, "patched", request)
+      responseEntity = ResponseEntity(response, HttpStatus.OK)
+    } else {
+      response = ResponseSuccess(responseContent, "not patched", request)
+      responseEntity = ResponseEntity(response, HttpStatus.NO_CONTENT)
+    }
+    logger.info { Json.encodeToString(response) }
+    return responseEntity
   }
 
   @PostMapping("/{id}/remove-from-list")

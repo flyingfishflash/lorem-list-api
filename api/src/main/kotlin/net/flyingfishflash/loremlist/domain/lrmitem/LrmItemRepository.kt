@@ -15,6 +15,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.nextLongVal
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
@@ -138,6 +139,17 @@ class LrmItemRepository {
     return LrmListsItemsTable.deleteWhere {
       (item eq itemId).and(list eq listId)
     }
+  }
+
+  fun update(lrmItem: LrmItem): Int {
+    val updatedCount =
+      repositoryTable.update({ repositoryTable.id eq lrmItem.id }) {
+        it[repositoryTable.name] = lrmItem.name
+        it[repositoryTable.description] = lrmItem.description
+        it[repositoryTable.quantity] = lrmItem.quantity
+      }
+
+    return updatedCount
   }
 
   fun ResultRow.toLrmItem(): LrmItem {

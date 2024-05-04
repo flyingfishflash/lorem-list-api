@@ -20,7 +20,7 @@ object LrmListItemTable : LongIdTable("item") {
   val created: Column<Instant> = timestamp(name = "created")
   val name: Column<String> = varchar("name", length = 64)
   val description: Column<String?> = varchar("description", length = 2048).nullable()
-  val quantity: Column<Long> = long("quantity")
+  val quantity: Column<Int> = integer("quantity")
 }
 
 object LrmListsItemsTable : Table("lists_items") {

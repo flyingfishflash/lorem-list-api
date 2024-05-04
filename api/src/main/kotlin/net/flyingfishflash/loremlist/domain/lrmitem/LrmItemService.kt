@@ -1,5 +1,8 @@
 package net.flyingfishflash.loremlist.domain.lrmitem
 
+import jakarta.validation.ConstraintViolation
+import jakarta.validation.ConstraintViolationException
+import jakarta.validation.Validation
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.springframework.http.HttpStatus
@@ -95,5 +98,68 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
       )
     }
     return item ?: throw ItemNotFoundException(id)
+  }
+
+  @Suppress("kotlin:S3776")
+  fun patch(id: Long, patchRequest: Map<String, Any>): Pair<LrmItem, Boolean> {
+    var patched = false
+    val lrmItem = findById(id)
+    var newName = lrmItem.name
+    var newDescription = lrmItem.description
+    var newQuantity = lrmItem.quantity
+
+    if (patchRequest.isNotEmpty()) {
+      for ((change, value) in patchRequest.entries) {
+        when (change) {
+          "name" -> {
+            if (value != lrmItem.name) {
+              newName = value as String
+              patched = true
+            }
+          }
+          "description" -> {
+            if (value != lrmItem.description) {
+              newDescription = value as String
+              patched = true
+            }
+          }
+          "quantity" -> {
+            if (value != lrmItem.quantity) {
+              newQuantity = value as Int
+              patched = true
+            }
+          }
+          else -> throw IllegalArgumentException("Unexpected value: $change")
+        }
+      }
+    }
+
+    if (patched) {
+      val lrmItemRequest = LrmItemRequest(name = newName, description = newDescription, quantity = newQuantity)
+      val violations: Set<ConstraintViolation<LrmItemRequest>> =
+        Validation.buildDefaultValidatorFactory().validator.validate(lrmItemRequest)
+      if (violations.isNotEmpty()) {
+        throw ConstraintViolationException(violations)
+      }
+
+      val updatedCount = try {
+        lrmItemRepository.update(LrmItemConverter.toLrmItem(lrmItemRequest, lrmItem))
+      } catch (exception: Exception) {
+        throw ApiException(
+          cause = exception,
+          message = "Item id ${lrmItem.id} could not be updated. The item was found and patch request is valid" +
+            " but an exception was thrown by the item repository.",
+          responseMessage = "Item id ${lrmItem.id} could not be updated.",
+        )
+      }
+
+      if (updatedCount != 1) {
+        throw ApiException(
+          message = "Item id ${lrmItem.id} could not be updated. $updatedCount records would have been updated rather than 1.",
+          responseMessage = "Item id ${lrmItem.id} could not be updated. $updatedCount records would have been updated rather than 1.",
+        )
+      }
+    }
+    return Pair(lrmItem, patched)
   }
 }

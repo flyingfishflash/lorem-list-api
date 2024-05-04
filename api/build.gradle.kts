@@ -91,6 +91,11 @@ sonarqube {
     property("sonar.projectName", "lorem-list-api")
     property("sonar.projectVersion", rootProject.version.toString())
     property(
+      "sonar.cpd.exclusions",
+      "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/LrmItemController.kt," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/LrmListController.kt,",
+    )
+    property(
       "sonar.coverage.exclusions",
       "src/main/kotlin/net/flyingfishflash/loremlist/LoremListApplication.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/**/data/*," +
