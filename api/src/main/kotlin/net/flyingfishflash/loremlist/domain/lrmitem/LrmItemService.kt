@@ -19,7 +19,6 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
       return findById(id)
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "Item could not be inserted.",
         responseMessage = "Item could not be inserted.",
@@ -32,7 +31,6 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
       lrmItemRepository.deleteById(id)
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "Item id $id could not be deleted.",
         responseMessage = "Item id $id could not be deleted.",
@@ -46,7 +44,6 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
       )
     } else if (deletedCount > 1) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         responseMessage = "More than one item with id $id were found. No items have been deleted.",
       )
     }
@@ -57,7 +54,6 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
       return lrmItemRepository.findAll()
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "Items could not be retrieved.",
         responseMessage = "Items could not be retrieved.",
@@ -70,7 +66,6 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
       return lrmItemRepository.findAllIncludeLists()
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "Items (including associated lists) could not be retrieved.",
         responseMessage = "Items (including associated lists) could not be retrieved.",
@@ -83,7 +78,6 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
       lrmItemRepository.findByIdOrNull(id)
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "Item id $id could not be retrieved.",
         responseMessage = "Item id $id could not be retrieved.",
@@ -97,7 +91,6 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
       lrmItemRepository.findByIdOrNullIncludeLists(id)
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "Item id $id (including associated lists) could not be retrieved.",
         responseMessage = "Item id $id (including associated lists) could not be retrieved.",

@@ -3,13 +3,13 @@ package net.flyingfishflash.loremlist.core.exceptions
 import org.springframework.http.HttpStatus
 
 class ApiException(
-  httpStatus: HttpStatus,
+  httpStatus: HttpStatus? = null,
   title: String? = null,
   cause: Throwable? = null,
   message: String? = null,
   responseMessage: String? = null,
 ) : AbstractApiException(
-  httpStatus = httpStatus,
+  httpStatus = httpStatus ?: HttpStatus.INTERNAL_SERVER_ERROR,
   title = title ?: TITLE,
   cause = cause,
   detail = message ?: buildMessage(cause),

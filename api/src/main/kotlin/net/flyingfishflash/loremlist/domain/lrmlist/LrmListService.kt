@@ -8,7 +8,6 @@ import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListConverter
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -23,7 +22,6 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
       return findById(id)
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "List could not be created.",
         responseMessage = "List could not be created.",
@@ -37,7 +35,6 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
         lrmListRepository.deleteById(id)
       } catch (cause: Exception) {
         throw ApiException(
-          httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
           cause = cause,
           message = "List $id could not be deleted.",
           responseMessage = "List $id could not be deleted.",
@@ -47,7 +44,6 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
       throw ListNotFoundException(id)
     } else if (deletedCount > 1) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         message = "List id $id could not be deleted. $deletedCount records would have been updated rather than 1.",
         responseMessage = "List id $id could not be deleted. $deletedCount records would have been updated rather than 1.",
       )
@@ -93,7 +89,6 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
         lrmListRepository.update(LrmListConverter.toLrmList(lrmListRequest, lrmList))
       } catch (exception: Exception) {
         throw ApiException(
-          httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
           cause = exception,
           message = "List id ${lrmList.id} could not be updated. The list was found and patch request is valid" +
             " but an exception was thrown by the list repository.",
@@ -103,7 +98,6 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
 
       if (updatedCount != 1) {
         throw ApiException(
-          httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
           message = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
           responseMessage = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
         )
@@ -118,7 +112,6 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
       return lrmListRepository.findAll()
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "Lists could not be retrieved.",
         responseMessage = "Lists could not be retrieved.",
@@ -131,7 +124,6 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
       return lrmListRepository.findAllIncludeItems()
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "Lists (including associated items) could not be retrieved.",
         responseMessage = "Lists (including associated items) could not be retrieved.",
@@ -144,7 +136,6 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
       lrmListRepository.findByIdOrNull(id)
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "List id $id could not be retrieved.",
         responseMessage = "List id $id could not be retrieved.",
@@ -158,7 +149,6 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
       lrmListRepository.findByIdOrNullIncludeItems(id)
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "List id $id (including associated items) could not be retrieved.",
         responseMessage = "List id $id (including associated items) could not be retrieved.",

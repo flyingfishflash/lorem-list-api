@@ -69,7 +69,6 @@ class CommonService(
           }
         }
         else -> throw ApiException(
-          httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
           responseMessage = "Item id $itemId could not be added to list id $listId because of a sql exception with an undefined cause.",
           cause = ex,
         )
@@ -93,7 +92,6 @@ class CommonService(
       }
     } catch (exception: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         responseMessage = "Item was not moved: " + (exception.message ?: "exception cause detail not available"),
         cause = exception,
       )
@@ -110,7 +108,6 @@ class CommonService(
       lrmItemRepository.removeItemFromList(itemId, listId)
     } catch (cause: Exception) {
       throw ApiException(
-        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
         cause = cause,
         message = "Item id $itemId could not be removed from list id $listId.",
         responseMessage = "Item id $itemId could not be removed from list id $listId.",
