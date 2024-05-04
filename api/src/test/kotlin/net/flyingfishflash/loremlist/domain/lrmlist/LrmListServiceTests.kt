@@ -15,9 +15,7 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import jakarta.validation.ConstraintViolationException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRepository
-import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementContext

@@ -4,8 +4,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemService
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
 import org.jetbrains.exposed.exceptions.ExposedSQLException

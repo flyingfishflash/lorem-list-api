@@ -1,8 +1,6 @@
 package net.flyingfishflash.loremlist.domain.lrmitem
 
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service

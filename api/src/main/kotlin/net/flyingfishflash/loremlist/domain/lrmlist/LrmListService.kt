@@ -4,10 +4,7 @@ import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListConverter
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRepository
-import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

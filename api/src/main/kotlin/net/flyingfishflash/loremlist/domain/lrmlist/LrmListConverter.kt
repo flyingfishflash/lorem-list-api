@@ -1,6 +1,6 @@
-package net.flyingfishflash.loremlist.domain.lrmlist.data
+package net.flyingfishflash.loremlist.domain.lrmlist
 
-import net.flyingfishflash.loremlist.domain.lrmlist.data.dto.LrmListRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 
 object LrmListConverter {
   fun toLrmList(lrmListRequest: LrmListRequest, lrmList: LrmList): LrmList {

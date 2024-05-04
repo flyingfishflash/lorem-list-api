@@ -18,13 +18,13 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemService
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmList
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.Statement

@@ -93,16 +93,16 @@ sonarqube {
     property(
       "sonar.coverage.exclusions",
       "src/main/kotlin/net/flyingfishflash/loremlist/LoremListApplication.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/**/dto/*," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/**/data/*," +
         "src/main/kotlin/net/flyingfishflash/loremlist/*/*/*Configuration.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/core/configuration/**," +
         "src/main/kotlin/net/flyingfishflash/loremlist/core/response/structure/ApiMessage.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/EntityModel.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/*/data/*Repository.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/data/LrmItem.kt," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/domain/*/*Repository.kt," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/LrmItem.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/data/LrmItemRequest.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/data/LrmItemMoveToListRequest.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/data/LrmList.kt,",
+        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/LrmList.kt,",
     )
   }
 }

@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.domain.lrmitem.data
+package net.flyingfishflash.loremlist.domain.lrmitem
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault

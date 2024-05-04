@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.domain.lrmlist.data.dto
+package net.flyingfishflash.loremlist.domain.lrmlist.data
 
 // import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.NotEmpty

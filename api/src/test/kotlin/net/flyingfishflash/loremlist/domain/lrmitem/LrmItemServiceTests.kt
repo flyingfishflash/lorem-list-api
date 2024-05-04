@@ -13,8 +13,6 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.mockk.verify
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Transaction

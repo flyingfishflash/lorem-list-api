@@ -1,9 +1,10 @@
-package net.flyingfishflash.loremlist.domain.lrmitem.data
+package net.flyingfishflash.loremlist.domain.lrmitem
 
 import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Sequence
