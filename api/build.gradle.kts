@@ -23,7 +23,7 @@ val ciPlatform: String by rootProject.extra
 val ciPipelineId: String by rootProject.extra
 
 val exposedVersion = "0.50.0"
-val flywayVersion = "10.11.1"
+val flywayVersion = "10.12.0"
 val kotestVersion = "5.8.1"
 val kotestExtensionsSpringVersion = "1.1.3"
 val kotlinLoggingVersion = "6.0.9"
