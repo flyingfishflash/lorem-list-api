@@ -1,4 +1,4 @@
-plugins { id("com.mooltiverse.oss.nyx") version "2.5.2" }
+plugins { id("com.mooltiverse.oss.nyx") version "3.0.2" }
 
 rootProject.name = "lorem-list"
 
