@@ -1,0 +1,24 @@
+# Changelog
+
+
+{{#releases}}
+## {{date}}
+
+{{#sections}}
+
+### {{name}}
+
+{{#commits}}
+* {{#short7}}{{sha}}{{/short7}} {{message.shortMessage}}
+{{/commits}}
+{{^commits}}
+No changes.
+{{/commits}}
+{{/sections}}
+{{^sections}}
+No changes.
+{{/sections}}
+{{/releases}}
+{{^releases}}
+No releases.
+{{/releases}}

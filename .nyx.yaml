@@ -1,0 +1,106 @@
+---
+dryRun: true
+preset: "simple"
+verbosity: "DEBUG"
+releasePrefix: "v"
+summary: true
+changelog:
+  path: "build/CHANGELOG.md"
+  template: ".nyx-changelog.template"
+  sections:
+    "Dependencies": "^dependency$"
+    "Added": "^feat$"
+    "Changed": "(^refactor$|^perf$)"
+    "Fixed": "^fix$"
+    "Continuous Integration": "^ci$"
+    "Build": "^build$"
+    "Tests": "^test$"
+    "Documentation": "^docs$"
+commitMessageConventions:
+  enabled:
+    - conventionalCommitsCustom
+  items:
+    conventionalCommitsCustom:
+      expression: "(?m)^(?<type>[a-zA-Z0-9_]+)(!)?(\\((?<scope>[a-z ]+)\\))?:( (?<title>.+))$(?s).*"
+      bumpExpressions:
+        major: "(?s)(?m)^[a-zA-Z0-9_]+(!|.*^(BREAKING( |-)CHANGE: )).*"
+        minor: "(?s)(?m)^feat(?!!|.*^(BREAKING( |-)CHANGE: )).*"
+        patch: "(?s)(?m)(^dependency|^fix|^perf|^refactor)(?!!|.*^(BREAKING( |-)CHANGE: )).*"
+git:
+  remotes:
+    codeberg:
+      authenticationMethod: USER_PASSWORD
+      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+releaseTypes:
+  enabled:
+    - mainline
+    - release
+    - internal
+  publicationServices:
+    - lan
+  #    - gitlab
+  remoteRepositories:
+    - codeberg
+  items:
+    mainline:
+      collapseVersions: false
+      description: "{{#fileContent}}build/CHANGELOG.md{{/fileContent}}"
+      filterTags: "^({{configuration.releasePrefix}})?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)$"
+      gitCommit: "false"
+      gitPush: "false"
+      gitTag: "false"
+      matchBranches: "^main$"
+      matchEnvironmentVariables:
+        CI: "^true$"
+      matchWorkspaceStatus: "CLEAN"
+      publish: "false"
+    release:
+      collapseVersions: false
+      description: "{{#fileContent}}build/CHANGELOG.md{{/fileContent}}"
+      filterTags: "^({{configuration.releasePrefix}})?([0-9]\\d*)\\.([0-9]\\d*)\\.([0-9]\\d*)$"
+      gitCommit: "false"
+      gitPush: "false"
+      gitTag: "true"
+      matchBranches: "^release$"
+      matchEnvironmentVariables:
+        CI: "^true$"
+      matchWorkspaceStatus: "CLEAN"
+      publish: "true"
+    internal:
+      gitCommit: "false"
+      gitPush: "false"
+      gitTag: "false"
+      publish: "false"
+      identifiers:
+        -
+          position: PRE_RELEASE
+          qualifier: "{{#lower}}{{branch}}{{/lower}}"
+          value: "{{#sanitize}}{{#environmentVariable}}DRONE_BUILD_NUMBER{{/environmentVariable}}{{/sanitize}}"
+services:
+  codeberg:
+    type: "GITHUB"
+    options:
+      AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+      BASE_URI: "https://codeberg.org/api/v1"
+      REPOSITORY_NAME: "ledger"
+      REPOSITORY_OWNER: "flyingfishflash"
+  lan:
+    type: "GITHUB"
+    options:
+      AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_LAN{{/environmentVariable}}"
+      BASE_URI: "https://gitea.flyingfishflash.net/api/v1"
+      REPOSITORY_NAME: "ledger"
+      REPOSITORY_OWNER: "flyingfishflash"
+  github:
+    type: "GITHUB"
+    options:
+      AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITHUB{{/environmentVariable}}"
+      REPOSITORY_NAME: "ledger"
+      REPOSITORY_OWNER: "flyingfishflash"
+  gitlab:
+    type: "GITLAB"
+    options:
+      AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITLAB{{/environmentVariable}}"
+      REPOSITORY_NAME: "ledger"
+      REPOSITORY_OWNER: "flyingfishflash"
