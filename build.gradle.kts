@@ -95,9 +95,6 @@ java { sourceCompatibility = JavaVersion.VERSION_17 }
 
 sonarqube {
   properties {
-    // TODO: no matter what value I place here sonarqube key/project name remains as lorem-list
-//    property("sonar.projectKey", "lorem-list-api")
-//    property("sonar.projectName", "lorem-list-api")
     property("sonar.projectVersion", rootProject.version.toString())
     property(
       "sonar.cpd.exclusions",
