@@ -173,10 +173,10 @@ steps:
 #        -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
       - >
         gradle
-        :api:testClasses
-        :api:spotlessCheck
-        :api:test
-        :api:bootBuildInfo
+        :testClasses
+        :spotlessCheck
+        :test
+        :bootBuildInfo
         -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
 #      - >
 #        gradle
