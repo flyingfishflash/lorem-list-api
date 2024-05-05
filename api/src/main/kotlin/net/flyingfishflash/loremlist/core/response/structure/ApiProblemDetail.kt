@@ -19,6 +19,4 @@ data class ApiProblemDetail(
     status = problemDetail.status,
     detail = problemDetail.detail ?: "default detail",
   )
-
-  // TODO initialize ApiProblemDetail extension properties
 }

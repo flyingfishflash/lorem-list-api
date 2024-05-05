@@ -36,7 +36,6 @@ class LrmListRepository {
     .map { it.toLrmlist() }
     .toList()
 
-  // TODO Paging Query
   fun findAllIncludeItems(): List<LrmList> {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .select(

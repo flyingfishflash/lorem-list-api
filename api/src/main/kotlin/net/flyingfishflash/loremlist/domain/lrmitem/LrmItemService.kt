@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional
 class LrmItemService(val lrmItemRepository: LrmItemRepository) {
-// TODO: Ensure the transaction is rolled back if an exception is thrown
 
   fun create(lrmItemRequest: LrmItemRequest): LrmItem {
     try {

@@ -21,7 +21,6 @@ class CommonService(
   val lrmItemService: LrmItemService,
   val lrmListService: LrmListService,
 ) {
-// TODO: Ensure the transaction is rolled back if an exception is thrown
   private val logger = KotlinLogging.logger {}
 
   fun addToList(itemId: Long, listId: Long): Pair<String, String> {
