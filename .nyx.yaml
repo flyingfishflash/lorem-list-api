@@ -82,24 +82,24 @@ services:
     options:
       AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
       BASE_URI: "https://codeberg.org/api/v1"
-      REPOSITORY_NAME: "ledger"
+      REPOSITORY_NAME: "lorem-list-api"
       REPOSITORY_OWNER: "flyingfishflash"
   lan:
     type: "GITHUB"
     options:
       AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_LAN{{/environmentVariable}}"
       BASE_URI: "https://gitea.flyingfishflash.net/api/v1"
-      REPOSITORY_NAME: "ledger"
+      REPOSITORY_NAME: "lorem-list-api"
       REPOSITORY_OWNER: "flyingfishflash"
   github:
     type: "GITHUB"
     options:
       AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITHUB{{/environmentVariable}}"
-      REPOSITORY_NAME: "ledger"
+      REPOSITORY_NAME: "lorem-list-api"
       REPOSITORY_OWNER: "flyingfishflash"
   gitlab:
     type: "GITLAB"
     options:
       AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITLAB{{/environmentVariable}}"
-      REPOSITORY_NAME: "ledger"
+      REPOSITORY_NAME: "lorem-list-api"
       REPOSITORY_OWNER: "flyingfishflash"
