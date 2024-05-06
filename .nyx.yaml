@@ -8,9 +8,9 @@ changelog:
   template: ".nyx-changelog.template"
   sections:
     "Dependencies": "^dependency$"
-    "Added": "^feat$"
-    "Changed": "(^refactor$|^perf$)"
-    "Fixed": "^fix$"
+    "Additions": "^feat$"
+    "Changes": "(^refactor$|^perf$)"
+    "Fixes": "^fix$"
     "Continuous Integration": "^ci$"
     "Build": "^build$"
     "Tests": "^test$"
@@ -38,7 +38,6 @@ releaseTypes:
     - internal
   publicationServices:
     - lan
-  #    - gitlab
   remoteRepositories:
     - codeberg
   items:
