@@ -2,7 +2,6 @@
 dryRun: true
 preset: "simple"
 verbosity: "DEBUG"
-releasePrefix: "v"
 summary: true
 changelog:
   path: "build/CHANGELOG.md"
