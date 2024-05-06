@@ -14,7 +14,6 @@ plugins {
   id("com.diffplug.spotless") version "6.25.0"
   id("com.github.ben-manes.versions") version "0.51.0"
   id("io.spring.dependency-management") version "1.1.5"
-  id("com.mooltiverse.oss.nyx") version "3.0.2"
   id("org.sonarqube") version "5.0.0.4638"
   id("org.springframework.boot") version "3.2.5"
   id("org.springdoc.openapi-gradle-plugin") version "1.8.0"
@@ -95,7 +94,7 @@ java { sourceCompatibility = JavaVersion.VERSION_17 }
 
 sonarqube {
   properties {
-    property("sonar.projectVersion", rootProject.version.toString())
+    property("sonar.projectVersion", project.version.toString())
     property(
       "sonar.cpd.exclusions",
       "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/LrmItemController.kt," +
@@ -123,7 +122,7 @@ springBoot {
     properties {
       artifact.set("lorem-list-api")
       name.set("lorem-list api")
-      version.set(rootProject.version.toString())
+      version.set(project.version.toString())
       additional.set(
         mapOf("ciPlatform" to ciPlatform, "ciPipelineId" to ciPipelineId, "commit" to ciCommit),
       )
