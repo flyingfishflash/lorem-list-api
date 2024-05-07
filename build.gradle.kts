@@ -165,6 +165,18 @@ tasks {
     }
   }
 
+  register<Sync>("explodeBootJar") {
+    dependsOn(bootJar)
+    from(project.zipTree(bootJar.get().archiveFile))
+    into("${layout.buildDirectory.get()}/boot_jar_exploded")
+  }
+
+  register<Copy>("copyBuildInfo") {
+    mustRunAfter("explodeBootJar")
+    from(layout.buildDirectory.file("boot_jar_exploded/META-INF/build-info.properties"))
+    into(layout.buildDirectory.dir("boot_jar_exploded/BOOT-INF/classes/META-INF/"))
+  }
+
   test {
     ignoreFailures = true
     useJUnitPlatform()

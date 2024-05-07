@@ -3,8 +3,7 @@
 # - deploy_to_host
 # - drone_deployer_ssh_key_private
 # - drone_deployer_ssh_username
-# - repository_api  = registry.domain.tld/lorem-list/lorem-list-api
-# - repository_client_web = registry.domain.tld/lorem-list/lorem-list-client-web
+# - repository  = registry.domain.tld/lorem-list/lorem-list-api
 
 # organization secrets:
 # -------------------
@@ -18,89 +17,9 @@
 # - sonar_host
 # - sonar_token
 
-#kind: pipeline
-#type: docker
-#name: "web client - build"
-#
-#volumes:
-#  - name: drone_cache
-#    host:
-#      path: /var/lib/docker/volumes_managed/drone_cache
-#
-#trigger:
-#  event:
-#    - push
-#    - tag
-#  ref:
-#    - refs/heads/build-*
-#    - refs/heads/feature-*
-#    - refs/heads/fix-*
-#    - refs/heads/main
-#    - refs/heads/perf-*
-#    - refs/heads/refactor-*
-#    - refs/heads/style-*
-#    - refs/heads/release
-#
-#environment:
-#  VERSION: .version
-#  BUILD: .build
-#
-#steps:
-#  - name: infer version
-#    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
-#    commands:
-#      # nyx requires git tags to infer the current version
-#      - git fetch --tags -q
-#      - rm -fv $VERSION
-#      - echo "export NYX_CURRENT_VERSION=$(nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n')" > $VERSION
-#      - cat $VERSION
-#
-#  - name: build
-#    image: node:18-alpine
-#    depends_on:
-#      - infer version
-#    commands:
-#      - source $VERSION
-#      - |
-#        cat <<EOT >> $BUILD
-#        export BUILD_SCM_COMMIT_SHORT_SHA=$(echo $DRONE_COMMIT_SHA | cut -c1-8)
-#        export BUILD_CLIENT_NPM_CACHE=/drone/drone_cache/$DRONE_REPO/client/npm
-#        export BUILD_CLIENT_DIST=/drone/drone_cache/$DRONE_REPO/client/dist
-#        export PATH=/drone/src/frontend/node_modules/.bin:$PATH
-#        EOT
-#      - source $BUILD
-#      - env | awk -v s="BUILD_" 'index($0, s) == 1' | LC_ALL=C sort
-#      - mkdir -pv $BUILD_CLIENT_NPM_CACHE
-#      - mkdir -pv $BUILD_CLIENT_DIST
-#      - cd /drone/src/frontend
-#      - |
-#        export JSON_BUILD_PROPERTIES=$(node -pe "
-#          JSON.stringify({
-#            artifact: new String('ledger'),
-#            ciPipelineId: process.env.DRONE_BUILD_NUMBER,
-#            ciPlatform: new String('drone'),
-#            commit: process.env.BUILD_SCM_COMMIT_SHORT_SHA,
-#            group: Symbol(''),
-#            name: Symbol(''),
-#            time: Symbol(''),
-#            version: process.env.NYX_CURRENT_VERSION
-#          });
-#        ")
-#      - echo $JSON_BUILD_PROPERTIES > src/assets/buildProperties.json
-#      - cat src/assets/buildProperties.json
-#      - npm version $NYX_CURRENT_VERSION --no-git-tag-version
-#      - npm ci --cache $BUILD_CLIENT_NPM_CACHE --prefer-offline
-#      - ng version
-#      - ng build --configuration production --output-path=$BUILD_CLIENT_DIST/ledger-frontend
-#      - printf "\n$(ls -1a $BUILD_CLIENT_DIST/ledger-frontend | wc -l) files in $BUILD_CLIENT_DIST/ledger-frontend\n"
-#    volumes:
-#      - name: drone_cache
-#        path: /drone/drone_cache
-
-#---
 kind: pipeline
 type: docker
-name: "api - build"
+name: "build"
 
 trigger:
   event:
@@ -108,6 +27,8 @@ trigger:
     - tag
   ref:
     - refs/heads/build-*
+    - refs/heads/ci-*
+    - refs/heads/dependency-*
     - refs/heads/feature-*
     - refs/heads/fix-*
     - refs/heads/main
@@ -152,13 +73,13 @@ steps:
       - fetch git tags
       - verify postgres
     commands:
-      - export GRADLE_USER_HOME=/drone/drone_cache/$DRONE_REPO/api/gradle-user-home
+      - export GRADLE_USER_HOME=/drone/drone_cache/$DRONE_REPO/gradle-user-home
       - echo $GRADLE_USER_HOME
       - mkdir -pv $GRADLE_USER_HOME
       - touch $GRADLE_USER_HOME/gradle.properties
       - echo org.gradle.caching=true > $GRADLE_USER_HOME/gradle.properties
       - echo org.gradle.daemon=false >> $GRADLE_USER_HOME/gradle.properties
-      - export GRADLE_PROJECT_BUILD_DIR=/drone/drone_cache/$DRONE_REPO/api/build
+      - export GRADLE_PROJECT_BUILD_DIR=/drone/drone_cache/$DRONE_REPO/build
       - echo $GRADLE_PROJECT_BUILD_DIR
       - mkdir -pv $GRADLE_PROJECT_BUILD_DIR
 #      - >
@@ -173,6 +94,8 @@ steps:
 #        -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
       - >
         gradle
+        :explodebootjar
+        :copyBuildInfo
         :testClasses
         :spotlessCheck
         :test
@@ -204,130 +127,107 @@ steps:
       - name: drone_cache
         path: /drone/drone_cache
 
-#---
-#kind: pipeline
-#name: "publish - image"
-#type: docker
-#
-#trigger:
-#  event:
-#    - push
-#  ref:
-#    - refs/heads/feature-*
-#    - refs/heads/fix-*
-#    - refs/heads/perf-*
-#    - refs/heads/refactor-*
-#    - refs/heads/release
-#
-#depends_on:
-#  - "web client - build"
-#  - "api - build"
-#
-#volumes:
-#  - name: drone_cache_client_dist
-#    host:
-#      path: /var/lib/docker/volumes_managed/drone_cache/flyingfishflash/lorem-list/client/dist
-#  - name: drone_cache_api_build
-#    host:
-#      path: /var/lib/docker/volumes_managed/drone_cache/flyingfishflash/lorem-list/api/build
-#
-#environment:
-#  TAGS: .tags
-#  VERSION: .version
-#
-#steps:
-#  - name: generate image tags
-#    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
-#    commands:
-#      # nyx requires git tags to infer the current version
-#      - git fetch --tags -q
-#      - nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n' > $TAGS
-#      - cat $TAGS && echo
-#
-#  - name: publish client-web
-#    image: plugins/docker
-#    depends_on:
-#      - generate image tags
-#    privileged: true
-#    settings:
-#      auto_tag: false
-#      context: /drone/src/client-web/
-#      dockerfile: /drone/src/client-web/Dockerfile
-#      repo:
-#        from_secret: repository_client_web
-#      registry:
-#        from_secret: registry_hostname
-#      username:
-#        from_secret: registry_username
-#      password:
-#        from_secret: registry_password
-#    volumes:
-#      - name: drone_cache_client_dist
-#        path: /drone/src/client-web/dist
-#
-#  - name: publish api
-#    image: plugins/docker
-#    depends_on:
-#      - generate image tags
-#    privileged: true
-#    settings:
-#      auto_tag: false
-#      context: /drone/src/api/
-#      dockerfile: /drone/src/api/Dockerfile
-#      repo:
-#        from_secret: repository_api
-#      registry:
-#        from_secret: registry_hostname
-#      username:
-#        from_secret: registry_username
-#      password:
-#        from_secret: registry_password
-#    volumes:
-#      - name: drone_cache_api_build
-#        path: /drone/src/api/build
-#
-#---
-#kind: pipeline
-#name: "publish - release"
-#type: docker
-#
-#trigger:
-#  event:
-#    - push
-#  ref:
-#    - refs/heads/release
-#
-#depends_on:
-#  - "publish - image"
-#
-#volumes:
-#  - name: drone_cache
-#    host:
-#      path: /var/lib/docker/volumes_managed/drone_cache
-#
-#steps:
-#  - name: "publish - release"
-#    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
-#    environment:
-#      NYX_FLYINGFISHFLASH_TOKEN_CODEBERG:
-#        from_secret: nyx_flyingfishflash_token_codeberg
+---
+kind: pipeline
+name: "publish - image"
+type: docker
+
+trigger:
+  event:
+    - push
+  ref:
+    - refs/heads/ci-*
+    - refs/heads/dependency-*
+    - refs/heads/feature-*
+    - refs/heads/fix-*
+    - refs/heads/perf-*
+    - refs/heads/refactor-*
+    - refs/heads/release
+
+depends_on:
+  - "build"
+
+volumes:
+  - name: drone_cache_build
+    host:
+      path: /var/lib/docker/volumes_managed/drone_cache/lorem-list/lorem-list-api/build
+
+environment:
+  TAGS: .tags
+  VERSION: .version
+
+steps:
+  - name: generate image tags
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
+    commands:
+      # nyx requires git tags to infer the current version
+      - git fetch --tags -q
+      - nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n' > $TAGS
+      - cat $TAGS && echo
+
+  - name: publish
+    image: plugins/docker
+    depends_on:
+      - generate image tags
+    privileged: true
+    settings:
+      auto_tag: false
+      context: /drone/src/
+      dockerfile: /drone/src/Containerfile
+      repo:
+        from_secret: repository
+      registry:
+        from_secret: registry_hostname
+      username:
+        from_secret: registry_username
+      password:
+        from_secret: registry_password
+    volumes:
+      - name: drone_cache_build
+        path: /drone/src/build
+
+---
+kind: pipeline
+name: "publish - release"
+type: docker
+
+trigger:
+  event:
+    - push
+  ref:
+    - refs/heads/release
+
+depends_on:
+  - "publish - image"
+
+volumes:
+  - name: drone_cache
+    host:
+      path: /var/lib/docker/volumes_managed/drone_cache
+
+steps:
+  - name: "publish - release"
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
+    environment:
+      NYX_FLYINGFISHFLASH_TOKEN_CODEBERG:
+        from_secret: nyx_flyingfishflash_token_codeberg
 #      NYX_FLYINGFISHFLASH_TOKEN_GITHUB:
 #        from_secret: nyx_flyingfishflash_token_github
-#      #      NYX_FLYINGFISHFLASH_TOKEN_GITLAB:
-#      #        from_secret: nyx_flyingfishflash_token_gitlab
-#      NYX_FLYINGFISHFLASH_TOKEN_LAN:
-#        from_secret: nyx_flyingfishflash_token_lan
-#    commands:
-#      # nyx requires git tags to infer the current version
-#      - git fetch --tags -q
-#      # nyx is configured to push to the codeberg remote
-#      # the codeberg remote propagates itself to GitHub and gitlab
+#      NYX_FLYINGFISHFLASH_TOKEN_GITLAB:
+#        from_secret: nyx_flyingfishflash_token_gitlab
+      NYX_FLYINGFISHFLASH_TOKEN_LAN:
+        from_secret: nyx_flyingfishflash_token_lan
+    commands:
+      # nyx requires git tags to infer the current version
+      - git fetch --tags -q
+      # nyx is configured to push to the codeberg remote
+      # the codeberg remote propagates itself to GitHub and gitlab
 #      - git remote add codeberg https://codeberg.org/flyingfishflash/lorem-list.git
-#      - mkdir /drone/src/build
-#      - nyx publish --dry-run=false
-#    volumes:
-#      - name: drone_cache
-#        path: /drone/cache
+      - mkdir /drone/src/build
+      - nyx publish --dry-run=false
+    volumes:
+      - name: drone_cache
+        path: /drone/cache
 
 #---
 #kind: pipeline

@@ -25,12 +25,12 @@ commitMessageConventions:
         major: "(?s)(?m)^[a-zA-Z0-9_]+(!|.*^(BREAKING( |-)CHANGE: )).*"
         minor: "(?s)(?m)^feat(?!!|.*^(BREAKING( |-)CHANGE: )).*"
         patch: "(?s)(?m)(^dependency|^fix|^perf|^refactor)(?!!|.*^(BREAKING( |-)CHANGE: )).*"
-git:
-  remotes:
-    codeberg:
-      authenticationMethod: USER_PASSWORD
-      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
-      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+#git:
+#  remotes:
+#    codeberg:
+#      authenticationMethod: USER_PASSWORD
+#      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+#      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
 releaseTypes:
   enabled:
     - mainline
@@ -38,8 +38,9 @@ releaseTypes:
     - internal
   publicationServices:
     - lan
-  remoteRepositories:
     - codeberg
+#  remoteRepositories:
+#    - codeberg
   items:
     mainline:
       collapseVersions: false
@@ -82,7 +83,7 @@ services:
       AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
       BASE_URI: "https://codeberg.org/api/v1"
       REPOSITORY_NAME: "lorem-list-api"
-      REPOSITORY_OWNER: "flyingfishflash"
+      REPOSITORY_OWNER: "lorem-list"
   lan:
     type: "GITHUB"
     options:
