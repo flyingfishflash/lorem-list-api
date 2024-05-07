@@ -220,8 +220,8 @@ steps:
     commands:
       # nyx requires git tags to infer the current version
       - git fetch --tags -q
-      # nyx is configured to push to the codeberg remote
-      # the codeberg remote propagates itself to GitHub and gitlab
+      # nyx is configured to push to the 'lan' remote
+      # the 'lan' remote is mirrored to codeberg
       - git remote add lan https://gitea.flyingfishflash.net/lorem-list/lorem-list-api.git
       - mkdir /drone/src/build
       - nyx publish --dry-run=false
