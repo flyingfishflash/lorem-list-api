@@ -94,7 +94,7 @@ services:
       AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_LAN{{/environmentVariable}}"
       BASE_URI: "https://gitea.flyingfishflash.net/api/v1"
       REPOSITORY_NAME: "lorem-list-api"
-      REPOSITORY_OWNER: "flyingfishflash"
+      REPOSITORY_OWNER: "lorem-list"
   github:
     type: "GITHUB"
     options:
