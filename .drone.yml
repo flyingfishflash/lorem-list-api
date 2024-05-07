@@ -162,7 +162,8 @@ steps:
     commands:
       # nyx requires git tags to infer the current version
       - git fetch --tags -q
-      - nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n' > $TAGS
+      - nyx infer --fatal
+#      - nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n' > $TAGS
       - cat $TAGS && echo
 
   - name: publish
@@ -224,7 +225,7 @@ steps:
       # the 'lan' remote is mirrored to codeberg
       - git remote add lan https://gitea.flyingfishflash.net/lorem-list/lorem-list-api.git
       - mkdir /drone/src/build
-      - nyx publish --dry-run=false
+      - nyx publish --dry-run=true
     volumes:
       - name: drone_cache
         path: /drone/cache
