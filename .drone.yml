@@ -224,7 +224,7 @@ steps:
       # the codeberg remote propagates itself to GitHub and gitlab
 #      - git remote add codeberg https://codeberg.org/flyingfishflash/lorem-list.git
       - mkdir /drone/src/build
-      - nyx publish --dry-run=false
+      - nyx publish --dry-run=true
     volumes:
       - name: drone_cache
         path: /drone/cache
