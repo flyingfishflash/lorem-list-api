@@ -25,22 +25,26 @@ commitMessageConventions:
         major: "(?s)(?m)^[a-zA-Z0-9_]+(!|.*^(BREAKING( |-)CHANGE: )).*"
         minor: "(?s)(?m)^feat(?!!|.*^(BREAKING( |-)CHANGE: )).*"
         patch: "(?s)(?m)(^dependency|^fix|^perf|^refactor)(?!!|.*^(BREAKING( |-)CHANGE: )).*"
-#git:
-#  remotes:
+git:
+  remotes:
+    lan:
+      authenticationMethod: USER_PASSWORD
+      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_LAN{{/environmentVariable}}"
+      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_LAN{{/environmentVariable}}"
 #    codeberg:
 #      authenticationMethod: USER_PASSWORD
 #      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
 #      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
 releaseTypes:
   enabled:
+    - internal
     - mainline
     - release
-    - internal
   publicationServices:
     - lan
     - codeberg
-#  remoteRepositories:
-#    - codeberg
+  remoteRepositories:
+    - lan
   items:
     mainline:
       collapseVersions: false
