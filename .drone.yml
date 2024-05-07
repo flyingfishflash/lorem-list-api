@@ -225,7 +225,7 @@ steps:
       # the 'lan' remote is mirrored to codeberg
       - git remote add lan https://gitea.flyingfishflash.net/lorem-list/lorem-list-api.git
       - mkdir /drone/src/build
-      - nyx publish --dry-run=true
+      - nyx publish --dry-run=false
     volumes:
       - name: drone_cache
         path: /drone/cache
