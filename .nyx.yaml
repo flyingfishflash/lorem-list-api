@@ -37,9 +37,9 @@ git:
 #      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
 releaseTypes:
   enabled:
-    - internal
     - mainline
     - release
+    - internal
   publicationServices:
     - lan
     - codeberg
