@@ -183,7 +183,7 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.update(ofType(LrmItem::class)) } returns 1
       val patchedLrmItem = lrmItemService.patch(1, mapOf("name" to expectedName)).first
       patchedLrmItem.name.shouldBe(expectedName)
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1) }
+      verify(exactly = 2) { mockLrmItemRepository.findByIdOrNull(1) }
       verify(exactly = 1) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
 
@@ -211,7 +211,7 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.update(ofType(LrmItem::class)) } returns 1
       val patchedLrmList = lrmItemService.patch(1, mapOf("description" to expectedDescription)).first
       patchedLrmList.description.shouldBe(expectedDescription)
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1) }
+      verify(exactly = 2) { mockLrmItemRepository.findByIdOrNull(1) }
       verify(exactly = 1) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
 
@@ -221,7 +221,7 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.update(ofType(LrmItem::class)) } returns 1
       val patchedLrmList = lrmItemService.patch(1, mapOf("quantity" to expectedQuantity)).first
       patchedLrmList.quantity.shouldBe(expectedQuantity)
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(1) }
+      verify(exactly = 2) { mockLrmItemRepository.findByIdOrNull(1) }
       verify(exactly = 1) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
 

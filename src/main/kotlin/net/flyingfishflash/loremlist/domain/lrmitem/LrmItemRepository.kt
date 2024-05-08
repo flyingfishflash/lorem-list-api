@@ -31,8 +31,9 @@ class LrmItemRepository {
     repositoryTable.uuid,
     repositoryTable.name,
     repositoryTable.description,
-    repositoryTable.created,
     repositoryTable.quantity,
+    repositoryTable.created,
+    repositoryTable.updated,
   )
     .map { it.toLrmItem() }
     .toList()
@@ -43,10 +44,12 @@ class LrmItemRepository {
         repositoryTable.id,
         repositoryTable.uuid,
         repositoryTable.name,
-        repositoryTable.created,
         repositoryTable.description,
         repositoryTable.quantity,
+        repositoryTable.created,
+        repositoryTable.updated,
         LrmListTable.id,
+        LrmListTable.uuid,
         LrmListTable.name,
       ).toList()
 
@@ -86,9 +89,10 @@ class LrmItemRepository {
         repositoryTable.id,
         repositoryTable.uuid,
         repositoryTable.name,
-        repositoryTable.created,
         repositoryTable.description,
         repositoryTable.quantity,
+        repositoryTable.created,
+        repositoryTable.updated,
         LrmListTable.id,
         LrmListTable.name,
       ).where { repositoryTable.id eq id }
@@ -114,15 +118,17 @@ class LrmItemRepository {
   }
 
   fun insert(lrmItemRequest: LrmItemRequest): Long {
+    val now = now()
     val id =
       repositoryTable
         .insertAndGetId {
           it[id] = listSequence.nextLongVal()
           it[uuid] = UUID.randomUUID()
-          it[created] = now()
           it[name] = lrmItemRequest.name
           it[description] = lrmItemRequest.description
           it[quantity] = lrmItemRequest.quantity
+          it[created] = now
+          it[updated] = now
         }
 
     return id.value
@@ -147,6 +153,7 @@ class LrmItemRepository {
         it[repositoryTable.name] = lrmItem.name
         it[repositoryTable.description] = lrmItem.description
         it[repositoryTable.quantity] = lrmItem.quantity
+        it[repositoryTable.updated] = now()
       }
 
     return updatedCount
@@ -156,10 +163,11 @@ class LrmItemRepository {
     return LrmItem(
       id = this[repositoryTable.id].value,
       uuid = this[repositoryTable.uuid],
-      created = this[repositoryTable.created],
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
       quantity = this[repositoryTable.quantity],
+      created = this[repositoryTable.created],
+      updated = this[repositoryTable.updated],
     )
   }
 }

@@ -6,6 +6,7 @@ import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListTable.created
 import net.flyingfishflash.loremlist.domain.LrmListTable.description
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
+import net.flyingfishflash.loremlist.domain.LrmListTable.updated
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
@@ -32,6 +33,7 @@ class LrmListRepository {
     repositoryTable.name,
     repositoryTable.description,
     repositoryTable.created,
+    repositoryTable.updated,
   )
     .map { it.toLrmlist() }
     .toList()
@@ -41,15 +43,17 @@ class LrmListRepository {
       .select(
         repositoryTable.id,
         repositoryTable.uuid,
-        repositoryTable.created,
         repositoryTable.name,
         repositoryTable.description,
+        repositoryTable.created,
+        repositoryTable.updated,
         LrmListItemTable.id,
         LrmListItemTable.uuid,
-        LrmListItemTable.created,
         LrmListItemTable.name,
         LrmListItemTable.description,
         LrmListItemTable.quantity,
+        LrmListItemTable.created,
+        LrmListItemTable.updated,
       ).toList()
 
     val listItemsByList = resultRows
@@ -63,10 +67,11 @@ class LrmListRepository {
           LrmItem(
             id = it[LrmListItemTable.id].value,
             uuid = it[LrmListItemTable.uuid],
-            created = it[LrmListItemTable.created],
             name = it[LrmListItemTable.name],
             description = it[LrmListItemTable.description],
             quantity = it[LrmListItemTable.quantity],
+            created = it[LrmListItemTable.created],
+            updated = it[LrmListItemTable.updated],
           )
         },
       )
@@ -85,15 +90,17 @@ class LrmListRepository {
     repositoryTable.name,
     repositoryTable.description,
     repositoryTable.created,
+    repositoryTable.updated,
   )
     .where { repositoryTable.id eq id }
     .firstOrNull()?.let {
       LrmList(
         id = it[repositoryTable.id].value,
         uuid = it[repositoryTable.uuid],
-        created = it[created],
         name = it[name],
         description = it[description],
+        created = it[created],
+        updated = it[updated],
       )
     }
 
@@ -102,15 +109,17 @@ class LrmListRepository {
       .select(
         repositoryTable.id,
         repositoryTable.uuid,
-        repositoryTable.created,
         repositoryTable.name,
         repositoryTable.description,
+        repositoryTable.created,
+        repositoryTable.updated,
         LrmListItemTable.id,
         LrmListItemTable.uuid,
-        LrmListItemTable.created,
         LrmListItemTable.name,
         LrmListItemTable.description,
         LrmListItemTable.quantity,
+        LrmListItemTable.created,
+        LrmListItemTable.updated,
       ).where { repositoryTable.id eq id }.toList()
 
     val listItems = resultRows
@@ -123,10 +132,11 @@ class LrmListRepository {
         LrmItem(
           id = it[LrmListItemTable.id].value,
           uuid = it[LrmListItemTable.uuid],
-          created = it[LrmListItemTable.created],
           name = it[LrmListItemTable.name],
           description = it[LrmListItemTable.description],
           quantity = it[LrmListItemTable.quantity],
+          created = it[LrmListItemTable.created],
+          updated = it[LrmListItemTable.updated],
         )
       }.toSet()
 
@@ -139,14 +149,16 @@ class LrmListRepository {
   }
 
   fun insert(lrmListRequest: LrmListRequest): Long {
+    val now = now()
     val id =
       repositoryTable
         .insertAndGetId {
           it[id] = listSequence.nextLongVal()
           it[uuid] = UUID.randomUUID()
-          it[created] = now()
           it[name] = lrmListRequest.name
           it[description] = lrmListRequest.description
+          it[created] = now
+          it[updated] = now
         }
 
     return id.value
@@ -157,6 +169,7 @@ class LrmListRepository {
       repositoryTable.update({ repositoryTable.id eq lrmList.id }) {
         it[name] = lrmList.name
         it[description] = lrmList.description
+        it[updated] = now()
       }
 
     return updatedCount
@@ -166,9 +179,10 @@ class LrmListRepository {
     return LrmList(
       id = this[repositoryTable.id].value,
       uuid = this[repositoryTable.uuid],
-      created = this[repositoryTable.created],
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
+      created = this[repositoryTable.created],
+      updated = this[repositoryTable.updated],
     )
   }
 }

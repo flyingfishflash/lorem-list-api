@@ -49,7 +49,7 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
   @Suppress("kotlin:S3776")
   fun patch(id: Long, patchRequest: Map<String, Any>): Pair<LrmList, Boolean> {
     var patched = false
-    val lrmList = findById(id)
+    var lrmList = findById(id)
     var newName = lrmList.name
     var newDescription = lrmList.description
 
@@ -97,9 +97,10 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
           message = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
           responseMessage = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
         )
+      } else {
+        lrmList = findById(id)
       }
     }
-
     return Pair(lrmList, patched)
   }
 

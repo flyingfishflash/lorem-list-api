@@ -8,7 +8,7 @@ changelog:
   template: ".nyx-changelog.template"
   sections:
     "Dependencies": "^dependency$"
-    "Additions": "^feat$"
+    "Additions": "^feature$"
     "Changes": "(^refactor$|^perf$)"
     "Fixes": "^fix$"
     "Continuous Integration": "^ci$"
@@ -23,7 +23,7 @@ commitMessageConventions:
       expression: "(?m)^(?<type>[a-zA-Z0-9_]+)(!)?(\\((?<scope>[a-z ]+)\\))?:( (?<title>.+))$(?s).*"
       bumpExpressions:
         major: "(?s)(?m)^[a-zA-Z0-9_]+(!|.*^(BREAKING( |-)CHANGE: )).*"
-        minor: "(?s)(?m)^feat(?!!|.*^(BREAKING( |-)CHANGE: )).*"
+        minor: "(?s)(?m)^feature(?!!|.*^(BREAKING( |-)CHANGE: )).*"
         patch: "(?s)(?m)(^dependency|^fix|^perf|^refactor)(?!!|.*^(BREAKING( |-)CHANGE: )).*"
 git:
   remotes:

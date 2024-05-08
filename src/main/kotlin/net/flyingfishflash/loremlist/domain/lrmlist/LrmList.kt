@@ -11,8 +11,9 @@ data class LrmList(
   var id: Long,
   @Serializable(with = UUIDSerializer::class)
   var uuid: UUID,
-  var created: Instant? = null,
   var name: String,
   var description: String? = null,
+  var created: Instant? = null,
+  var updated: Instant? = null,
   val items: Set<LrmItem>? = null,
 )

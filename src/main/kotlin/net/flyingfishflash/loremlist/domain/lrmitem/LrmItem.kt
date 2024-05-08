@@ -14,9 +14,10 @@ data class LrmItem(
   var id: Long,
   @Serializable(with = UUIDSerializer::class)
   var uuid: UUID? = null,
-  var created: Instant? = null,
   var name: String,
   var description: String? = null,
   @EncodeDefault var quantity: Int = 0,
+  var created: Instant? = null,
+  var updated: Instant? = null,
   val lists: Set<LrmListSuccinct>? = null,
 )

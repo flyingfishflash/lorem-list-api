@@ -102,7 +102,7 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
   @Suppress("kotlin:S3776")
   fun patch(id: Long, patchRequest: Map<String, Any>): Pair<LrmItem, Boolean> {
     var patched = false
-    val lrmItem = findById(id)
+    var lrmItem = findById(id)
     var newName = lrmItem.name
     var newDescription = lrmItem.description
     var newQuantity = lrmItem.quantity
@@ -157,6 +157,8 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
           message = "Item id ${lrmItem.id} could not be updated. $updatedCount records would have been updated rather than 1.",
           responseMessage = "Item id ${lrmItem.id} could not be updated. $updatedCount records would have been updated rather than 1.",
         )
+      } else {
+        lrmItem = findById(id)
       }
     }
     return Pair(lrmItem, patched)

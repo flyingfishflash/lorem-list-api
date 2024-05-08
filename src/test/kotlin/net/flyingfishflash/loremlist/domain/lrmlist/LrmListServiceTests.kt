@@ -197,7 +197,7 @@ class LrmListServiceTests : DescribeSpec({
       every { lrmListRepository.update(ofType(LrmList::class)) } returns 1
       val patchedLrmList = lrmListService.patch(1, mapOf("name" to expectedName)).first
       patchedLrmList.name.shouldBe(expectedName)
-      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 2) { lrmListRepository.findByIdOrNull(1) }
       verify(exactly = 1) { lrmListRepository.update(ofType(LrmList::class)) }
     }
 
@@ -220,7 +220,7 @@ class LrmListServiceTests : DescribeSpec({
       every { lrmListRepository.update(ofType(LrmList::class)) } returns 1
       val patchedLrmList = lrmListService.patch(1, mapOf("description" to expectedDescription)).first
       patchedLrmList.description.shouldBe(expectedDescription)
-      verify(exactly = 1) { lrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 2) { lrmListRepository.findByIdOrNull(1) }
       verify(exactly = 1) { lrmListRepository.update(ofType(LrmList::class)) }
     }
 
