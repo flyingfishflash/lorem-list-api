@@ -3,7 +3,7 @@
 # - deploy_to_host
 # - drone_deployer_ssh_key_private
 # - drone_deployer_ssh_username
-# - repository  = registry.domain.tld/lorem-list/lorem-list-api
+# - registry  = registry.domain.tld/lorem-list/lorem-list-api
 
 # organization secrets:
 # -------------------
@@ -176,7 +176,7 @@ steps:
       context: /drone/src/
       dockerfile: /drone/src/Containerfile
       repo:
-        from_secret: repository
+        from_secret: registry
       registry:
         from_secret: registry_hostname
       username:
