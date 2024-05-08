@@ -129,7 +129,7 @@ class CustomResponseBodyAdviceTests : DescribeSpec({
         val customResponseBodyAdvice = CustomResponseBodyAdvice()
         val problemDetail = ProblemDetail.forStatus(300)
         val apiProblemDetail = ApiProblemDetail(problemDetail)
-        val responseProblem = ResponseProblem(apiProblemDetail, mockk<HttpServletRequest>(relaxed = true))
+        val responseProblem = ResponseProblem(apiProblemDetail, "Lorem Ipsum", mockk<HttpServletRequest>(relaxed = true))
         val body = customResponseBodyAdvice.beforeBodyWrite(
           o = responseProblem,
           methodParameter = mockk<MethodParameter>(relaxed = true),
@@ -145,7 +145,7 @@ class CustomResponseBodyAdviceTests : DescribeSpec({
         val customResponseBodyAdvice = CustomResponseBodyAdvice()
         val problemDetail = ProblemDetail.forStatus(400)
         val apiProblemDetail = ApiProblemDetail(problemDetail)
-        val responseProblem = ResponseProblem(apiProblemDetail, mockk<HttpServletRequest>(relaxed = true))
+        val responseProblem = ResponseProblem(apiProblemDetail, "Lorem Ipsum", mockk<HttpServletRequest>(relaxed = true))
         val body = customResponseBodyAdvice.beforeBodyWrite(
           o = responseProblem,
           methodParameter = mockk<MethodParameter>(relaxed = true),
@@ -161,7 +161,7 @@ class CustomResponseBodyAdviceTests : DescribeSpec({
         val customResponseBodyAdvice = CustomResponseBodyAdvice()
         val problemDetail = ProblemDetail.forStatus(500)
         val apiProblemDetail = ApiProblemDetail(problemDetail)
-        val responseProblem = ResponseProblem(apiProblemDetail, mockk<HttpServletRequest>(relaxed = true))
+        val responseProblem = ResponseProblem(apiProblemDetail, "Lorem Ipsum", mockk<HttpServletRequest>(relaxed = true))
         val body = customResponseBodyAdvice.beforeBodyWrite(
           o = responseProblem,
           methodParameter = mockk<MethodParameter>(relaxed = true),

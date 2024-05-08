@@ -37,18 +37,6 @@ data class ResponseProblem(
   /** Create an API ResponseProblem from an ApiProblem
    * @return ResponseProblem
    */
-  constructor(apiProblemDetail: ApiProblemDetail, request: HttpServletRequest) : this(
-    disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(apiProblemDetail.status)),
-    method = request.method.lowercase(),
-    instance = request.requestURI.toString(),
-    message = "from response problem constructor",
-    size = calcSize(apiProblemDetail),
-    content = apiProblemDetail,
-  )
-
-  /** Create an API ResponseProblem from an ApiProblem
-   * @return ResponseProblem
-   */
   constructor(apiProblemDetail: ApiProblemDetail, responseMessage: String, request: HttpServletRequest) : this(
     disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(apiProblemDetail.status)),
     method = request.method.lowercase(),
