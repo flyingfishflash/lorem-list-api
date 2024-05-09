@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.core.response.advice
+package net.flyingfishflash.loremlist.unit.core.response.advice
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import jakarta.servlet.http.HttpServletRequest
+import net.flyingfishflash.loremlist.core.response.advice.CustomResponseBodyAdvice
 import net.flyingfishflash.loremlist.core.response.structure.ApiProblemDetail
 import net.flyingfishflash.loremlist.core.response.structure.IgnoreResponseBinding
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem

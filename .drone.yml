@@ -82,16 +82,6 @@ steps:
       - export GRADLE_PROJECT_BUILD_DIR=/drone/drone_cache/$DRONE_REPO/build
       - echo $GRADLE_PROJECT_BUILD_DIR
       - mkdir -pv $GRADLE_PROJECT_BUILD_DIR
-#      - >
-#        gradle
-#        :api:explodebootjar
-#        :api:copyBuildInfo
-#        :api:testClasses
-#        :api:spotlessCheck
-#        :api:test
-#        :api:integrationTests
-#        :api:bootBuildInfo
-#        -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
       - >
         gradle
         :explodebootjar
@@ -99,17 +89,18 @@ steps:
         :testClasses
         :spotlessCheck
         :test
+        :integrationTests
         :bootBuildInfo
         -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
-#      - >
-#        gradle
-#        :api:integrationTests
-#        -Dspring.profiles.active=postgresql
-#        -Dspring.datasource.url=jdbc:postgresql://postgres:5432/lorem-list
-#        -Dspring.datasource.username=lorem-list
-#        -Dspring.datasource.password=lorem-list
-#        -Dspring.datasource.platform=postgresql
-#        -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
+      - >
+        gradle
+        :integrationTests
+        -Dspring.profiles.active=postgresql
+        -Dspring.datasource.url=jdbc:postgresql://postgres:5432/lorem-list
+        -Dspring.datasource.username=lorem-list
+        -Dspring.datasource.password=lorem-list
+        -Dspring.datasource.platform=postgresql
+        -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
       - >
         /drone/src/scripts/ci/drone/drone-is-sonar-configured.sh &&
         gradle

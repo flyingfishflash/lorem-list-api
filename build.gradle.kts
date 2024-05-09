@@ -184,6 +184,12 @@ tasks {
     filter { excludeTestsMatching("net.flyingfishflash.loremlist.integration*") }
   }
 
+  register<Test>("integrationTests") {
+    useJUnitPlatform {
+      filter { excludeTestsMatching("net.flyingfishflash.loremlist.unit*") }
+    }
+  }
+
   register<JacocoReport>("jacocoUnitTestReport") {
     mustRunAfter(test)
     executionData(fileTree(project.layout.buildDirectory).include("jacoco/test.exec"))

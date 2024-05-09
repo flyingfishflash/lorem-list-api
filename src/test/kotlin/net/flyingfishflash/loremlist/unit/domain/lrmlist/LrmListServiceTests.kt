@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.domain.lrmlist
+package net.flyingfishflash.loremlist.unit.domain.lrmlist
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
@@ -15,6 +15,10 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import jakarta.validation.ConstraintViolationException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
+import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Transaction

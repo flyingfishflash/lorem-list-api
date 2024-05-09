@@ -1,7 +1,8 @@
-package net.flyingfishflash.loremlist.core.response.structure
+package net.flyingfishflash.loremlist.unit.core.response.structure
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
+import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import org.springframework.http.HttpStatus
 
 class DispositionTests : DescribeSpec({
