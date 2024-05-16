@@ -8,11 +8,10 @@ import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemService
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
-import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.sql.SQLIntegrityConstraintViolationException
+import java.sql.SQLException
 
 @Service
 @Transactional
@@ -25,54 +24,45 @@ class CommonService(
 
   fun addToList(itemId: Long, listId: Long): Pair<String, String> {
     try {
+      lrmItemService.findById(itemId)
+      lrmListService.findById(listId)
       lrmItemRepository.addItemToList(listId, itemId)
-      return Pair(lrmItemService.findById(itemId).name, lrmListService.findById(listId).name)
-    } catch (ex: ExposedSQLException) {
-      when (val original = ex.cause) {
-        is SQLIntegrityConstraintViolationException -> {
-          logger.error { original.toString() }
-          try {
-            lrmItemService.findById(itemId)
-          } catch (itemNotFound: ItemNotFoundException) {
-            throw ApiException(
-              httpStatus = itemNotFound.httpStatus,
-              responseMessage = "Item id $itemId could not be added to list id $listId because the item couldn't be found",
-              cause = itemNotFound,
-            )
-          }
-          try {
-            lrmListService.findById(listId)
-          } catch (listNotFound: ListNotFoundException) {
-            throw ApiException(
-              httpStatus = listNotFound.httpStatus,
-              responseMessage = "Item id $itemId could not be added to list id $listId because the list couldn't be found",
-              cause = listNotFound,
-            )
-          }
-          when {
-            original.message?.contains("Unique index or primary key violation") == true ->
-              throw ApiException(
-                httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-                responseMessage = "Item id $itemId could not be added to list id $listId because it's already been added.",
-                cause = original,
-
-              )
-            else -> {
-              throw ApiException(
-                httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-                responseMessage = "Item id $itemId could not be added to list id $listId because of an " +
-                  "unanticipated sql integrity constraint violation.",
-                cause = original,
-              )
-            }
-          }
+    } catch (itemNotFound: ItemNotFoundException) {
+      throw ApiException(
+        httpStatus = itemNotFound.httpStatus,
+        responseMessage = "Item id $itemId could not be added to list id $listId because the item couldn't be found.",
+        cause = itemNotFound,
+      )
+    } catch (listNotFound: ListNotFoundException) {
+      throw ApiException(
+        httpStatus = listNotFound.httpStatus,
+        responseMessage = "Item id $itemId could not be added to list id $listId because the list couldn't be found.",
+        cause = listNotFound,
+      )
+    } catch (sqlException: SQLException) {
+      when {
+        sqlException.message?.contains("duplicate key value violates unique constraint") == true || // postgresql
+          sqlException.message?.contains("Unique index or primary key violation") == true -> { // h2
+          throw ApiException(
+            httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
+            responseMessage = "Item id $itemId could not be added to list id $listId because it's already been added.",
+            cause = sqlException,
+          )
         }
-        else -> throw ApiException(
-          responseMessage = "Item id $itemId could not be added to list id $listId because of a sql exception with an undefined cause.",
-          cause = ex,
-        )
+        else -> {
+          throw ApiException(
+            responseMessage = "Item id $itemId could not be added to list id $listId because of an unanticipated sql exception.",
+            cause = sqlException,
+          )
+        }
       }
+    } catch (exception: Exception) {
+      throw ApiException(
+        responseMessage = "Item id $itemId could not be added to list id $listId because of an unanticipated exception.",
+        cause = exception,
+      )
     }
+    return Pair(lrmItemService.findById(itemId).name, lrmListService.findById(listId).name)
   }
 
   fun moveToList(itemId: Long, fromListId: Long, toListId: Long): Triple<String, String, String> {
@@ -80,15 +70,11 @@ class CommonService(
       addToList(itemId = itemId, listId = toListId)
       removeFromList(itemId = itemId, listId = fromListId)
     } catch (exception: ApiException) {
-      if (exception.cause != null) {
-        throw ApiException(
-          httpStatus = if (exception.cause is AbstractApiException) exception.cause.httpStatus else HttpStatus.INTERNAL_SERVER_ERROR,
-          responseMessage = "Item was not moved: " + exception.message,
-          cause = exception.cause,
-        )
-      } else {
-        throw exception
-      }
+      throw ApiException(
+        httpStatus = if (exception.cause is AbstractApiException) exception.cause.httpStatus else HttpStatus.INTERNAL_SERVER_ERROR,
+        responseMessage = "Item was not moved: " + exception.message,
+        cause = exception.cause,
+      )
     } catch (exception: Exception) {
       throw ApiException(
         responseMessage = "Item was not moved: " + (exception.message ?: "exception cause detail not available"),

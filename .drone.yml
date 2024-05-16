@@ -36,6 +36,7 @@ trigger:
     - refs/heads/refactor-*
     - refs/heads/release
     - refs/heads/style-*
+    - refs/heads/test-*
 
 volumes:
   - name: drone_cache
@@ -95,11 +96,11 @@ steps:
       - >
         gradle
         :integrationTests
-        -Dspring.profiles.active=postgresql
-        -Dspring.datasource.url=jdbc:postgresql://postgres:5432/lorem-list
-        -Dspring.datasource.username=lorem-list
-        -Dspring.datasource.password=lorem-list
-        -Dspring.datasource.platform=postgresql
+        -Pspring.profiles.active=postgresql
+        -Pspring.datasource.url=jdbc:postgresql://postgres:5432/lorem-list
+        -Pspring.datasource.username=lorem-list
+        -Pspring.datasource.password=lorem-list
+        -Pspring.datasource.platform=postgresql
         -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
       - >
         /drone/src/scripts/ci/drone/drone-is-sonar-configured.sh &&

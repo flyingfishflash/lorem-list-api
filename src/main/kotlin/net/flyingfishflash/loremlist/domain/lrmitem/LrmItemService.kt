@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.domain.lrmitem
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional
 class LrmItemService(val lrmItemRepository: LrmItemRepository) {
+  private val logger = KotlinLogging.logger {}
 
   fun create(lrmItemRequest: LrmItemRequest): LrmItem {
     try {
@@ -77,6 +79,7 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
     val item = try {
       lrmItemRepository.findByIdOrNull(id)
     } catch (cause: Exception) {
+      logger.error { cause }
       throw ApiException(
         cause = cause,
         message = "Item id $id could not be retrieved.",

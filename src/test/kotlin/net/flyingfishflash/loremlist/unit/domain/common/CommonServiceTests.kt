@@ -6,7 +6,6 @@ import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.Runs
 import io.mockk.clearAllMocks
@@ -16,6 +15,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
+import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.common.CommonService
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
@@ -26,14 +26,8 @@ import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
-import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.Statement
-import org.jetbrains.exposed.sql.statements.StatementContext
-import org.jetbrains.exposed.sql.statements.StatementType
 import org.springframework.http.HttpStatus
 import java.sql.SQLException
-import java.sql.SQLIntegrityConstraintViolationException
 import java.util.UUID
 
 class CommonServiceTests : DescribeSpec({
@@ -48,18 +42,6 @@ class CommonServiceTests : DescribeSpec({
   fun lrmItem(): LrmItem = LrmItem(id = 0, uuid = itemUuid, name = lrmItemRequest.name, description = lrmItemRequest.description)
   fun lrmList(): LrmList = LrmList(id = 0, uuid = listUuid, name = "Lorem List Name", description = "Lorem List Description")
 
-  fun exposedSQLExceptionConstraintViolation(): ExposedSQLException = ExposedSQLException(
-    cause = mockk<SQLIntegrityConstraintViolationException>(),
-    transaction = mockk<Transaction>(relaxed = true),
-    contexts = listOf(mockk<StatementContext>(relaxed = true)),
-  )
-
-  fun exposedSQLExceptionGeneric(): ExposedSQLException = ExposedSQLException(
-    cause = SQLException("Cause of ExposedSQLException"),
-    transaction = mockk<Transaction>(relaxed = true),
-    contexts = listOf(mockk<StatementContext>(relaxed = true)),
-  )
-
   afterEach { clearAllMocks() }
   afterSpec { unmockkAll() }
 
@@ -72,93 +54,90 @@ class CommonServiceTests : DescribeSpec({
       response.first.shouldBeEqual(lrmItem().name)
       response.second.shouldBeEqual(lrmList().name)
       verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
-      verify(exactly = 1) { mockLrmItemService.findById(1) }
-      verify(exactly = 1) { mockLrmListService.findById(1) }
+      verify(exactly = 2) { mockLrmItemService.findById(1) }
+      verify(exactly = 2) { mockLrmListService.findById(1) }
     }
 
     it("item not found") {
-      every { mockLrmItemRepository.addItemToList(1, 1) } throws exposedSQLExceptionConstraintViolation()
       every { mockLrmItemService.findById(1) } throws ItemNotFoundException(1)
-      shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
-        .cause.shouldBeInstanceOf<ItemNotFoundException>()
-      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
+      val exception = shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
+      exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
+      verify(exactly = 0) { mockLrmItemRepository.addItemToList(1, 1) }
+      verify(exactly = 1) { mockLrmItemService.findById(1) }
+      verify(exactly = 0) { mockLrmListService.findById(1) }
     }
 
     it("list not found") {
-      every { mockLrmItemRepository.addItemToList(1, 1) } throws exposedSQLExceptionConstraintViolation()
       every { mockLrmItemService.findById(1) } returns lrmItem()
       every { mockLrmListService.findById(1) } throws ListNotFoundException(1)
       shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
         .cause.shouldBeInstanceOf<ListNotFoundException>()
-      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
+      verify(exactly = 0) { mockLrmItemRepository.addItemToList(1, 1) }
+      verify(exactly = 1) { mockLrmItemService.findById(1) }
+      verify(exactly = 1) { mockLrmListService.findById(1) }
     }
 
-    it("already added to list") {
-      val exposedSQLExceptionConstraintViolation = exposedSQLExceptionConstraintViolation()
-      every { mockLrmItemRepository.addItemToList(1, 1) } throws exposedSQLExceptionConstraintViolation
+    it("already added to list (postgresql") {
       every { mockLrmItemService.findById(1) } returns lrmItem()
       every { mockLrmListService.findById(1) } returns lrmList()
-      every { exposedSQLExceptionConstraintViolation.contexts[0].statement } returns mockk<Statement<String>>()
-      every { exposedSQLExceptionConstraintViolation.contexts[0].statement.type } returns mockk<StatementType>()
-      every { exposedSQLExceptionConstraintViolation.cause!!.message } returns "Unique index or primary key violation"
-      val exception = shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
-      exception.cause.shouldBeInstanceOf<SQLIntegrityConstraintViolationException>()
-      exception.responseMessage.shouldBe("Item id 1 could not be added to list id 1 because it's already been added.")
-      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
-    }
-
-    it("unanticipated sql integrity constraint violation (original exception message is null)") {
-      val exposedSQLExceptionConstraintViolation = exposedSQLExceptionConstraintViolation()
-      every { mockLrmItemRepository.addItemToList(1, 1) } throws exposedSQLExceptionConstraintViolation
-      every { mockLrmItemService.findById(1) } returns lrmItem()
-      every { mockLrmListService.findById(1) } returns lrmList()
-      every { exposedSQLExceptionConstraintViolation.contexts[0].statement } returns mockk<Statement<String>>()
-      every { exposedSQLExceptionConstraintViolation.contexts[0].statement.type } returns mockk<StatementType>()
-      every { exposedSQLExceptionConstraintViolation.cause?.message } returns null
-      val exception = shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
-      exception.cause.shouldBeInstanceOf<SQLIntegrityConstraintViolationException>()
-      exception.responseMessage.shouldBe(
-        "Item id 1 could not be added to list id 1 because of an unanticipated sql integrity constraint violation.",
-      )
-      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
-    }
-
-    it("unanticipated sql integrity constraint violation (original exception message is not null)") {
-      val exposedSQLExceptionConstraintViolation = exposedSQLExceptionConstraintViolation()
-      every { mockLrmItemRepository.addItemToList(1, 1) } throws exposedSQLExceptionConstraintViolation
-      every { mockLrmItemService.findById(1) } returns lrmItem()
-      every { mockLrmListService.findById(1) } returns lrmList()
-      every { exposedSQLExceptionConstraintViolation.cause!!.message } returns "unanticipated sql integrity constraint violation"
-      shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
-        .cause.shouldBeInstanceOf<SQLIntegrityConstraintViolationException>()
-      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
-    }
-
-    it("unanticipated exposed sql exception with undefined cause") {
-      val exposedSQLExceptionNullCause = ExposedSQLException(
-        cause = null,
-        transaction = mockk<Transaction>(relaxed = true),
-        contexts = listOf(mockk<StatementContext>(relaxed = true)),
-      )
-      val mockContexts = exposedSQLExceptionNullCause.contexts
-      every { mockLrmItemRepository.addItemToList(1, 1) } throws exposedSQLExceptionNullCause
-      every { mockContexts[0].statement } returns mockk<Statement<String>>()
-      every { mockContexts[0].statement.type } returns mockk<StatementType>()
-      val exception = shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
-      exception.cause.shouldBeInstanceOf<ExposedSQLException>()
-      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-      exception.responseMessage.shouldBe("Item id 1 could not be added to list id 1 because of a sql exception with an undefined cause.")
-      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
-    }
-
-    it("unanticipated exposed sql exception") {
-      every { mockLrmItemRepository.addItemToList(1, 1) } throws exposedSQLExceptionGeneric()
-      every { exposedSQLExceptionGeneric().contexts[0].statement } returns mockk<Statement<String>>()
-      every { exposedSQLExceptionGeneric().contexts[0].statement.type } returns mockk<StatementType>()
+      every { mockLrmItemRepository.addItemToList(1, 1) } throws SQLException("duplicate key value violates unique constraint")
       val exception = shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
       exception.cause.shouldBeInstanceOf<SQLException>()
-      exception.cause!!.message.shouldContain("Cause of ExposedSQLException")
-      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.responseMessage.shouldBe("Item id 1 could not be added to list id 1 because it's already been added.")
+      verify(exactly = 1) { mockLrmItemService.findById(1) }
+      verify(exactly = 1) { mockLrmListService.findById(1) }
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
+    }
+
+    it("already added to list (h2)") {
+      every { mockLrmItemService.findById(1) } returns lrmItem()
+      every { mockLrmListService.findById(1) } returns lrmList()
+      every { mockLrmItemRepository.addItemToList(1, 1) } throws SQLException("Unique index or primary key violation")
+      val exception = shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
+      exception.cause.shouldBeInstanceOf<SQLException>()
+      exception.responseMessage.shouldBe("Item id 1 could not be added to list id 1 because it's already been added.")
+      verify(exactly = 1) { mockLrmItemService.findById(1) }
+      verify(exactly = 1) { mockLrmListService.findById(1) }
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
+    }
+
+    it("unanticipated sql exception (exception message is null)") {
+      every { mockLrmItemService.findById(1) } returns lrmItem()
+      every { mockLrmListService.findById(1) } returns lrmList()
+      every { mockLrmItemRepository.addItemToList(1, 1) } throws SQLException()
+      val exception = shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
+      exception.cause.shouldBeInstanceOf<SQLException>()
+      exception.responseMessage.shouldBe(
+        "Item id 1 could not be added to list id 1 because of an unanticipated sql exception.",
+      )
+      verify(exactly = 1) { mockLrmItemService.findById(1) }
+      verify(exactly = 1) { mockLrmListService.findById(1) }
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
+    }
+
+    it("unanticipated sql exception (exception message is not null)") {
+      every { mockLrmItemService.findById(1) } returns lrmItem()
+      every { mockLrmListService.findById(1) } returns lrmList()
+      every { mockLrmItemRepository.addItemToList(1, 1) } throws SQLException("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
+      exception.cause.shouldBeInstanceOf<SQLException>()
+      exception.responseMessage.shouldBe(
+        "Item id 1 could not be added to list id 1 because of an unanticipated sql exception.",
+      )
+      verify(exactly = 1) { mockLrmItemService.findById(1) }
+      verify(exactly = 1) { mockLrmListService.findById(1) }
+      verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
+    }
+
+    it("unanticipated exception") {
+      every { mockLrmItemService.findById(1) } returns lrmItem()
+      every { mockLrmListService.findById(1) } returns lrmList()
+      every { mockLrmItemRepository.addItemToList(1, 1) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { commonService.addToList(itemId = 1, listId = 1) }
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.responseMessage.shouldBe("Item id 1 could not be added to list id 1 because of an unanticipated exception.")
+      verify(exactly = 1) { mockLrmItemService.findById(1) }
+      verify(exactly = 1) { mockLrmListService.findById(1) }
       verify(exactly = 1) { mockLrmItemRepository.addItemToList(1, 1) }
     }
   }
@@ -178,32 +157,19 @@ class CommonServiceTests : DescribeSpec({
 
     it("anticipated api exception with cause of type abstract api exception") {
       val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
-      every { mockLrmItemRepository.addItemToList(3, 1) } throws exposedSQLExceptionConstraintViolation()
-      every { mockLrmItemService.findById(1) } throws ItemNotFoundException(1)
+      every { spy.addToList(any(), any()) } throws ApiException(cause = ApiException(), httpStatus = HttpStatus.I_AM_A_TEAPOT)
       val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
-      val causeHttpStatus = exception.cause.shouldBeInstanceOf<ItemNotFoundException>().httpStatus
+      val causeHttpStatus = exception.cause.shouldBeInstanceOf<AbstractApiException>().httpStatus
       exception.httpStatus.shouldBe(causeHttpStatus)
       verify(exactly = 1) { spy.addToList(any(), any()) }
       verify(exactly = 0) { spy.removeFromList(any(), any()) }
     }
 
-    it("anticipated api exception with cause not of type api exception with detail message") {
+    it("anticipated api exception with root cause of type exception") {
       val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
-      every { mockLrmItemRepository.addItemToList(3, 1) } throws Exception("Not of Type ApiException")
-      every { mockLrmItemRepository.findByIdOrNull(1) } returns null
+      every { spy.addToList(any(), any()) } throws ApiException(cause = Exception())
       val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
-      exception.cause.shouldBeInstanceOf<Exception>()
-      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-      verify(exactly = 1) { spy.addToList(any(), any()) }
-      verify(exactly = 0) { spy.removeFromList(any(), any()) }
-    }
-
-    it("anticipated api exception with cause not of type api exception without detail message") {
-      val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
-      every { mockLrmItemRepository.addItemToList(3, 1) } throws Exception()
-      every { mockLrmItemRepository.findByIdOrNull(1) } returns null
-      val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
-      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.cause.shouldBeInstanceOf<Exception>().message.shouldBeNull()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       verify(exactly = 1) { spy.addToList(any(), any()) }
       verify(exactly = 0) { spy.removeFromList(any(), any()) }
@@ -211,24 +177,21 @@ class CommonServiceTests : DescribeSpec({
 
     it("anticipated api exception with root cause not of type api exception") {
       val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
-      every { mockLrmItemRepository.addItemToList(3, 1) } throws
-        ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, cause = Exception())
-      every { mockLrmItemRepository.findByIdOrNull(1) } returns null
+      every { spy.addToList(any(), any()) } throws Exception("Lorem Ipsum")
       val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
-      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.cause.shouldBeInstanceOf<Exception>().message.shouldBe("Lorem Ipsum")
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       verify(exactly = 1) { spy.addToList(any(), any()) }
       verify(exactly = 0) { spy.removeFromList(any(), any()) }
     }
 
-    it("anticipated api exception with no root cause") {
+    it("anticipated api exception with root cause not of type api exception (no message)") {
       val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
-      every { mockLrmItemRepository.addItemToList(3, 1) } throws
-        ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT)
-      every { mockLrmItemRepository.findByIdOrNull(1) } returns null
+      every { spy.addToList(any(), any()) } throws Exception()
       val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
-      exception.cause.shouldBeNull()
-      exception.httpStatus.shouldBe(HttpStatus.I_AM_A_TEAPOT)
+      exception.cause.shouldBeInstanceOf<Exception>().message.shouldBeNull()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.responseMessage.shouldBe("Item was not moved: exception cause detail not available")
       verify(exactly = 1) { spy.addToList(any(), any()) }
       verify(exactly = 0) { spy.removeFromList(any(), any()) }
     }

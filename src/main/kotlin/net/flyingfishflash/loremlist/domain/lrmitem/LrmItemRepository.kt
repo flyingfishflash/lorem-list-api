@@ -94,6 +94,7 @@ class LrmItemRepository {
         repositoryTable.created,
         repositoryTable.updated,
         LrmListTable.id,
+        LrmListTable.uuid,
         LrmListTable.name,
       ).where { repositoryTable.id eq id }
       .toList()

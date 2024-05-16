@@ -62,7 +62,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("the message") }
+          jsonPath("$.message") { value("retrieved all lists") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(mockReturn.size) }
           jsonPath("$.content") { exists() }
@@ -89,7 +89,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("the message") }
+          jsonPath("$.message") { value("retrieved all lists") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(mockReturn.size) }
           jsonPath("$.content") { isArray() }
@@ -115,7 +115,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("the message") }
+          jsonPath("$.message") { value("retrieved all lists") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(mockReturn.size) }
           jsonPath("$.content") { isArray() }
@@ -229,28 +229,24 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     describe("/lists/1 http get") {
       it("list is found") {
-        every { lrmListService.findByIdIncludeItems(id) } returns lrmListWithEmptyItems()
+        every { lrmListService.findById(id) } returns lrmList()
         val instance = "/lists/$id"
         mockMvc.get(instance).andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved list $id") }
+          jsonPath("$.message") { value("retrieved list id $id") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.description") { value(lrmList().description) }
           jsonPath("$.content.name") { value(lrmList().name) }
-          jsonPath("$.content.items") {
-            isArray()
-            isEmpty()
-          }
         }
-        verify(exactly = 1) { lrmListService.findByIdIncludeItems(id) }
+        verify(exactly = 1) { lrmListService.findById(id) }
       }
 
       it("list is not found") {
-        every { lrmListService.findByIdIncludeItems(id) } throws ListNotFoundException(id)
+        every { lrmListService.findById(id) } throws ListNotFoundException(id)
         val instance = "/lists/$id"
         mockMvc.get(instance).andExpect {
           status { isNotFound() }
@@ -264,7 +260,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           jsonPath("$.content.detail") { value("List id $id could not be found.") }
         }
-        verify(exactly = 1) { lrmListService.findByIdIncludeItems(id) }
+        verify(exactly = 1) { lrmListService.findById(id) }
       }
     }
 
@@ -277,7 +273,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved list $id") }
+          jsonPath("$.message") { value("retrieved list id $id") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.description") { value(lrmList().description) }
@@ -318,7 +314,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved list $id") }
+          jsonPath("$.message") { value("retrieved list id $id") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.description") { value(lrmList().description) }

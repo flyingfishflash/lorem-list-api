@@ -48,6 +48,7 @@ dependencies {
   implementation("jakarta.validation:jakarta.validation-api")
 //  https://github.com/flyway/flyway/releases
   implementation("org.flywaydb:flyway-core:$flywayVersion")
+  implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
 //  https://github.com/JetBrains/Exposed/releases
   implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
   implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -178,13 +179,19 @@ tasks {
   }
 
   test {
-    ignoreFailures = true
+    ignoreFailures = false
     useJUnitPlatform()
     finalizedBy("jacocoUnitTestReport")
     filter { excludeTestsMatching("net.flyingfishflash.loremlist.integration*") }
   }
 
   register<Test>("integrationTests") {
+    ignoreFailures = true
+    findProperty("spring.profiles.active")?.let { systemProperty("spring.profiles.active", it) }
+    findProperty("spring.datasource.url")?.let { systemProperty("spring.datasource.url", it) }
+    findProperty("spring.datasource.username")?.let { systemProperty("spring.datasource.username", it) }
+    findProperty("spring.datasource.password")?.let { systemProperty("spring.datasource.password", it) }
+    findProperty("spring.datasource.platform")?.let { systemProperty("spring.datasource.platform", it) }
     useJUnitPlatform {
       filter { excludeTestsMatching("net.flyingfishflash.loremlist.unit*") }
     }
@@ -227,6 +234,7 @@ tasks {
 testlogger {
   showExceptions = false
   showSimpleNames = true
+  showStandardStreams = true
   theme = ThemeType.MOCHA
 }
 

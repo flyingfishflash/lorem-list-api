@@ -174,6 +174,7 @@ class LrmItemController(val lrmItemService: LrmItemService, val commonService: C
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessage(responseMessage)
     val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 

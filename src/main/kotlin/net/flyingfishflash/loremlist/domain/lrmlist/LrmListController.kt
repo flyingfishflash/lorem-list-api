@@ -98,7 +98,7 @@ class LrmListController(private val lrmListService: LrmListService) {
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
     val responseContent = if (includeItems) lrmListService.findAllIncludeItems() else lrmListService.findAll()
-    val response = ResponseSuccess(responseContent, "the message", request)
+    val response = ResponseSuccess(responseContent, "retrieved all lists", request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
   }
@@ -121,7 +121,7 @@ class LrmListController(private val lrmListService: LrmListService) {
   @GetMapping("/{id}")
   fun findById(
     @PathVariable("id") @Min(1) id: Long,
-    @RequestParam(defaultValue = true.toString()) includeItems: Boolean,
+    @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmList>> {
     val responseContent =
@@ -130,7 +130,7 @@ class LrmListController(private val lrmListService: LrmListService) {
       } else {
         lrmListService.findById(id)
       }
-    val response = ResponseSuccess(responseContent, "retrieved list $id", request)
+    val response = ResponseSuccess(responseContent, "retrieved list id $id", request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
   }
