@@ -215,7 +215,7 @@ steps:
       - git fetch --tags -q
       # nyx is configured to push to the 'lan' remote
       # the 'lan' remote is mirrored to codeberg
-      - git remote add lan https://gitea.flyingfishflash.net/lorem-list/lorem-list-api.git
+      - git remote add lan https://forgejo.flyingfishflash.net/lorem-list/lorem-list-api.git
       - mkdir /drone/src/build
       - nyx publish --dry-run=false
     volumes:
