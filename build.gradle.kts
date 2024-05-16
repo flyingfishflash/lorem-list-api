@@ -30,7 +30,7 @@ val ciPipelineId by extra { ciPipelineId() }
 
 val exposedVersion = "0.50.0"
 val flywayVersion = "10.12.0"
-val kotestVersion = "5.8.1"
+val kotestVersion = "5.9.0"
 val kotestExtensionsSpringVersion = "1.1.3"
 val kotlinLoggingVersion = "6.0.9"
 val kotlinxDateTimeVersion = "0.5.0"
