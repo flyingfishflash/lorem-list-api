@@ -28,7 +28,7 @@ val ciCommit by extra { ciCommit() }
 val ciPlatform by extra { ciPlatform() }
 val ciPipelineId by extra { ciPipelineId() }
 
-val exposedVersion = "0.50.0"
+val exposedVersion = "0.50.1"
 val flywayVersion = "10.13.0"
 val kotestVersion = "5.9.0"
 val kotestExtensionsSpringVersion = "1.1.3"
