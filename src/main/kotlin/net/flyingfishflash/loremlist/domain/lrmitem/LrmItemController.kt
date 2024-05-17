@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Min
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
+import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.domain.common.CommonService
@@ -42,7 +43,7 @@ import org.springframework.web.bind.annotation.RestController
 )
 @RestController
 @RequestMapping("/items")
-class LrmItemController(val lrmItemService: LrmItemService, val commonService: CommonService) {
+class LrmItemController(val commonService: CommonService, val lrmItemService: LrmItemService) {
   private val logger = KotlinLogging.logger {}
 
   @PostMapping("/{id}/add-to-list")
@@ -57,6 +58,34 @@ class LrmItemController(val lrmItemService: LrmItemService, val commonService: C
     val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
     val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @GetMapping("/{id}/count-list-associations")
+  @Operation(summary = "Count of lists associated with an item")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Count of list associations retrieved",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Item Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  fun countListAssociations(
+    @PathVariable("id") @Min(1) id: Long,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = commonService.countListAssociations(id)
+    val responseMessage = "item is associated with $serviceResponse lists."
+    val responseStatus = HttpStatus.OK
+    val responseContent = ApiMessageNumeric(serviceResponse)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 

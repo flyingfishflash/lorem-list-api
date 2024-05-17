@@ -1,6 +1,5 @@
 package net.flyingfishflash.loremlist.domain.common
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
@@ -16,12 +15,11 @@ import java.sql.SQLException
 @Service
 @Transactional
 class CommonService(
+  val commonRepository: CommonRepository,
   val lrmItemRepository: LrmItemRepository,
   val lrmItemService: LrmItemService,
   val lrmListService: LrmListService,
 ) {
-  private val logger = KotlinLogging.logger {}
-
   fun addToList(itemId: Long, listId: Long): Pair<String, String> {
     try {
       lrmItemService.findById(itemId)
@@ -138,5 +136,26 @@ class CommonService(
         )
       }
     }
+  }
+
+  fun countListAssociations(id: Long): Long {
+    val associations = try {
+      lrmItemService.findById(id)
+      commonRepository.countListAssociations(id)
+    } catch (itemNotFoundException: ItemNotFoundException) {
+      throw ApiException(
+        cause = itemNotFoundException,
+        httpStatus = itemNotFoundException.httpStatus,
+        message = "Count of lists associated with item id $id could not be retrieved because the item could not be found.",
+        responseMessage = "Count of lists associated with item id $id could not be retrieved because the item could not be found.",
+      )
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Count of lists associated with item id $id could not be retrieved.",
+        responseMessage = "Count of lists associated with item id $id could not be retrieved.",
+      )
+    }
+    return associations
   }
 }

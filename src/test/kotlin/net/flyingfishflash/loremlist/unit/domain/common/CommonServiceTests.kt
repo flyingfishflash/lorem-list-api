@@ -17,6 +17,7 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
+import net.flyingfishflash.loremlist.domain.common.CommonRepository
 import net.flyingfishflash.loremlist.domain.common.CommonService
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
@@ -31,10 +32,11 @@ import java.sql.SQLException
 import java.util.UUID
 
 class CommonServiceTests : DescribeSpec({
+  val mockCommonRepository = mockk<CommonRepository>()
   val mockLrmItemRepository = mockk<LrmItemRepository>()
   val mockLrmItemService = mockk<LrmItemService>()
   val mockLrmListService = mockk<LrmListService>()
-  val commonService = CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService)
+  val commonService = CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmItemService, mockLrmListService)
 
   val lrmItemRequest = LrmItemRequest("Lorem Item Name", "Lorem Item Description")
   val itemUuid = UUID.randomUUID()
@@ -142,9 +144,32 @@ class CommonServiceTests : DescribeSpec({
     }
   }
 
+  describe("countListAssociations()") {
+    it("count of list associations is returned") {
+      every { mockLrmItemService.findById(1) } returns lrmItem()
+      every { mockCommonRepository.countListAssociations(1) } returns 1
+      commonService.countListAssociations(1)
+      verify(exactly = 1) { mockCommonRepository.countListAssociations(any()) }
+    }
+
+    it("item is not found") {
+      every { mockLrmItemService.findById(1) } throws ItemNotFoundException(1)
+      val exception = shouldThrow<ApiException> { commonService.countListAssociations(1) }
+      exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
+      exception.httpStatus.shouldBe(HttpStatus.NOT_FOUND)
+    }
+
+    it("item repository throws exception") {
+      every { mockLrmItemService.findById(1) } throws RuntimeException("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { commonService.countListAssociations(1) }
+      exception.cause.shouldBeInstanceOf<RuntimeException>()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+  }
+
   describe("moveToList()") {
     it("item is moved from one list to another list") {
-      val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
+      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmItemService, mockLrmListService))
       every { mockLrmItemService.findById(1) } returns lrmItem()
       every { mockLrmListService.findById(2) } returns lrmList()
       every { mockLrmListService.findById(3) } returns lrmList()
@@ -156,7 +181,7 @@ class CommonServiceTests : DescribeSpec({
     }
 
     it("anticipated api exception with cause of type abstract api exception") {
-      val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
+      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmItemService, mockLrmListService))
       every { spy.addToList(any(), any()) } throws ApiException(cause = ApiException(), httpStatus = HttpStatus.I_AM_A_TEAPOT)
       val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
       val causeHttpStatus = exception.cause.shouldBeInstanceOf<AbstractApiException>().httpStatus
@@ -166,7 +191,7 @@ class CommonServiceTests : DescribeSpec({
     }
 
     it("anticipated api exception with root cause of type exception") {
-      val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
+      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmItemService, mockLrmListService))
       every { spy.addToList(any(), any()) } throws ApiException(cause = Exception())
       val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
       exception.cause.shouldBeInstanceOf<Exception>().message.shouldBeNull()
@@ -176,7 +201,7 @@ class CommonServiceTests : DescribeSpec({
     }
 
     it("anticipated api exception with root cause not of type api exception") {
-      val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
+      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmItemService, mockLrmListService))
       every { spy.addToList(any(), any()) } throws Exception("Lorem Ipsum")
       val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
       exception.cause.shouldBeInstanceOf<Exception>().message.shouldBe("Lorem Ipsum")
@@ -186,7 +211,7 @@ class CommonServiceTests : DescribeSpec({
     }
 
     it("anticipated api exception with root cause not of type api exception (no message)") {
-      val spy = spyk(CommonService(mockLrmItemRepository, mockLrmItemService, mockLrmListService))
+      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmItemService, mockLrmListService))
       every { spy.addToList(any(), any()) } throws Exception()
       val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
       exception.cause.shouldBeInstanceOf<Exception>().message.shouldBeNull()
