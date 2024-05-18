@@ -745,6 +745,40 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.value") { value(1) }
         }
       }
+
+      it("list 1 has one item association") {
+        val instance = "/lists/$listOneId/count-item-associations"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.message") { value("list is associated with 1 items.") }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(1) }
+        }
+      }
+
+      it("list 2 has one item association") {
+        val instance = "/lists/$listTwoId/count-item-associations"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.message") { value("list is associated with 1 items.") }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(1) }
+        }
+      }
     }
 
     describe("item delete") {

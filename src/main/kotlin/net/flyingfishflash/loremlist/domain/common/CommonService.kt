@@ -138,22 +138,43 @@ class CommonService(
     }
   }
 
-  fun countListAssociations(id: Long): Long {
+  fun countItemToListAssociations(itemId: Long): Long {
     val associations = try {
-      lrmItemService.findById(id)
-      commonRepository.countListAssociations(id)
+      lrmItemService.findById(itemId)
+      commonRepository.countItemToListAssociations(itemId)
     } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
         cause = itemNotFoundException,
         httpStatus = itemNotFoundException.httpStatus,
-        message = "Count of lists associated with item id $id could not be retrieved because the item could not be found.",
-        responseMessage = "Count of lists associated with item id $id could not be retrieved because the item could not be found.",
+        message = "Count of lists associated with item id $itemId could not be retrieved because the item could not be found.",
+        responseMessage = "Count of lists associated with item id $itemId could not be retrieved because the item could not be found.",
       )
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
-        message = "Count of lists associated with item id $id could not be retrieved.",
-        responseMessage = "Count of lists associated with item id $id could not be retrieved.",
+        message = "Count of lists associated with item id $itemId could not be retrieved.",
+        responseMessage = "Count of lists associated with item id $itemId could not be retrieved.",
+      )
+    }
+    return associations
+  }
+
+  fun countListToItemAssociations(listId: Long): Long {
+    val associations = try {
+      lrmListService.findById(listId)
+      commonRepository.countListToItemAssociations(listId)
+    } catch (listNotFoundException: ListNotFoundException) {
+      throw ApiException(
+        cause = listNotFoundException,
+        httpStatus = listNotFoundException.httpStatus,
+        message = "Count of items associated with list id $listId could not be retrieved because the list could not be found.",
+        responseMessage = "Count of items associated with list id $listId could not be retrieved because the list could not be found.",
+      )
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Count of items associated with list id $listId could not be retrieved.",
+        responseMessage = "Count of items associated with list id $listId could not be retrieved.",
       )
     }
     return associations

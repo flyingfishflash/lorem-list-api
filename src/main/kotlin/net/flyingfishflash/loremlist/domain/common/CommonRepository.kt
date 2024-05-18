@@ -10,12 +10,12 @@ import org.springframework.stereotype.Repository
 class CommonRepository {
   private val repositoryTable = LrmListsItemsTable
 
-  fun countListAssociations(itemId: Long): Long {
+  fun countItemToListAssociations(itemId: Long): Long {
     val itemCount = item.count()
     return repositoryTable.select(itemCount).where { item eq itemId }.map { it[itemCount] }.first()
   }
 
-  fun countItemAssociations(listId: Long): Long {
+  fun countListToItemAssociations(listId: Long): Long {
     val listCount = list.count()
     return repositoryTable.select(listCount).where { list eq listId }.map { it[listCount] }.first()
   }

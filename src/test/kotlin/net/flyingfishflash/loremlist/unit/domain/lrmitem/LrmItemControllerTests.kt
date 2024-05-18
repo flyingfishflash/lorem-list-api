@@ -466,7 +466,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/items/{id}/count-list-associations") {
       describe("get") {
         it("count of list associations is returned") {
-          every { commonService.countListAssociations(1) } returns 999
+          every { commonService.countItemToListAssociations(1) } returns 999
           val instance = "/items/$id/count-list-associations"
           mockMvc.get(instance).andExpect {
             status { isOk() }
@@ -479,11 +479,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.length()") { value(1) }
             jsonPath("$.content.value") { value(999) }
           }
-          verify(exactly = 1) { commonService.countListAssociations(any()) }
+          verify(exactly = 1) { commonService.countItemToListAssociations(any()) }
         }
 
         it("item is not found") {
-          every { commonService.countListAssociations(1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
+          every { commonService.countItemToListAssociations(1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
           val instance = "/items/$id/count-list-associations"
           mockMvc.get(instance).andExpect {
             status { isNotFound() }
@@ -493,7 +493,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
-          verify(exactly = 1) { commonService.countListAssociations(any()) }
+          verify(exactly = 1) { commonService.countItemToListAssociations(any()) }
         }
       }
     }

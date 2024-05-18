@@ -13,8 +13,10 @@ import jakarta.validation.constraints.Min
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
+import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
+import net.flyingfishflash.loremlist.domain.common.CommonService
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -40,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController
 )
 @RestController
 @RequestMapping("/lists")
-class LrmListController(private val lrmListService: LrmListService) {
+class LrmListController(private val commonService: CommonService, private val lrmListService: LrmListService) {
   private val logger = KotlinLogging.logger {}
 
   @Operation(summary = "Create a new list")
@@ -58,6 +60,34 @@ class LrmListController(private val lrmListService: LrmListService) {
     val responseStatus = HttpStatus.OK
     val responseContent = lrmListService.create(lrmListRequest)
     val responseMessage = "created new list"
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { Json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @GetMapping("/{id}/count-item-associations")
+  @Operation(summary = "Count of items associated with a list")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Count of item associations retrieved",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  fun countListToItemAssociations(
+    @PathVariable("id") @Min(1) id: Long,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = commonService.countListToItemAssociations(id)
+    val responseMessage = "list is associated with $serviceResponse items."
+    val responseStatus = HttpStatus.OK
+    val responseContent = ApiMessageNumeric(serviceResponse)
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)

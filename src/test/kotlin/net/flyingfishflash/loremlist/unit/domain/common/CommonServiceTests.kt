@@ -144,24 +144,47 @@ class CommonServiceTests : DescribeSpec({
     }
   }
 
-  describe("countListAssociations()") {
+  describe("countItemToListAssociations()") {
     it("count of list associations is returned") {
       every { mockLrmItemService.findById(1) } returns lrmItem()
-      every { mockCommonRepository.countListAssociations(1) } returns 1
-      commonService.countListAssociations(1)
-      verify(exactly = 1) { mockCommonRepository.countListAssociations(any()) }
+      every { mockCommonRepository.countItemToListAssociations(1) } returns 1
+      commonService.countItemToListAssociations(1)
+      verify(exactly = 1) { mockCommonRepository.countItemToListAssociations(any()) }
     }
 
     it("item is not found") {
       every { mockLrmItemService.findById(1) } throws ItemNotFoundException(1)
-      val exception = shouldThrow<ApiException> { commonService.countListAssociations(1) }
+      val exception = shouldThrow<ApiException> { commonService.countItemToListAssociations(1) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       exception.httpStatus.shouldBe(HttpStatus.NOT_FOUND)
     }
 
     it("item repository throws exception") {
       every { mockLrmItemService.findById(1) } throws RuntimeException("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { commonService.countListAssociations(1) }
+      val exception = shouldThrow<ApiException> { commonService.countItemToListAssociations(1) }
+      exception.cause.shouldBeInstanceOf<RuntimeException>()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  describe("countListToItemAssociations()") {
+    it("count of item associations is returned") {
+      every { mockLrmListService.findById(1) } returns lrmList()
+      every { mockCommonRepository.countListToItemAssociations(1) } returns 1
+      commonService.countListToItemAssociations(1)
+      verify(exactly = 1) { mockCommonRepository.countListToItemAssociations(any()) }
+    }
+
+    it("list is not found") {
+      every { mockLrmListService.findById(1) } throws ListNotFoundException(1)
+      val exception = shouldThrow<ApiException> { commonService.countListToItemAssociations(1) }
+      exception.cause.shouldBeInstanceOf<ListNotFoundException>()
+      exception.httpStatus.shouldBe(HttpStatus.NOT_FOUND)
+    }
+
+    it("list repository throws exception") {
+      every { mockLrmListService.findById(1) } throws RuntimeException("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { commonService.countListToItemAssociations(1) }
       exception.cause.shouldBeInstanceOf<RuntimeException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
     }

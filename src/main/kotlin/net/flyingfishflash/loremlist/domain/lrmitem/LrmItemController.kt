@@ -76,11 +76,11 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
       ),
     ],
   )
-  fun countListAssociations(
+  fun countItemToListAssociations(
     @PathVariable("id") @Min(1) id: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = commonService.countListAssociations(id)
+    val serviceResponse = commonService.countItemToListAssociations(id)
     val responseMessage = "item is associated with $serviceResponse lists."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)
