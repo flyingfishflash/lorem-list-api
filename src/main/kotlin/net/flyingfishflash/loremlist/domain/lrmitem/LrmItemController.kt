@@ -47,7 +47,7 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
   private val logger = KotlinLogging.logger {}
 
   @PostMapping("/{id}/add-to-list")
-  @Operation(summary = "Assign an item to a list")
+  @Operation(summary = "Associate an item with a list")
   fun addToList(
     @PathVariable("id") @Min(1) id: Long,
     @Min(1) @RequestBody listId: Long,
@@ -247,8 +247,22 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     return responseEntity
   }
 
+  @GetMapping("/{id}/remove-from-all-lists")
+  @Operation(summary = "Remove an item from all associated lists")
+  fun removeFromAllLists(
+    @PathVariable("id") @Min(1) id: Long,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = commonService.removeFromAllLists(itemId = id)
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Removed item '${serviceResponse.first}' from all associated lists (${serviceResponse.second})."
+    val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
+  }
+
   @PostMapping("/{id}/remove-from-list")
-  @Operation(summary = "Remove an item from a list")
+  @Operation(summary = "Remove an item from an associated list")
   fun removeFromList(
     @PathVariable("id") @Min(1) id: Long,
     @Min(1) @RequestBody listId: Long,

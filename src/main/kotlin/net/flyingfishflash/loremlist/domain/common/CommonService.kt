@@ -63,6 +63,48 @@ class CommonService(
     return Pair(lrmItemService.findById(itemId).name, lrmListService.findById(listId).name)
   }
 
+  fun countItemToListAssociations(itemId: Long): Long {
+    val associations = try {
+      lrmItemService.findById(itemId)
+      commonRepository.countItemToListAssociations(itemId)
+    } catch (itemNotFoundException: ItemNotFoundException) {
+      throw ApiException(
+        cause = itemNotFoundException,
+        httpStatus = itemNotFoundException.httpStatus,
+        message = "Count of lists associated with item id $itemId could not be retrieved because the item could not be found.",
+        responseMessage = "Count of lists associated with item id $itemId could not be retrieved because the item could not be found.",
+      )
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Count of lists associated with item id $itemId could not be retrieved.",
+        responseMessage = "Count of lists associated with item id $itemId could not be retrieved.",
+      )
+    }
+    return associations
+  }
+
+  fun countListToItemAssociations(listId: Long): Long {
+    val associations = try {
+      lrmListService.findById(listId)
+      commonRepository.countListToItemAssociations(listId)
+    } catch (listNotFoundException: ListNotFoundException) {
+      throw ApiException(
+        cause = listNotFoundException,
+        httpStatus = listNotFoundException.httpStatus,
+        message = "Count of items associated with list id $listId could not be retrieved because the list could not be found.",
+        responseMessage = "Count of items associated with list id $listId could not be retrieved because the list could not be found.",
+      )
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Count of items associated with list id $listId could not be retrieved.",
+        responseMessage = "Count of items associated with list id $listId could not be retrieved.",
+      )
+    }
+    return associations
+  }
+
   fun moveToList(itemId: Long, fromListId: Long, toListId: Long): Triple<String, String, String> {
     try {
       addToList(itemId = itemId, listId = toListId)
@@ -84,6 +126,25 @@ class CommonService(
       lrmListService.findById(fromListId).name,
       lrmListService.findById(toListId).name,
     )
+  }
+
+  fun removeFromAllLists(itemId: Long): Pair<String, Int> {
+    try {
+      val deletedCount = commonRepository.deleteAllItemToListAssociations(itemId)
+      return Pair(lrmItemService.findById(itemId).name, deletedCount)
+    } catch (itemNotFoundException: ItemNotFoundException) {
+      throw ApiException(
+        cause = itemNotFoundException,
+        httpStatus = itemNotFoundException.httpStatus,
+        responseMessage = "Item id $itemId could not be removed from any/all lists because the item could not be found.",
+      )
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Item id $itemId could not be removed from any/all lists due to an exception.",
+        responseMessage = "Item id $itemId could not be removed from any/all lists due to an exception.",
+      )
+    }
   }
 
   fun removeFromList(itemId: Long, listId: Long): Pair<String, String> {
@@ -136,47 +197,5 @@ class CommonService(
         )
       }
     }
-  }
-
-  fun countItemToListAssociations(itemId: Long): Long {
-    val associations = try {
-      lrmItemService.findById(itemId)
-      commonRepository.countItemToListAssociations(itemId)
-    } catch (itemNotFoundException: ItemNotFoundException) {
-      throw ApiException(
-        cause = itemNotFoundException,
-        httpStatus = itemNotFoundException.httpStatus,
-        message = "Count of lists associated with item id $itemId could not be retrieved because the item could not be found.",
-        responseMessage = "Count of lists associated with item id $itemId could not be retrieved because the item could not be found.",
-      )
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "Count of lists associated with item id $itemId could not be retrieved.",
-        responseMessage = "Count of lists associated with item id $itemId could not be retrieved.",
-      )
-    }
-    return associations
-  }
-
-  fun countListToItemAssociations(listId: Long): Long {
-    val associations = try {
-      lrmListService.findById(listId)
-      commonRepository.countListToItemAssociations(listId)
-    } catch (listNotFoundException: ListNotFoundException) {
-      throw ApiException(
-        cause = listNotFoundException,
-        httpStatus = listNotFoundException.httpStatus,
-        message = "Count of items associated with list id $listId could not be retrieved because the list could not be found.",
-        responseMessage = "Count of items associated with list id $listId could not be retrieved because the list could not be found.",
-      )
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "Count of items associated with list id $listId could not be retrieved.",
-        responseMessage = "Count of items associated with list id $listId could not be retrieved.",
-      )
-    }
-    return associations
   }
 }

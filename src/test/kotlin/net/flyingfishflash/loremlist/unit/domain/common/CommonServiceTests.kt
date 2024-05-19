@@ -245,6 +245,33 @@ class CommonServiceTests : DescribeSpec({
     }
   }
 
+  describe("removeFromAllLists()") {
+    it("remove from all lists") {
+      every { mockCommonRepository.deleteAllItemToListAssociations(1) } returns 999
+      every { mockLrmItemService.findById(1) } returns lrmItem()
+      commonService.removeFromAllLists(1)
+      verify(exactly = 1) { mockCommonRepository.deleteAllItemToListAssociations(any()) }
+      verify(exactly = 1) { mockLrmItemService.findById(any()) }
+    }
+
+    it("item not found") {
+      every { mockCommonRepository.deleteAllItemToListAssociations(1) } returns 999
+      every { mockLrmItemService.findById(1) } throws ItemNotFoundException(999)
+      val exception = shouldThrow<ApiException> { commonService.removeFromAllLists(1) }
+      exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
+      exception.httpStatus.shouldBe(ItemNotFoundException.HTTP_STATUS)
+      exception.responseMessage.shouldBe("Item id 1 could not be removed from any/all lists because the item could not be found.")
+    }
+
+    it("item repository throws exception") {
+      every { mockCommonRepository.deleteAllItemToListAssociations(1) } throws RuntimeException()
+      val exception = shouldThrow<ApiException> { commonService.removeFromAllLists(1) }
+      exception.cause.shouldBeInstanceOf<RuntimeException>()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.responseMessage.shouldBe("Item id 1 could not be removed from any/all lists due to an exception.")
+    }
+  }
+
   describe("removeFromList()") {
     it("removed from list") {
       every { mockLrmItemRepository.removeItemFromList(1, 2) } returns 1

@@ -542,6 +542,26 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
+    describe("/items/{id}/remove-from-all-lists") {
+      it("item is removed from all lists") {
+        every { commonService.removeFromAllLists(1) } returns Pair(lrmItem().name, 999)
+        val instance = "/items/$id/remove-from-all-lists"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.message") { value("Removed item '${lrmItem().name}' from all associated lists (999).") }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.value") { value(999) }
+        }
+        verify(exactly = 1) { commonService.removeFromAllLists(any()) }
+      }
+    }
+
     describe("/items/{id}/remove-from-list") {
       describe("post") {
         it("item is removed from list") {

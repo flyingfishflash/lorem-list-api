@@ -8,7 +8,7 @@ class ItemNotFoundException(
   cause: Throwable? = null,
   message: String? = null,
 ) : AbstractApiException(
-  httpStatus = HttpStatus.NOT_FOUND,
+  httpStatus = HTTP_STATUS,
   title = TITLE,
   cause = cause,
   detail = message ?: defaultMessage(id),
@@ -16,6 +16,7 @@ class ItemNotFoundException(
 ) {
   companion object {
     const val TITLE = "Item Not Found Exception"
+    val HTTP_STATUS = HttpStatus.NOT_FOUND
     fun defaultMessage(id: Long) = "Item id $id could not be found."
   }
 }
