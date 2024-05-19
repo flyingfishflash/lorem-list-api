@@ -5,14 +5,15 @@ import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
+import net.flyingfishflash.loremlist.domain.common.CommonService
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
-class LrmItemService(val lrmItemRepository: LrmItemRepository) {
+class LrmItemService(private val commonService: CommonService, private val lrmItemRepository: LrmItemRepository) {
   private val logger = KotlinLogging.logger {}
 
   fun create(lrmItemRequest: LrmItemRequest): LrmItem {
@@ -28,25 +29,49 @@ class LrmItemService(val lrmItemRepository: LrmItemRepository) {
     }
   }
 
-  fun deleteSingleById(id: Long) {
-    val deletedCount = try {
-      lrmItemRepository.deleteById(id)
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "Item id $id could not be deleted.",
-        responseMessage = "Item id $id could not be deleted.",
+  fun deleteSingleById(id: Long, removeListAssociations: Boolean): LrmItemDeleteResponse {
+    try {
+      val countItemToListAssociations = commonService.countItemToListAssociations(id)
+      val associatedListNames: List<String> = findByIdIncludeLists(id).lists?.map { it.name } ?: emptyList()
+      if (countItemToListAssociations > 0) {
+        if (removeListAssociations) {
+          commonService.removeFromAllLists(id)
+          val deletedCount = lrmItemRepository.deleteById(id)
+          if (deletedCount > 1) {
+            throw ApiException(
+              message = "More than one item with id $id were found. No items have been deleted.",
+              responseMessage = "More than one item with id $id were found. No items have been deleted.",
+            )
+          }
+        } else {
+          // throw an exception rather than removing the item from all lists and then deleting it
+          throw ItemDeleteWithListAssociationException(
+            id = id,
+            associationDetail = LrmItemDeleteResponse(
+              countItemToListAssociations = countItemToListAssociations,
+              associatedListNames = associatedListNames,
+            ),
+          )
+        }
+      } else {
+        // item is not associated with any lists
+        val deletedCount = lrmItemRepository.deleteById(id)
+        if (deletedCount > 1) {
+          throw ApiException(
+            message = "More than one item with id $id were found. No items have been deleted.",
+            responseMessage = "More than one item with id $id were found. No items have been deleted.",
+          )
+        }
+      }
+      return LrmItemDeleteResponse(
+        countItemToListAssociations = countItemToListAssociations,
+        associatedListNames = associatedListNames,
       )
-    }
-    if (deletedCount < 1) {
+    } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
-        httpStatus = HttpStatus.BAD_REQUEST,
-        cause = ItemNotFoundException(id = id),
-        responseMessage = "Item id $id was not deleted because it could be found to delete.",
-      )
-    } else if (deletedCount > 1) {
-      throw ApiException(
-        responseMessage = "More than one item with id $id were found. No items have been deleted.",
+        cause = itemNotFoundException,
+        httpStatus = itemNotFoundException.httpStatus,
+        responseMessage = "Item id $id could not be deleted because it could not be found.",
       )
     }
   }

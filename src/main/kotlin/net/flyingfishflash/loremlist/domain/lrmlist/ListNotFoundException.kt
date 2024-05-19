@@ -16,6 +16,7 @@ class ListNotFoundException(
 ) {
   companion object {
     const val TITLE = "List Not Found Exception"
+    val HTTP_STATUS = HttpStatus.NOT_FOUND
     fun defaultMessage(id: Long) = "List id $id could not be found."
   }
 }

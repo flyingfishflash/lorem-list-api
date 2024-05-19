@@ -17,6 +17,7 @@ import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.domain.common.CommonService
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemMoveToListRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.springframework.http.HttpStatus
@@ -117,15 +118,23 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
         description = "Item Not Found",
         content = [Content(schema = Schema(implementation = ResponseProblem::class))],
       ),
+      ApiResponse(
+        responseCode = "422",
+        description = "Item Not Deleted Due to List Associations",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
     ],
   )
   @DeleteMapping("/{id}")
-  fun delete(@PathVariable("id") @Min(1) id: Long, request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    lrmItemService.deleteSingleById(id)
+  fun delete(
+    @PathVariable("id") @Min(1) id: Long,
+    @RequestParam(defaultValue = false.toString()) removeListAssociations: Boolean,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<LrmItemDeleteResponse>> {
+    val serviceResponse = lrmItemService.deleteSingleById(id, removeListAssociations)
     val responseStatus = HttpStatus.OK
-    val responseMessage = "deleted item id $id"
-    val responseContent = ApiMessage("content")
-    val response = ResponseSuccess(responseContent, responseMessage, request)
+    val responseMessage = "Deleted item id $id."
+    val response = ResponseSuccess(serviceResponse, responseMessage, request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }

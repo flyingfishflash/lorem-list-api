@@ -3,10 +3,11 @@ package net.flyingfishflash.loremlist.domain.common
 import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
-import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemService
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
-import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -15,27 +16,26 @@ import java.sql.SQLException
 @Service
 @Transactional
 class CommonService(
-  val commonRepository: CommonRepository,
-  val lrmItemRepository: LrmItemRepository,
-  val lrmItemService: LrmItemService,
-  val lrmListService: LrmListService,
+  private val commonRepository: CommonRepository,
+  private val lrmItemRepository: LrmItemRepository,
+  private val lrmListRepository: LrmListRepository,
 ) {
+
   fun addToList(itemId: Long, listId: Long): Pair<String, String> {
+    val item: LrmItem
+    val list: LrmList
+    val exceptionMessage = "Item id $itemId could not be added to list id $listId"
+
     try {
-      lrmItemService.findById(itemId)
-      lrmListService.findById(listId)
+      item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
+      list = lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
       lrmItemRepository.addItemToList(listId, itemId)
-    } catch (itemNotFound: ItemNotFoundException) {
+    } catch (abstractApiException: AbstractApiException) {
       throw ApiException(
-        httpStatus = itemNotFound.httpStatus,
-        responseMessage = "Item id $itemId could not be added to list id $listId because the item couldn't be found.",
-        cause = itemNotFound,
-      )
-    } catch (listNotFound: ListNotFoundException) {
-      throw ApiException(
-        httpStatus = listNotFound.httpStatus,
-        responseMessage = "Item id $itemId could not be added to list id $listId because the list couldn't be found.",
-        cause = listNotFound,
+        httpStatus = abstractApiException.httpStatus,
+        message = "$exceptionMessage: ${abstractApiException.message}",
+        responseMessage = "$exceptionMessage: ${abstractApiException.message}",
+        cause = abstractApiException,
       )
     } catch (sqlException: SQLException) {
       when {
@@ -43,157 +43,171 @@ class CommonService(
           sqlException.message?.contains("Unique index or primary key violation") == true -> { // h2
           throw ApiException(
             httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-            responseMessage = "Item id $itemId could not be added to list id $listId because it's already been added.",
+            responseMessage = "$exceptionMessage: It's already been added.",
             cause = sqlException,
           )
         }
         else -> {
           throw ApiException(
-            responseMessage = "Item id $itemId could not be added to list id $listId because of an unanticipated sql exception.",
+            responseMessage = "$exceptionMessage: Unanticipated SQL exception.",
             cause = sqlException,
           )
         }
       }
     } catch (exception: Exception) {
       throw ApiException(
-        responseMessage = "Item id $itemId could not be added to list id $listId because of an unanticipated exception.",
+        message = "$exceptionMessage.",
+        responseMessage = "$exceptionMessage.",
         cause = exception,
       )
     }
-    return Pair(lrmItemService.findById(itemId).name, lrmListService.findById(listId).name)
+    return Pair(item.name, list.name)
   }
 
   fun countItemToListAssociations(itemId: Long): Long {
+    val exceptionMessage = "Count of lists associated with item id $itemId could not be retrieved"
     val associations = try {
-      lrmItemService.findById(itemId)
+      lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
       commonRepository.countItemToListAssociations(itemId)
     } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
         cause = itemNotFoundException,
         httpStatus = itemNotFoundException.httpStatus,
-        message = "Count of lists associated with item id $itemId could not be retrieved because the item could not be found.",
-        responseMessage = "Count of lists associated with item id $itemId could not be retrieved because the item could not be found.",
+        message = "$exceptionMessage: ${itemNotFoundException.message}",
+        responseMessage = "$exceptionMessage: ${itemNotFoundException.message}",
       )
-    } catch (cause: Exception) {
+    } catch (exception: Exception) {
       throw ApiException(
-        cause = cause,
-        message = "Count of lists associated with item id $itemId could not be retrieved.",
-        responseMessage = "Count of lists associated with item id $itemId could not be retrieved.",
+        cause = exception,
+        message = "$exceptionMessage.",
+        responseMessage = "$exceptionMessage.",
       )
     }
     return associations
   }
 
   fun countListToItemAssociations(listId: Long): Long {
+    val exceptionMessage = "Count of items associated with list id $listId could not be retrieved"
     val associations = try {
-      lrmListService.findById(listId)
+      lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
       commonRepository.countListToItemAssociations(listId)
     } catch (listNotFoundException: ListNotFoundException) {
       throw ApiException(
         cause = listNotFoundException,
         httpStatus = listNotFoundException.httpStatus,
-        message = "Count of items associated with list id $listId could not be retrieved because the list could not be found.",
-        responseMessage = "Count of items associated with list id $listId could not be retrieved because the list could not be found.",
+        message = "$exceptionMessage: ${listNotFoundException.message}",
+        responseMessage = "$exceptionMessage: ${listNotFoundException.message}",
       )
-    } catch (cause: Exception) {
+    } catch (exception: Exception) {
       throw ApiException(
-        cause = cause,
-        message = "Count of items associated with list id $listId could not be retrieved.",
-        responseMessage = "Count of items associated with list id $listId could not be retrieved.",
+        cause = exception,
+        message = "$exceptionMessage.",
+        responseMessage = "$exceptionMessage.",
       )
     }
     return associations
   }
 
   fun moveToList(itemId: Long, fromListId: Long, toListId: Long): Triple<String, String, String> {
+    val item: LrmItem
+    val fromList: LrmList
+    val toList: LrmList
+    val exceptionMessage = "Item id $itemId was not moved from list id $fromListId to list id $toListId"
+
     try {
+      item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
+      fromList = lrmListRepository.findByIdOrNull(fromListId) ?: throw ListNotFoundException(fromListId)
+      toList = lrmListRepository.findByIdOrNull(toListId) ?: throw ListNotFoundException(toListId)
       addToList(itemId = itemId, listId = toListId)
       removeFromList(itemId = itemId, listId = fromListId)
-    } catch (exception: ApiException) {
+    } catch (exception: AbstractApiException) {
       throw ApiException(
-        httpStatus = if (exception.cause is AbstractApiException) exception.cause.httpStatus else HttpStatus.INTERNAL_SERVER_ERROR,
-        responseMessage = "Item was not moved: " + exception.message,
-        cause = exception.cause,
+        httpStatus = exception.httpStatus,
+        message = "$exceptionMessage $exception.message",
+        responseMessage = "$exceptionMessage $exception.message",
+        cause = exception,
       )
     } catch (exception: Exception) {
       throw ApiException(
-        responseMessage = "Item was not moved: " + (exception.message ?: "exception cause detail not available"),
+        message = "$exceptionMessage.",
+        responseMessage = "$exceptionMessage.",
         cause = exception,
       )
     }
     return Triple(
-      lrmItemService.findById(itemId).name,
-      lrmListService.findById(fromListId).name,
-      lrmListService.findById(toListId).name,
+      item.name,
+      fromList.name,
+      toList.name,
     )
   }
 
   fun removeFromAllLists(itemId: Long): Pair<String, Int> {
+    val item: LrmItem
+    val exceptionMessage = "Item id $itemId could not be removed from any/all lists"
+
     try {
+      item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
       val deletedCount = commonRepository.deleteAllItemToListAssociations(itemId)
-      return Pair(lrmItemService.findById(itemId).name, deletedCount)
+      return Pair(item.name, deletedCount)
     } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
         cause = itemNotFoundException,
         httpStatus = itemNotFoundException.httpStatus,
-        responseMessage = "Item id $itemId could not be removed from any/all lists because the item could not be found.",
+        message = "$exceptionMessage: ${itemNotFoundException.message}",
+        responseMessage = "$exceptionMessage: ${itemNotFoundException.message}",
       )
-    } catch (cause: Exception) {
+    } catch (exception: Exception) {
       throw ApiException(
-        cause = cause,
-        message = "Item id $itemId could not be removed from any/all lists due to an exception.",
-        responseMessage = "Item id $itemId could not be removed from any/all lists due to an exception.",
+        cause = exception,
+        message = "$exceptionMessage.",
+        responseMessage = "$exceptionMessage.",
       )
     }
   }
 
   fun removeFromList(itemId: Long, listId: Long): Pair<String, String> {
+    val item: LrmItem
+    val list: LrmList
+    val exceptionMessage = "Item id $itemId could not be removed from list id $listId"
+
+    try {
+      item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
+      list = lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
+    } catch (abstractApiException: AbstractApiException) {
+      throw ApiException(
+        httpStatus = abstractApiException.httpStatus,
+        message = "$exceptionMessage: $abstractApiException.message",
+        responseMessage = "$exceptionMessage: $abstractApiException.message",
+        cause = abstractApiException,
+      )
+    }
+
     val deletedCount = try {
       lrmItemRepository.removeItemFromList(itemId, listId)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
-        message = "Item id $itemId could not be removed from list id $listId.",
-        responseMessage = "Item id $itemId could not be removed from list id $listId.",
+        message = "$exceptionMessage.",
+        responseMessage = "$exceptionMessage.",
       )
     }
 
     when {
       deletedCount == 1 -> {
-        return Pair(lrmItemService.findById(itemId).name, lrmListService.findById(listId).name)
+        return Pair(item.name, list.name)
       }
       deletedCount < 1 -> {
-        try {
-          lrmItemService.findById(itemId)
-        } catch (itemNotFound: ItemNotFoundException) {
-          throw ApiException(
-            httpStatus = HttpStatus.BAD_REQUEST,
-            cause = itemNotFound,
-            responseMessage = "Item id $itemId could not be removed from list id $listId " +
-              "because item id $itemId could not be found",
-          )
-        }
-        try {
-          lrmListService.findById(listId)
-        } catch (listNotFound: ListNotFoundException) {
-          throw ApiException(
-            httpStatus = HttpStatus.BAD_REQUEST,
-            cause = listNotFound,
-            responseMessage = "Item id $itemId could not be removed from list id $listId " +
-              "because list id $listId could not be found",
-          )
-        }
         throw ApiException(
           httpStatus = HttpStatus.BAD_REQUEST,
-          message = "Item id $itemId exists and list id $listId exists but 0 records were deleted.",
-          responseMessage = "Item id $itemId is not associated with list id $listId.",
+          message = "$exceptionMessage: Item id $itemId exists and list id $listId exists but 0 records were deleted.",
+          responseMessage = "$exceptionMessage: Item id $itemId is not associated with list id $listId.",
         )
       }
       else -> {
         throw ApiException(
           httpStatus = HttpStatus.BAD_REQUEST,
-          message = "Delete transaction rolled back because the count of deleted records was > 1.",
-          responseMessage = "Item id $itemId is associated with list id $listId multiple times.",
+          message = "$exceptionMessage: Delete transaction rolled back because the count of deleted records was > 1.",
+          responseMessage = "$exceptionMessage: Item id $itemId is associated with list id $listId multiple times.",
         )
       }
     }

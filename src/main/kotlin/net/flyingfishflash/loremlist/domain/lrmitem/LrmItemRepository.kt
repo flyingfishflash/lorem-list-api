@@ -24,7 +24,7 @@ class LrmItemRepository {
   private val repositoryTable = LrmListItemTable
   private val listSequence = Sequence("item_sequence")
 
-  fun deleteById(id: Long): Int = repositoryTable.deleteWhere { repositoryTable.id eq LrmListItemTable.id }
+  fun deleteById(id: Long): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
 
   fun findAll(): List<LrmItem> = repositoryTable.select(
     repositoryTable.id,

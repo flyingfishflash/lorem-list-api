@@ -3,10 +3,8 @@ package net.flyingfishflash.loremlist.unit.domain.lrmitem
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringExtension
-import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.just
 import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.serialization.encodeToString
@@ -15,10 +13,12 @@ import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.common.CommonService
+import net.flyingfishflash.loremlist.domain.lrmitem.ItemDeleteWithListAssociationException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemController
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemService
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemMoveToListRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
@@ -218,23 +218,28 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/items/{id}") {
       describe("delete") {
         it("item is deleted") {
-          every { lrmItemService.deleteSingleById(id) } just Runs
+          // non-sensical conditioning of the delete response:
+          // if the count of item to list associations is 0, then associatedListNames should be an empty list
+          every { lrmItemService.deleteSingleById(id, removeListAssociations = false) } returns
+            LrmItemDeleteResponse(0, listOf("Lorem Ipsum"))
           val instance = "/items/$id"
           mockMvc.delete(instance).andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.message") { value("deleted item id $id") }
+            jsonPath("$.message") { value("Deleted item id $id.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.message") { value("content") }
+            jsonPath("$.content.countItemToListAssociations") { value(0) }
+            jsonPath("$.content.associatedListNames.length()") { value(1) }
+            jsonPath("$.content.associatedListNames.[0]") { value("Lorem Ipsum") }
           }
-          verify(exactly = 1) { lrmItemService.deleteSingleById(id) }
+          verify(exactly = 1) { lrmItemService.deleteSingleById(any(), any()) }
         }
 
         it("item is not found") {
-          every { lrmItemService.deleteSingleById(id) } throws ItemNotFoundException(id)
+          every { lrmItemService.deleteSingleById(id, removeListAssociations = false) } throws ItemNotFoundException(id)
           val instance = "/items/$id"
           mockMvc.delete(instance).andExpect {
             status { isNotFound() }
@@ -248,7 +253,37 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $id could not be found.") }
           }
-          verify(exactly = 1) { lrmItemService.deleteSingleById(id) }
+          verify(exactly = 1) { lrmItemService.deleteSingleById(any(), any()) }
+        }
+
+        it("item is not deleted due to list associations") {
+          every {
+            lrmItemService.deleteSingleById(id, removeListAssociations = false)
+          } throws ItemDeleteWithListAssociationException(1, LrmItemDeleteResponse(1, listOf("Lorem Ipsum")))
+          val instance = "/items/$id"
+          mockMvc.delete(instance).andExpect {
+            status { ItemDeleteWithListAssociationException.HTTP_STATUS }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+            jsonPath("$.message") {
+              value(
+                "Item id $id could not be deleted because it's associated with 1 list(s). " +
+                  "First remove the item from each list.",
+              )
+            }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ItemDeleteWithListAssociationException.TITLE) }
+            jsonPath("$.content.status") { ItemDeleteWithListAssociationException.HTTP_STATUS.value() }
+            jsonPath("$.content.detail") {
+              value(
+                "Item id $id could not be deleted because it's associated with 1 list(s). " +
+                  "First remove the item from each list.",
+              )
+            }
+          }
+          verify(exactly = 1) { lrmItemService.deleteSingleById(any(), any()) }
         }
       }
 
