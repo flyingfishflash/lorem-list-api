@@ -7,12 +7,14 @@ import net.flyingfishflash.loremlist.domain.LrmListTable.created
 import net.flyingfishflash.loremlist.domain.LrmListTable.description
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
 import net.flyingfishflash.loremlist.domain.LrmListTable.updated
+import net.flyingfishflash.loremlist.domain.LrmListTable.uuid
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.nextLongVal
@@ -24,6 +26,12 @@ import java.util.UUID
 class LrmListRepository {
   private val repositoryTable = LrmListTable
   private val listSequence = Sequence("list_sequence")
+
+  fun count(): Long {
+    val uuidCount = uuid.count()
+    val count = repositoryTable.select(uuidCount).first()[uuidCount]
+    return count
+  }
 
   fun deleteById(id: Long): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
 

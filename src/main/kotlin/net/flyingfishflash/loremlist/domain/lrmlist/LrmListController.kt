@@ -45,6 +45,26 @@ import org.springframework.web.bind.annotation.RestController
 class LrmListController(private val commonService: CommonService, private val lrmListService: LrmListService) {
   private val logger = KotlinLogging.logger {}
 
+  @GetMapping("/count")
+  @Operation(summary = "Count of all lists")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Successful count of all lists",
+      ),
+    ],
+  )
+  fun count(request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = lrmListService.count()
+    val responseMessage = "$serviceResponse lists."
+    val responseStatus = HttpStatus.OK
+    val responseContent = ApiMessageNumeric(serviceResponse)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { Json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
   @Operation(summary = "Create a new list")
   @ApiResponses(
     value = [

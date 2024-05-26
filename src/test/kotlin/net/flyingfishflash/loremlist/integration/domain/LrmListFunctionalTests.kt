@@ -553,7 +553,18 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("total list count is two") {
-        TODO()
+        val instance = "/lists/count"
+        mockMvc.get(instance).andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.message") { value("2 lists.") }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(2) }
+        }
       }
     }
 
@@ -1082,7 +1093,18 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("total list count is zero") {
-        TODO()
+        val instance = "/lists/count"
+        mockMvc.get(instance).andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.message") { value("0 lists.") }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(0) }
+        }
       }
     }
   }

@@ -12,6 +12,19 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class LrmListService(val lrmListRepository: LrmListRepository) {
 
+  fun count(): Long {
+    try {
+      val count = lrmListRepository.count()
+      return count
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Total list count couldn't be generated.",
+        responseMessage = "Total list count couldn't be generated.",
+      )
+    }
+  }
+
   fun create(lrmListRequest: LrmListRequest): LrmList {
     try {
       val id = lrmListRepository.insert(lrmListRequest)
