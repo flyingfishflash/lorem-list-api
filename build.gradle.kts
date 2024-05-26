@@ -1,4 +1,5 @@
 import com.adarshr.gradle.testlogger.theme.ThemeType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 group = "net.flyingfishflash"
 description = "Simple List Management API"
@@ -20,7 +21,7 @@ plugins {
   kotlin("jvm") version "2.0.0"
   kotlin("plugin.jpa") version "2.0.0"
   kotlin("plugin.serialization") version "2.0.0"
-  kotlin("plugin.spring") version "1.9.22"
+  kotlin("plugin.spring") version "2.0.0"
 //  id("org.graalvm.buildtools.native") version "0.9.28"
 }
 
@@ -161,9 +162,9 @@ spotless {
 
 tasks {
   compileKotlin {
-    kotlinOptions {
-      freeCompilerArgs += "-Xjsr305=strict"
-      jvmTarget = "17"
+    compilerOptions {
+      jvmTarget.set(JvmTarget.JVM_17)
+      freeCompilerArgs.add("-Xjsr305=strict")
     }
   }
 
