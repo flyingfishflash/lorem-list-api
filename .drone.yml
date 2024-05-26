@@ -28,7 +28,9 @@ trigger:
   ref:
     - refs/heads/build-*
     - refs/heads/ci-*
+    - refs/heads/dependencies
     - refs/heads/dependency-*
+    - refs/heads/dependency
     - refs/heads/feature-*
     - refs/heads/fix-*
     - refs/heads/main
@@ -129,7 +131,9 @@ trigger:
     - push
   ref:
     - refs/heads/ci-*
+    - refs/heads/dependencies
     - refs/heads/dependency-*
+    - refs/heads/dependency
     - refs/heads/feature-*
     - refs/heads/fix-*
     - refs/heads/perf-*
