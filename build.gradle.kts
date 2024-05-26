@@ -30,6 +30,7 @@ val ciPipelineId by extra { ciPipelineId() }
 
 val exposedVersion = "0.50.1"
 val flywayVersion = "10.13.0"
+val jakartaValidationApiVersion = "3.1.0"
 val kotestVersion = "5.9.0"
 val kotestExtensionsSpringVersion = "1.1.3"
 val kotlinLoggingVersion = "6.0.9"
@@ -45,7 +46,7 @@ dependencies {
 //  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 //  https://github.com/oshai/kotlin-logging/releases
   implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
-  implementation("jakarta.validation:jakarta.validation-api")
+  implementation("jakarta.validation:jakarta.validation-api:$jakartaValidationApiVersion")
 //  https://github.com/flyway/flyway/releases
   implementation("org.flywaydb:flyway-core:$flywayVersion")
   implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
