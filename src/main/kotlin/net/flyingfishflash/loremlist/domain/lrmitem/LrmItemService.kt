@@ -16,6 +16,19 @@ import org.springframework.transaction.annotation.Transactional
 class LrmItemService(private val commonService: CommonService, private val lrmItemRepository: LrmItemRepository) {
   private val logger = KotlinLogging.logger {}
 
+  fun count(): Long {
+    try {
+      val count = lrmItemRepository.count()
+      return count
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Total item count couldn't be generated.",
+        responseMessage = "Total item count couldn't be generated.",
+      )
+    }
+  }
+
   fun create(lrmItemRequest: LrmItemRequest): LrmItem {
     try {
       val id = lrmItemRepository.insert(lrmItemRequest)

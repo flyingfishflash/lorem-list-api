@@ -2,14 +2,17 @@ package net.flyingfishflash.loremlist.domain.lrmitem
 
 import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.LrmListItemTable
+import net.flyingfishflash.loremlist.domain.LrmListItemTable.uuid
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
+import net.flyingfishflash.loremlist.domain.LrmListsItemsTable.item
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -23,6 +26,12 @@ import java.util.UUID
 class LrmItemRepository {
   private val repositoryTable = LrmListItemTable
   private val listSequence = Sequence("item_sequence")
+
+  fun count(): Long {
+    val uuidCount = uuid.count()
+    val count = repositoryTable.select(uuidCount).first()[uuidCount]
+    return count
+  }
 
   fun deleteById(id: Long): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
 

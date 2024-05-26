@@ -215,6 +215,26 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
+    describe("/items/count") {
+      describe("get") {
+        it("count of items is returned") {
+          every { lrmItemService.count() } returns 999
+          val instance = "/items/count"
+          mockMvc.get(instance).andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+            jsonPath("$.message") { value("999 items.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(1) }
+            jsonPath("$.content.value") { value(999) }
+          }
+        }
+      }
+    }
+
     describe("/items/{id}") {
       describe("delete") {
         it("item is deleted") {

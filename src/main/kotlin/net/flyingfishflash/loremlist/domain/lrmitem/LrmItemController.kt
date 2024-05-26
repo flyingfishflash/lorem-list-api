@@ -62,6 +62,54 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     return ResponseEntity(response, responseStatus)
   }
 
+  @GetMapping("/count")
+  @Operation(summary = "Count of all items")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Successful count of all items",
+      ),
+    ],
+  )
+  fun count(request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = lrmItemService.count()
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "$serviceResponse items."
+    val responseContent = ApiMessageNumeric(serviceResponse)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { Json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
+//  @GetMapping("/{id}/list-associations/count")
+//  @Operation(summary = "Count of lists associated with an item")
+//  @ApiResponses(
+//    value = [
+//      ApiResponse(
+//        responseCode = "200",
+//        description = "Count of list associations retrieved",
+//      ),
+//      ApiResponse(
+//        responseCode = "404",
+//        description = "Item Not Found",
+//        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+//      ),
+//    ],
+//  )
+//  fun itemToListAssociationsCount(
+//    @PathVariable("id") @Min(1) id: Long,
+//    request: HttpServletRequest,
+//  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+//    val serviceResponse = commonService.countItemToListAssociations(id)
+//    val responseMessage = "item is associated with $serviceResponse lists."
+//    val responseStatus = HttpStatus.OK
+//    val responseContent = ApiMessageNumeric(serviceResponse)
+//    val response = ResponseSuccess(responseContent, responseMessage, request)
+//    logger.info { Json.encodeToString(response) }
+//    return ResponseEntity(response, responseStatus)
+//  }
+
   @GetMapping("/{id}/count-list-associations")
   @Operation(summary = "Count of lists associated with an item")
   @ApiResponses(

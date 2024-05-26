@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.equals.shouldBeEqual
+import io.kotest.matchers.ints.exactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -49,6 +50,21 @@ class LrmItemServiceTests : DescribeSpec({
 
   afterEach { clearAllMocks() }
   afterSpec { unmockkAll() }
+
+  describe("count()") {
+    it("count is returned") {
+      every { mockLrmItemRepository.count() } returns 999
+      lrmItemService.count().shouldBe(999)
+      verify(exactly = 1) { mockLrmItemRepository.count() }
+    }
+
+    it("item repository throws exception") {
+      every { mockLrmItemRepository.count() } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.count() }
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      verify(exactly = 1) { mockLrmItemRepository.count() }
+    }
+  }
 
   describe("create()") {
     it("item is created") {
