@@ -17,7 +17,7 @@ plugins {
   id("org.sonarqube") version "5.0.0.4638"
   id("org.springframework.boot") version "3.3.0"
   id("org.springdoc.openapi-gradle-plugin") version "1.8.0"
-  kotlin("jvm") version "1.9.22"
+  kotlin("jvm") version "2.0.0"
   kotlin("plugin.jpa") version "1.9.22"
   kotlin("plugin.serialization") version "1.9.22"
   kotlin("plugin.spring") version "1.9.22"
