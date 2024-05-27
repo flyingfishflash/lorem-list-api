@@ -47,21 +47,6 @@ import org.springframework.web.bind.annotation.RestController
 class LrmItemController(val commonService: CommonService, val lrmItemService: LrmItemService) {
   private val logger = KotlinLogging.logger {}
 
-  @PostMapping("/{id}/add-to-list")
-  @Operation(summary = "Associate an item with a list")
-  fun addToList(
-    @PathVariable("id") @Min(1) id: Long,
-    @Min(1) @RequestBody listId: Long,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = commonService.addToList(itemId = id, listId = listId)
-    val responseStatus = HttpStatus.OK
-    val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
-    val responseContent = ApiMessage(responseMessage)
-    val response = ResponseSuccess(responseContent, responseMessage, request)
-    return ResponseEntity(response, responseStatus)
-  }
-
   @GetMapping("/count")
   @Operation(summary = "Count of all items")
   @ApiResponses(
@@ -214,9 +199,53 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     return ResponseEntity(response, responseStatus)
   }
 
-  @PostMapping("/{id}/move-to-list")
-  @Operation(summary = "Move an item to a list")
-  fun moveToList(
+  @PostMapping("/{id}/list-associations/create")
+  @Operation(summary = "Associate an item with a list")
+  fun listAssociationsCreate(
+    @PathVariable("id") @Min(1) id: Long,
+    @Min(1) @RequestBody listId: Long,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
+    val serviceResponse = commonService.addToList(itemId = id, listId = listId)
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
+    val responseContent = ApiMessage(responseMessage)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @PostMapping("/{id}/list-associations/delete")
+  @Operation(summary = "Delete an item's association to a specified list")
+  fun listAssociationsDelete(
+    @PathVariable("id") @Min(1) id: Long,
+    @Min(1) @RequestBody listId: Long,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
+    val serviceResponse = commonService.removeFromList(itemId = id, listId = listId)
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
+    val responseContent = ApiMessage(responseMessage)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @GetMapping("/{id}/list-associations/delete-all")
+  @Operation(summary = "Delete all of an item's list associations")
+  fun listAssociationsDeleteAll(
+    @PathVariable("id") @Min(1) id: Long,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = commonService.removeFromAllLists(itemId = id)
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Removed item '${serviceResponse.first}' from all associated lists (${serviceResponse.second})."
+    val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @PostMapping("/{id}/list-associations/update")
+  @Operation(summary = "Move an item from one list to another list")
+  fun listAssociationsUpdate(
     @PathVariable("id") @Min(1) id: Long,
     @RequestBody moveToListRequest: LrmItemMoveToListRequest,
     request: HttpServletRequest,
@@ -274,34 +303,5 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     }
     logger.info { Json.encodeToString(response) }
     return responseEntity
-  }
-
-  @GetMapping("/{id}/remove-from-all-lists")
-  @Operation(summary = "Remove an item from all associated lists")
-  fun removeFromAllLists(
-    @PathVariable("id") @Min(1) id: Long,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = commonService.removeFromAllLists(itemId = id)
-    val responseStatus = HttpStatus.OK
-    val responseMessage = "Removed item '${serviceResponse.first}' from all associated lists (${serviceResponse.second})."
-    val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
-    val response = ResponseSuccess(responseContent, responseMessage, request)
-    return ResponseEntity(response, responseStatus)
-  }
-
-  @PostMapping("/{id}/remove-from-list")
-  @Operation(summary = "Remove an item from an associated list")
-  fun removeFromList(
-    @PathVariable("id") @Min(1) id: Long,
-    @Min(1) @RequestBody listId: Long,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = commonService.removeFromList(itemId = id, listId = listId)
-    val responseStatus = HttpStatus.OK
-    val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
-    val responseContent = ApiMessage(responseMessage)
-    val response = ResponseSuccess(responseContent, responseMessage, request)
-    return ResponseEntity(response, responseStatus)
   }
 }
