@@ -850,7 +850,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 has one list association") {
-        val instance = "/items/$itemOneId/count-list-associations"
+        val instance = "/items/$itemOneId/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -867,7 +867,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 2 has one list association") {
-        val instance = "/items/$itemTwoId/count-list-associations"
+        val instance = "/items/$itemTwoId/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -935,7 +935,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 has zero list associations") {
-        val instance = "/items/$itemOneId/count-list-associations"
+        val instance = "/items/$itemOneId/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -954,7 +954,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
     describe("item delete") {
       it("item 3 has zero list associations") {
-        val instance = "/items/$itemThreeId/count-list-associations"
+        val instance = "/items/$itemThreeId/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1008,7 +1008,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 2 has two list associations") {
-        val instance = "/items/$itemTwoId/count-list-associations"
+        val instance = "/items/$itemTwoId/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {

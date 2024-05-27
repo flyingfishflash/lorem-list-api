@@ -82,62 +82,6 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     return ResponseEntity(response, responseStatus)
   }
 
-//  @GetMapping("/{id}/list-associations/count")
-//  @Operation(summary = "Count of lists associated with an item")
-//  @ApiResponses(
-//    value = [
-//      ApiResponse(
-//        responseCode = "200",
-//        description = "Count of list associations retrieved",
-//      ),
-//      ApiResponse(
-//        responseCode = "404",
-//        description = "Item Not Found",
-//        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-//      ),
-//    ],
-//  )
-//  fun itemToListAssociationsCount(
-//    @PathVariable("id") @Min(1) id: Long,
-//    request: HttpServletRequest,
-//  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-//    val serviceResponse = commonService.countItemToListAssociations(id)
-//    val responseMessage = "item is associated with $serviceResponse lists."
-//    val responseStatus = HttpStatus.OK
-//    val responseContent = ApiMessageNumeric(serviceResponse)
-//    val response = ResponseSuccess(responseContent, responseMessage, request)
-//    logger.info { Json.encodeToString(response) }
-//    return ResponseEntity(response, responseStatus)
-//  }
-
-  @GetMapping("/{id}/count-list-associations")
-  @Operation(summary = "Count of lists associated with an item")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "Count of list associations retrieved",
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "Item Not Found",
-        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-      ),
-    ],
-  )
-  fun countItemToListAssociations(
-    @PathVariable("id") @Min(1) id: Long,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = commonService.countItemToListAssociations(id)
-    val responseMessage = "item is associated with $serviceResponse lists."
-    val responseStatus = HttpStatus.OK
-    val responseContent = ApiMessageNumeric(serviceResponse)
-    val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
-    return ResponseEntity(response, responseStatus)
-  }
-
   @Operation(summary = "Create an item")
   @ApiResponses(
     value = [
@@ -237,6 +181,34 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     val responseStatus = HttpStatus.OK
     val responseMessage = if (includeLists) "retrieved item id $id and it's associated lists" else "retrieved item id $id"
     val responseContent = if (includeLists) lrmItemService.findByIdIncludeLists(id) else lrmItemService.findById(id)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { Json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @GetMapping("/{id}/list-associations/count")
+  @Operation(summary = "Count of lists associated with an item")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Count of list associations retrieved",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Item Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  fun listAssociationsCount(
+    @PathVariable("id") @Min(1) id: Long,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = commonService.countItemToListAssociations(id)
+    val responseMessage = "item is associated with $serviceResponse lists."
+    val responseStatus = HttpStatus.OK
+    val responseContent = ApiMessageNumeric(serviceResponse)
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
