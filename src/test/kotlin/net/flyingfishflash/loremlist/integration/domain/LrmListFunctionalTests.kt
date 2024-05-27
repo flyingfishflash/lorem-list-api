@@ -884,7 +884,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 1 has one item association") {
-        val instance = "/lists/$listOneId/count-item-associations"
+        val instance = "/lists/$listOneId/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -892,7 +892,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("list is associated with 1 items.") }
+          jsonPath("$.message") { value("List is associated with 1 items.") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(1) }
@@ -901,7 +901,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 2 has one item association") {
-        val instance = "/lists/$listTwoId/count-item-associations"
+        val instance = "/lists/$listTwoId/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -909,7 +909,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("list is associated with 1 items.") }
+          jsonPath("$.message") { value("List is associated with 1 items.") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(1) }

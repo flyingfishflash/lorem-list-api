@@ -85,34 +85,6 @@ class LrmListController(private val commonService: CommonService, private val lr
     return ResponseEntity(response, responseStatus)
   }
 
-  @GetMapping("/{id}/count-item-associations")
-  @Operation(summary = "Count of items associated with a list")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "Count of item associations retrieved",
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "List Not Found",
-        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-      ),
-    ],
-  )
-  fun countListToItemAssociations(
-    @PathVariable("id") @Min(1) id: Long,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = commonService.countListToItemAssociations(id)
-    val responseMessage = "list is associated with $serviceResponse items."
-    val responseStatus = HttpStatus.OK
-    val responseContent = ApiMessageNumeric(serviceResponse)
-    val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
-    return ResponseEntity(response, responseStatus)
-  }
-
   @Operation(summary = "Delete a list")
   @ApiResponses(
     value = [
@@ -130,6 +102,34 @@ class LrmListController(private val commonService: CommonService, private val lr
     val response = ResponseSuccess(ApiMessage("content"), "deleted list id $id", request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity<ResponseSuccess<ApiMessage>>(response, HttpStatus.OK)
+  }
+
+  @GetMapping("/{id}/item-associations/count")
+  @Operation(summary = "Count of items associated with a list")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Successful count of item associations",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  fun itemAssociationsCount(
+    @PathVariable("id") @Min(1) id: Long,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = commonService.countListToItemAssociations(id)
+    val responseMessage = "List is associated with $serviceResponse items."
+    val responseStatus = HttpStatus.OK
+    val responseContent = ApiMessageNumeric(serviceResponse)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { Json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
   }
 
   @Operation(summary = "Retrieve all lists details and optionally the items")

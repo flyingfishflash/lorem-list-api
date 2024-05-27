@@ -398,17 +398,17 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists/{id}/count-item-associations") {
+    describe("/lists/{id}/item-associations/count") {
       describe("get") {
         it("count of item associations is returned") {
           every { mockCommonService.countListToItemAssociations(1) } returns 999
-          val instance = "/lists/$id/count-item-associations"
+          val instance = "/lists/$id/item-associations/count"
           mockMvc.get(instance).andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value("list is associated with 999 items.") }
+            jsonPath("$.message") { value("List is associated with 999 items.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(1) }
@@ -419,7 +419,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
         it("item is not found") {
           every { mockCommonService.countListToItemAssociations(1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
-          val instance = "/lists/$id/count-item-associations"
+          val instance = "/lists/$id/item-associations/count"
           mockMvc.get(instance).andExpect {
             status { isNotFound() }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
