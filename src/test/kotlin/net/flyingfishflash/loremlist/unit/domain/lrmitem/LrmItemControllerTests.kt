@@ -13,13 +13,13 @@ import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.common.CommonService
+import net.flyingfishflash.loremlist.domain.common.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemDeleteWithListAssociationException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemController
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemService
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemMoveToListRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
@@ -48,7 +48,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
   init {
     val id: Long = 1
-    val lrmItemMoveToListRequest = LrmItemMoveToListRequest(2, 3)
+    val itemToListAssociationUpdateRequest = ItemToListAssociationUpdateRequest(2, 3)
     val lrmItemRequest = LrmItemRequest("Lorem Item Name", "Lorem Item Description")
     fun lrmItem(): LrmItem = LrmItem(id = 0, name = lrmItemRequest.name, description = lrmItemRequest.description)
     fun lrmItemWithEmptyLists() = lrmItem().copy(lists = setOf())
@@ -624,10 +624,10 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("item is moved from one list to another list") {
           val fromListName = "List A"
           val toListName = "List B"
-          every { commonService.moveToList(id, 2, 3) } returns Triple(lrmItem().name, fromListName, toListName)
+          every { commonService.updateItemToList(id, 2, 3) } returns Triple(lrmItem().name, fromListName, toListName)
           val instance = "/items/$id/list-associations/update"
           mockMvc.post(instance) {
-            content = Json.encodeToString(lrmItemMoveToListRequest)
+            content = Json.encodeToString(itemToListAssociationUpdateRequest)
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isOk() }
@@ -639,15 +639,15 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.message") { value("Moved item '${lrmItem().name}' from list '$fromListName' to list '$toListName'.") }
           }
-          verify(exactly = 1) { commonService.moveToList(id, 2, 3) }
+          verify(exactly = 1) { commonService.updateItemToList(id, 2, 3) }
         }
 
         it("item is not moved") {
-          every { commonService.moveToList(id, 2, 3) } throws
+          every { commonService.updateItemToList(id, 2, 3) } throws
             ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, title = "Api Exception Title", responseMessage = "Api Exception Detail")
           val instance = "/items/$id/list-associations/update"
           mockMvc.post(instance) {
-            content = Json.encodeToString(lrmItemMoveToListRequest)
+            content = Json.encodeToString(itemToListAssociationUpdateRequest)
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isIAmATeapot() }
@@ -658,7 +658,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
           }
-          verify(exactly = 1) { commonService.moveToList(id, 2, 3) }
+          verify(exactly = 1) { commonService.updateItemToList(id, 2, 3) }
         }
       }
     }

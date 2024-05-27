@@ -17,8 +17,8 @@ import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.domain.common.CommonService
+import net.flyingfishflash.loremlist.domain.common.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemMoveToListRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -247,10 +247,10 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
   @Operation(summary = "Move an item from one list to another list")
   fun listAssociationsUpdate(
     @PathVariable("id") @Min(1) id: Long,
-    @RequestBody moveToListRequest: LrmItemMoveToListRequest,
+    @RequestBody moveToListRequest: ItemToListAssociationUpdateRequest,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = commonService.moveToList(
+    val serviceResponse = commonService.updateItemToList(
       itemId = id,
       fromListId = moveToListRequest.fromListId,
       toListId = moveToListRequest.toListId,

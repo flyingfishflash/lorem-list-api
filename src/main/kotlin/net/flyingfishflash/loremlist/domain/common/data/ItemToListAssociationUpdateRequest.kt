@@ -1,11 +1,11 @@
-package net.flyingfishflash.loremlist.domain.lrmitem.data
+package net.flyingfishflash.loremlist.domain.common.data
 
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotEmpty
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LrmItemMoveToListRequest(
+data class ItemToListAssociationUpdateRequest(
   @field:NotEmpty
   @field:Min(1)
   val fromListId: Long,

@@ -5,7 +5,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemMoveToListRequest
+import net.flyingfishflash.loremlist.domain.common.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -721,7 +721,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 1 is moved from list 1 to list 2") {
         val instance = "/items/$itemOneId/list-associations/update"
         mockMvc.post(instance) {
-          content = Json.encodeToString(LrmItemMoveToListRequest(fromListId = 1, toListId = 2))
+          content = Json.encodeToString(ItemToListAssociationUpdateRequest(fromListId = 1, toListId = 2))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }

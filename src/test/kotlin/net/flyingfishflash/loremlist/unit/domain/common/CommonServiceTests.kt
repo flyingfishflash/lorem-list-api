@@ -11,10 +11,11 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.spyk
 import io.mockk.unmockkAll
 import io.mockk.verify
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
+import net.flyingfishflash.loremlist.domain.common.Association
+import net.flyingfishflash.loremlist.domain.common.AssociationNotFoundException
 import net.flyingfishflash.loremlist.domain.common.CommonRepository
 import net.flyingfishflash.loremlist.domain.common.CommonService
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
@@ -190,62 +191,65 @@ class CommonServiceTests : DescribeSpec({
     }
   }
 
-  describe("moveToList()") {
+  describe("updateItemToList()") {
     it("item is moved from one list to another list") {
-      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmListRepository))
+      val association = Association(UUID.randomUUID(), itemId = 1, listId = 2)
+      val updatedAssociation = association.copy(listId = 3)
       every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(2) } returns lrmList()
       every { mockLrmListRepository.findByIdOrNull(3) } returns lrmList()
-      every { spy.addToList(any(), any()) } returns Pair("1", "3")
-      every { spy.removeFromList(any(), any()) } returns Pair("1", "2")
-      spy.moveToList(1, 2, 3)
-      verify(exactly = 1) { spy.addToList(1, 3) }
-      verify(exactly = 1) { spy.removeFromList(1, 2) }
+      every { mockCommonRepository.findByItemIdAndListIdOrNull(1, 2) } returns association
+      every { mockCommonRepository.update(updatedAssociation) } returns 1
+      commonService.updateItemToList(1, 2, 3)
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
+      verify(exactly = 2) { mockLrmListRepository.findByIdOrNull(any()) }
+      verify(exactly = 1) { mockCommonRepository.findByItemIdAndListIdOrNull(any(), any()) }
+      verify(exactly = 1) { mockCommonRepository.update(any()) }
     }
 
     it("item is not found") {
-      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmListRepository))
       every { mockLrmItemRepository.findByIdOrNull(1) } returns null
-      val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
+      val exception = shouldThrow<ApiException> { commonService.updateItemToList(1, 2, 3) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
-      verify(exactly = 0) { spy.addToList(1, 3) }
-      verify(exactly = 0) { spy.removeFromList(1, 2) }
+      verify(exactly = 0) { mockCommonRepository.update(any()) }
     }
 
     it("from list is not found") {
-      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmListRepository))
       every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(2) } returns null
-      val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
+      val exception = shouldThrow<ApiException> { commonService.updateItemToList(1, 2, 3) }
       exception.cause.shouldBeInstanceOf<ListNotFoundException>()
-      verify(exactly = 0) { spy.addToList(1, 3) }
-      verify(exactly = 0) { spy.removeFromList(1, 2) }
+      verify(exactly = 0) { mockCommonRepository.update(any()) }
     }
 
     it("to list is not found") {
-      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmListRepository))
       every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(2) } returns lrmList()
       every { mockLrmListRepository.findByIdOrNull(3) } returns null
-      val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
+      val exception = shouldThrow<ApiException> { commonService.updateItemToList(1, 2, 3) }
       exception.cause.shouldBeInstanceOf<ListNotFoundException>()
-      verify(exactly = 0) { spy.addToList(1, 3) }
-      verify(exactly = 0) { spy.removeFromList(1, 2) }
+      verify(exactly = 0) { mockCommonRepository.update(any()) }
     }
 
-    it("non-api exception is thrown") {
-      val spy = spyk(CommonService(mockCommonRepository, mockLrmItemRepository, mockLrmListRepository))
+    it("association is not found") {
       every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(2) } returns lrmList()
       every { mockLrmListRepository.findByIdOrNull(3) } returns lrmList()
-      every { spy.addToList(any(), any()) } throws RuntimeException("Lorem Ipsum")
-      every { spy.removeFromList(any(), any()) } returns Pair("1", "2")
-      val exception = shouldThrow<ApiException> { spy.moveToList(1, 2, 3) }
+      every { mockCommonRepository.findByItemIdAndListIdOrNull(1, 2) } returns null
+      val exception = shouldThrow<ApiException> { commonService.updateItemToList(1, 2, 3) }
+      exception.cause.shouldBeInstanceOf<AssociationNotFoundException>()
+      verify(exactly = 0) { mockCommonRepository.update(any()) }
+    }
+
+    it("non-api exception is thrown") {
+      every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
+      every { mockLrmListRepository.findByIdOrNull(2) } returns lrmList()
+      every { mockLrmListRepository.findByIdOrNull(3) } returns lrmList()
+      every { mockCommonRepository.findByItemIdAndListIdOrNull(1, 2) } throws RuntimeException("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { commonService.updateItemToList(1, 2, 3) }
       exception.cause.shouldBeInstanceOf<RuntimeException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.responseMessage.shouldBe("Item id 1 was not moved from list id 2 to list id 3.")
-      verify(exactly = 1) { spy.addToList(1, 3) }
-      verify(exactly = 0) { spy.removeFromList(1, 2) }
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
       verify(exactly = 2) { mockLrmListRepository.findByIdOrNull(any()) }
     }

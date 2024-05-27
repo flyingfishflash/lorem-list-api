@@ -108,18 +108,20 @@ class CommonService(
     return associations
   }
 
-  fun moveToList(itemId: Long, fromListId: Long, toListId: Long): Triple<String, String, String> {
+  fun updateItemToList(itemId: Long, fromListId: Long, toListId: Long): Triple<String, String, String> {
     val item: LrmItem
     val fromList: LrmList
     val toList: LrmList
+    val association: Association
     val exceptionMessage = "Item id $itemId was not moved from list id $fromListId to list id $toListId"
 
     try {
       item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
       fromList = lrmListRepository.findByIdOrNull(fromListId) ?: throw ListNotFoundException(fromListId)
       toList = lrmListRepository.findByIdOrNull(toListId) ?: throw ListNotFoundException(toListId)
-      addToList(itemId = itemId, listId = toListId)
-      removeFromList(itemId = itemId, listId = fromListId)
+      association = commonRepository.findByItemIdAndListIdOrNull(itemId, fromListId) ?: throw AssociationNotFoundException()
+      val updatedAssociation = association.copy(listId = toListId)
+      commonRepository.update(updatedAssociation)
     } catch (exception: AbstractApiException) {
       throw ApiException(
         httpStatus = exception.httpStatus,
