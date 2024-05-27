@@ -5,7 +5,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
-import net.flyingfishflash.loremlist.domain.common.data.ItemToListAssociationUpdateRequest
+import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -568,7 +568,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
     }
 
-    describe("list content operations") {
+    describe("association operations") {
       it("item 1 is added to list 1") {
         val instance = "/items/$itemOneId/list-associations/create"
         mockMvc.post(instance) {

@@ -1,8 +1,8 @@
-package net.flyingfishflash.loremlist.unit.domain.common
+package net.flyingfishflash.loremlist.unit.domain.association
 
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
-import net.flyingfishflash.loremlist.domain.common.AssociationNotFoundException
+import net.flyingfishflash.loremlist.domain.association.AssociationNotFoundException
 import java.util.UUID
 
 class AssociationNotFoundTests : DescribeSpec({

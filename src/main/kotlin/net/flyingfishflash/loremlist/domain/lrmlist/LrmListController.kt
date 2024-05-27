@@ -16,7 +16,7 @@ import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
-import net.flyingfishflash.loremlist.domain.common.CommonService
+import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.RestController
 )
 @RestController
 @RequestMapping("/lists")
-class LrmListController(private val commonService: CommonService, private val lrmListService: LrmListService) {
+class LrmListController(private val associationService: AssociationService, private val lrmListService: LrmListService) {
   private val logger = KotlinLogging.logger {}
 
   @GetMapping("/count")
@@ -123,7 +123,7 @@ class LrmListController(private val commonService: CommonService, private val lr
     @PathVariable("id") @Min(1) id: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = commonService.countListToItemAssociations(id)
+    val serviceResponse = associationService.countListToItem(id)
     val responseMessage = "List is associated with $serviceResponse items."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)

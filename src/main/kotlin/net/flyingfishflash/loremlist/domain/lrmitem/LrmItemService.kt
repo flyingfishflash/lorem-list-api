@@ -5,7 +5,7 @@ import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
-import net.flyingfishflash.loremlist.domain.common.CommonService
+import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.springframework.stereotype.Service
@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
-class LrmItemService(private val commonService: CommonService, private val lrmItemRepository: LrmItemRepository) {
+class LrmItemService(private val associationService: AssociationService, private val lrmItemRepository: LrmItemRepository) {
   private val logger = KotlinLogging.logger {}
 
   fun count(): Long {
@@ -44,11 +44,11 @@ class LrmItemService(private val commonService: CommonService, private val lrmIt
 
   fun deleteSingleById(id: Long, removeListAssociations: Boolean): LrmItemDeleteResponse {
     try {
-      val countItemToListAssociations = commonService.countItemToListAssociations(id)
+      val countItemToListAssociations = associationService.countItemToList(id)
       val associatedListNames: List<String> = findByIdIncludeLists(id).lists?.map { it.name } ?: emptyList()
       if (countItemToListAssociations > 0) {
         if (removeListAssociations) {
-          commonService.removeFromAllLists(id)
+          associationService.deleteAllItemToListForItem(id)
           val deletedCount = lrmItemRepository.deleteById(id)
           if (deletedCount > 1) {
             throw ApiException(

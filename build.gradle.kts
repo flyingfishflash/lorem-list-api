@@ -112,8 +112,8 @@ sonarqube {
         "src/main/kotlin/net/flyingfishflash/loremlist/core/response/structure/ApiMessage.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/EntityModel.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/*/*Repository.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/common/Association.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/common/data/ItemToListAssociationUpdateRequest.kt," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/domain/association/Association.kt," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/domain/association/data/ItemToListAssociationUpdateRequest.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/LrmItem.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/data/LrmItemRequest.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/data/LrmItemDeleteResponse.kt," +

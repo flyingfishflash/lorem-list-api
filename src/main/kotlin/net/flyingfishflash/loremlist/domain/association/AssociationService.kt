@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.domain.common
+package net.flyingfishflash.loremlist.domain.association
 
 import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
@@ -15,13 +15,13 @@ import java.sql.SQLException
 
 @Service
 @Transactional
-class CommonService(
-  private val commonRepository: CommonRepository,
+class AssociationService(
+  private val associationRepository: AssociationRepository,
   private val lrmItemRepository: LrmItemRepository,
   private val lrmListRepository: LrmListRepository,
 ) {
 
-  fun addToList(itemId: Long, listId: Long): Pair<String, String> {
+  fun addItemToList(itemId: Long, listId: Long): Pair<String, String> {
     val item: LrmItem
     val list: LrmList
     val exceptionMessage = "Item id $itemId could not be added to list id $listId"
@@ -29,7 +29,7 @@ class CommonService(
     try {
       item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
       list = lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
-      lrmItemRepository.addItemToList(listId, itemId)
+      associationRepository.create(itemId = itemId, listId = listId)
     } catch (abstractApiException: AbstractApiException) {
       throw ApiException(
         httpStatus = abstractApiException.httpStatus,
@@ -64,11 +64,11 @@ class CommonService(
     return Pair(item.name, list.name)
   }
 
-  fun countItemToListAssociations(itemId: Long): Long {
+  fun countItemToList(itemId: Long): Long {
     val exceptionMessage = "Count of lists associated with item id $itemId could not be retrieved"
     val associations = try {
       lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
-      commonRepository.countItemToListAssociations(itemId)
+      associationRepository.countItemToList(itemId)
     } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
         cause = itemNotFoundException,
@@ -86,11 +86,11 @@ class CommonService(
     return associations
   }
 
-  fun countListToItemAssociations(listId: Long): Long {
+  fun countListToItem(listId: Long): Long {
     val exceptionMessage = "Count of items associated with list id $listId could not be retrieved"
     val associations = try {
       lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
-      commonRepository.countListToItemAssociations(listId)
+      associationRepository.countListToItem(listId)
     } catch (listNotFoundException: ListNotFoundException) {
       throw ApiException(
         cause = listNotFoundException,
@@ -119,9 +119,9 @@ class CommonService(
       item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
       fromList = lrmListRepository.findByIdOrNull(fromListId) ?: throw ListNotFoundException(fromListId)
       toList = lrmListRepository.findByIdOrNull(toListId) ?: throw ListNotFoundException(toListId)
-      association = commonRepository.findByItemIdAndListIdOrNull(itemId, fromListId) ?: throw AssociationNotFoundException()
+      association = associationRepository.findByItemIdAndListIdOrNull(itemId, fromListId) ?: throw AssociationNotFoundException()
       val updatedAssociation = association.copy(listId = toListId)
-      commonRepository.update(updatedAssociation)
+      associationRepository.update(updatedAssociation)
     } catch (exception: AbstractApiException) {
       throw ApiException(
         httpStatus = exception.httpStatus,
@@ -143,13 +143,13 @@ class CommonService(
     )
   }
 
-  fun removeFromAllLists(itemId: Long): Pair<String, Int> {
+  fun deleteAllItemToListForItem(itemId: Long): Pair<String, Int> {
     val item: LrmItem
     val exceptionMessage = "Item id $itemId could not be removed from any/all lists"
 
     try {
       item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
-      val deletedCount = commonRepository.deleteAllItemToListAssociations(itemId)
+      val deletedCount = associationRepository.deleteAllItemToListForItem(itemId)
       return Pair(item.name, deletedCount)
     } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
@@ -167,7 +167,7 @@ class CommonService(
     }
   }
 
-  fun removeFromList(itemId: Long, listId: Long): Pair<String, String> {
+  fun deleteItemToList(itemId: Long, listId: Long): Pair<String, String> {
     val item: LrmItem
     val list: LrmList
     val exceptionMessage = "Item id $itemId could not be removed from list id $listId"
@@ -185,7 +185,7 @@ class CommonService(
     }
 
     val deletedCount = try {
-      lrmItemRepository.removeItemFromList(itemId, listId)
+      associationRepository.delete(itemId, listId)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,

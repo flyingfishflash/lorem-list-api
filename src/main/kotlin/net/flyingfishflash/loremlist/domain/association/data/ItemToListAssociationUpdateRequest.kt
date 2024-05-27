@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.domain.common.data
+package net.flyingfishflash.loremlist.domain.association.data
 
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotEmpty

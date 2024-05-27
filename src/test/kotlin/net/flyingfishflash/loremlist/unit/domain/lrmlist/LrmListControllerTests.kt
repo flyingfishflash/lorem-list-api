@@ -14,7 +14,7 @@ import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
-import net.flyingfishflash.loremlist.domain.common.CommonService
+import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListController
@@ -39,7 +39,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
   override fun extensions() = listOf(SpringExtension)
 
   @MockkBean
-  lateinit var mockCommonService: CommonService
+  lateinit var mockAssociationService: AssociationService
 
   @MockkBean
   lateinit var mockLrmListService: LrmListService
@@ -401,7 +401,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/lists/{id}/item-associations/count") {
       describe("get") {
         it("count of item associations is returned") {
-          every { mockCommonService.countListToItemAssociations(1) } returns 999
+          every { mockAssociationService.countListToItem(1) } returns 999
           val instance = "/lists/$id/item-associations/count"
           mockMvc.get(instance).andExpect {
             status { isOk() }
@@ -414,11 +414,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.length()") { value(1) }
             jsonPath("$.content.value") { value(999) }
           }
-          verify(exactly = 1) { mockCommonService.countListToItemAssociations(any()) }
+          verify(exactly = 1) { mockAssociationService.countListToItem(any()) }
         }
 
         it("item is not found") {
-          every { mockCommonService.countListToItemAssociations(1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
+          every { mockAssociationService.countListToItem(1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
           val instance = "/lists/$id/item-associations/count"
           mockMvc.get(instance).andExpect {
             status { isNotFound() }
@@ -428,7 +428,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
-          verify(exactly = 1) { mockCommonService.countListToItemAssociations(any()) }
+          verify(exactly = 1) { mockAssociationService.countListToItem(any()) }
         }
       }
     }

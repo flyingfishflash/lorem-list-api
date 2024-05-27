@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.domain.common
+package net.flyingfishflash.loremlist.domain.association
 
 import kotlinx.serialization.Serializable
 import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer

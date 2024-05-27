@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.domain.common
+package net.flyingfishflash.loremlist.domain.association
 
 import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import org.springframework.http.HttpStatus

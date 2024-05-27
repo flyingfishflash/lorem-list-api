@@ -5,16 +5,13 @@ import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListItemTable.uuid
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
-import net.flyingfishflash.loremlist.domain.LrmListsItemsTable.item
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Sequence
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.nextLongVal
 import org.jetbrains.exposed.sql.selectAll
@@ -142,19 +139,6 @@ class LrmItemRepository {
         }
 
     return id.value
-  }
-
-  fun addItemToList(listId: Long, itemId: Long) {
-    LrmListsItemsTable.insert {
-      it[list] = listId
-      it[item] = itemId
-    }
-  }
-
-  fun removeItemFromList(itemId: Long, listId: Long): Int {
-    return LrmListsItemsTable.deleteWhere {
-      (item eq itemId).and(list eq listId)
-    }
   }
 
   fun update(lrmItem: LrmItem): Int {

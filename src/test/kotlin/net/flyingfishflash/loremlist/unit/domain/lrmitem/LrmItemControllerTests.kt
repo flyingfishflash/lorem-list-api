@@ -12,8 +12,8 @@ import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
-import net.flyingfishflash.loremlist.domain.common.CommonService
-import net.flyingfishflash.loremlist.domain.common.data.ItemToListAssociationUpdateRequest
+import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemDeleteWithListAssociationException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
@@ -44,7 +44,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
   lateinit var lrmItemService: LrmItemService
 
   @MockkBean
-  lateinit var commonService: CommonService
+  lateinit var associationService: AssociationService
 
   init {
     val id: Long = 1
@@ -435,7 +435,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/items/{id}/list-associations/count") {
       describe("get") {
         it("count of list associations is returned") {
-          every { commonService.countItemToListAssociations(1) } returns 999
+          every { associationService.countItemToList(1) } returns 999
           val instance = "/items/$id/list-associations/count"
           mockMvc.get(instance).andExpect {
             status { isOk() }
@@ -448,11 +448,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.length()") { value(1) }
             jsonPath("$.content.value") { value(999) }
           }
-          verify(exactly = 1) { commonService.countItemToListAssociations(any()) }
+          verify(exactly = 1) { associationService.countItemToList(any()) }
         }
 
         it("item is not found") {
-          every { commonService.countItemToListAssociations(1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
+          every { associationService.countItemToList(1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
           val instance = "/items/$id/list-associations/count"
           mockMvc.get(instance).andExpect {
             status { isNotFound() }
@@ -462,7 +462,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
-          verify(exactly = 1) { commonService.countItemToListAssociations(any()) }
+          verify(exactly = 1) { associationService.countItemToList(any()) }
         }
       }
     }
@@ -471,7 +471,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("post") {
         it("item is added to list") {
           val lrmListName = "Lorem List Name"
-          every { commonService.addToList(id, 2) } returns Pair(lrmItem().name, lrmListName)
+          every { associationService.addItemToList(id, 2) } returns Pair(lrmItem().name, lrmListName)
           val instance = "/items/$id/list-associations/create"
           mockMvc.post(instance) {
             content = Json.encodeToString(2)
@@ -486,11 +486,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.message") { value("Assigned item '${lrmItem().name}' to list '$lrmListName'.") }
           }
-          verify(exactly = 1) { commonService.addToList(id, 2) }
+          verify(exactly = 1) { associationService.addItemToList(id, 2) }
         }
 
         it("item is not found") {
-          every { commonService.addToList(id, 2) } throws ItemNotFoundException(id)
+          every { associationService.addItemToList(id, 2) } throws ItemNotFoundException(id)
           val instance = "/items/$id/list-associations/create"
           mockMvc.post(instance) {
             content = Json.encodeToString(2)
@@ -507,11 +507,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $id could not be found.") }
           }
-          verify(exactly = 1) { commonService.addToList(id, 2) }
+          verify(exactly = 1) { associationService.addItemToList(id, 2) }
         }
 
         it("list is not found") {
-          every { commonService.addToList(id, 2) } throws ListNotFoundException(id)
+          every { associationService.addItemToList(id, 2) } throws ListNotFoundException(id)
           val instance = "/items/$id/list-associations/create"
           mockMvc.post(instance) {
             content = Json.encodeToString(2)
@@ -528,7 +528,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $id could not be found.") }
           }
-          verify(exactly = 1) { commonService.addToList(id, 2) }
+          verify(exactly = 1) { associationService.addItemToList(id, 2) }
         }
       }
     }
@@ -537,7 +537,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("post") {
         it("item is removed from list") {
           val lrmListName = "Lorem List Name"
-          every { commonService.removeFromList(id, 2) } returns Pair(lrmItem().name, lrmListName)
+          every { associationService.deleteItemToList(id, 2) } returns Pair(lrmItem().name, lrmListName)
           val instance = "/items/$id/list-associations/delete"
           mockMvc.post(instance) {
             content = Json.encodeToString(2)
@@ -552,11 +552,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.message") { value("Removed item '${lrmItem().name}' from list '$lrmListName'.") }
           }
-          verify(exactly = 1) { commonService.removeFromList(id, 2) }
+          verify(exactly = 1) { associationService.deleteItemToList(id, 2) }
         }
 
         it("item is not found") {
-          every { commonService.removeFromList(id, 2) } throws ItemNotFoundException(id)
+          every { associationService.deleteItemToList(id, 2) } throws ItemNotFoundException(id)
           val instance = "/items/$id/list-associations/delete"
           mockMvc.post(instance) {
             content = Json.encodeToString(2)
@@ -573,11 +573,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $id could not be found.") }
           }
-          verify(exactly = 1) { commonService.removeFromList(id, 2) }
+          verify(exactly = 1) { associationService.deleteItemToList(id, 2) }
         }
 
         it("list is not found") {
-          every { commonService.removeFromList(id, 2) } throws ListNotFoundException(id)
+          every { associationService.deleteItemToList(id, 2) } throws ListNotFoundException(id)
           val instance = "/items/$id/list-associations/delete"
           mockMvc.post(instance) {
             content = Json.encodeToString(2)
@@ -594,14 +594,14 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $id could not be found.") }
           }
-          verify(exactly = 1) { commonService.removeFromList(id, 2) }
+          verify(exactly = 1) { associationService.deleteItemToList(id, 2) }
         }
       }
     }
 
     describe("/items/{id}/list-associations/delete-all") {
       it("item is removed from all lists") {
-        every { commonService.removeFromAllLists(1) } returns Pair(lrmItem().name, 999)
+        every { associationService.deleteAllItemToListForItem(1) } returns Pair(lrmItem().name, 999)
         val instance = "/items/$id/list-associations/delete-all"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
@@ -615,7 +615,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.value") { value(999) }
         }
-        verify(exactly = 1) { commonService.removeFromAllLists(any()) }
+        verify(exactly = 1) { associationService.deleteAllItemToListForItem(any()) }
       }
     }
 
@@ -624,7 +624,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("item is moved from one list to another list") {
           val fromListName = "List A"
           val toListName = "List B"
-          every { commonService.updateItemToList(id, 2, 3) } returns Triple(lrmItem().name, fromListName, toListName)
+          every { associationService.updateItemToList(id, 2, 3) } returns Triple(lrmItem().name, fromListName, toListName)
           val instance = "/items/$id/list-associations/update"
           mockMvc.post(instance) {
             content = Json.encodeToString(itemToListAssociationUpdateRequest)
@@ -639,11 +639,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.message") { value("Moved item '${lrmItem().name}' from list '$fromListName' to list '$toListName'.") }
           }
-          verify(exactly = 1) { commonService.updateItemToList(id, 2, 3) }
+          verify(exactly = 1) { associationService.updateItemToList(id, 2, 3) }
         }
 
         it("item is not moved") {
-          every { commonService.updateItemToList(id, 2, 3) } throws
+          every { associationService.updateItemToList(id, 2, 3) } throws
             ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, title = "Api Exception Title", responseMessage = "Api Exception Detail")
           val instance = "/items/$id/list-associations/update"
           mockMvc.post(instance) {
@@ -658,7 +658,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
           }
-          verify(exactly = 1) { commonService.updateItemToList(id, 2, 3) }
+          verify(exactly = 1) { associationService.updateItemToList(id, 2, 3) }
         }
       }
     }

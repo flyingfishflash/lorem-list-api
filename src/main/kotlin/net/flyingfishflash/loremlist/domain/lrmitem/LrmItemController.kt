@@ -16,8 +16,8 @@ import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
-import net.flyingfishflash.loremlist.domain.common.CommonService
-import net.flyingfishflash.loremlist.domain.common.data.ItemToListAssociationUpdateRequest
+import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.springframework.http.HttpStatus
@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RestController
 )
 @RestController
 @RequestMapping("/items")
-class LrmItemController(val commonService: CommonService, val lrmItemService: LrmItemService) {
+class LrmItemController(val associationService: AssociationService, val lrmItemService: LrmItemService) {
   private val logger = KotlinLogging.logger {}
 
   @GetMapping("/count")
@@ -190,7 +190,7 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     @PathVariable("id") @Min(1) id: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = commonService.countItemToListAssociations(id)
+    val serviceResponse = associationService.countItemToList(id)
     val responseMessage = "item is associated with $serviceResponse lists."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)
@@ -206,7 +206,7 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     @Min(1) @RequestBody listId: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = commonService.addToList(itemId = id, listId = listId)
+    val serviceResponse = associationService.addItemToList(itemId = id, listId = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -221,7 +221,7 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     @Min(1) @RequestBody listId: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = commonService.removeFromList(itemId = id, listId = listId)
+    val serviceResponse = associationService.deleteItemToList(itemId = id, listId = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -235,7 +235,7 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     @PathVariable("id") @Min(1) id: Long,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = commonService.removeFromAllLists(itemId = id)
+    val serviceResponse = associationService.deleteAllItemToListForItem(itemId = id)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from all associated lists (${serviceResponse.second})."
     val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
@@ -250,7 +250,7 @@ class LrmItemController(val commonService: CommonService, val lrmItemService: Lr
     @RequestBody moveToListRequest: ItemToListAssociationUpdateRequest,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = commonService.updateItemToList(
+    val serviceResponse = associationService.updateItemToList(
       itemId = id,
       fromListId = moveToListRequest.fromListId,
       toListId = moveToListRequest.toListId,
