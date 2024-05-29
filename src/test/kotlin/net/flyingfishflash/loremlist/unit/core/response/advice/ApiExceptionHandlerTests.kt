@@ -1,27 +1,33 @@
 package net.flyingfishflash.loremlist.unit.core.response.advice
 
 import io.kotest.core.spec.style.DescribeSpec
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import jakarta.servlet.http.HttpServletRequest
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonObject
+import jakarta.validation.ConstraintViolationException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler
+import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import org.springframework.core.env.Environment
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.context.request.ServletWebRequest
+import org.springframework.web.method.annotation.HandlerMethodValidationException
 
 class ApiExceptionHandlerTests : DescribeSpec({
 
   afterEach { clearAllMocks() }
   afterSpec { unmockkAll() }
 
-  describe("handleAbstractApiException") {
+  describe("handleAbstractApiException()") {
     it("with stacktrace") {
       val mockEnvironment = mockk<Environment>(relaxed = true)
       every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
@@ -29,10 +35,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val apiException = ApiException()
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
-      responseEntity.body?.content?.extensions?.jsonObject?.keys.shouldBe(setOf("stacktrace"))
-      responseEntity.body?.content?.extensions?.jsonObject?.get("stacktrace")?.shouldBeInstanceOf<JsonArray>()
-      responseEntity.body?.content?.extensions?.jsonObject?.get("stacktrace")?.toString()
-        .shouldContain("net.flyingfishflash.loremlist.unit.core.response.advice.ApiExceptionHandlerTests")
+      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.extensions?.stackTrace.shouldNotBeNull()
     }
 
     it("without stacktrace") {
@@ -42,11 +46,12 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val apiException = ApiException()
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
-      responseEntity.body?.content?.extensions?.jsonObject?.get("stacktrace")?.shouldBe(JsonPrimitive("disabled"))
+      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.extensions?.stackTrace.shouldBeNull()
     }
   }
 
-  describe("handleException") {
+  describe("handleException()") {
     it("with stacktrace") {
       val mockEnvironment = mockk<Environment>(relaxed = true)
       every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
@@ -54,10 +59,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val exception = Exception()
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleException(mockHttpServletRequest, exception)
-      responseEntity.body?.content?.extensions?.jsonObject?.keys.shouldBe(setOf("stacktrace"))
-      responseEntity.body?.content?.extensions?.jsonObject?.get("stacktrace")?.shouldBeInstanceOf<JsonArray>()
-      responseEntity.body?.content?.extensions?.jsonObject?.get("stacktrace")?.toString()
-        .shouldContain("net.flyingfishflash.loremlist.unit.core.response.advice.ApiExceptionHandlerTests")
+      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.extensions?.stackTrace.shouldNotBeNull()
     }
 
     it("without stacktrace") {
@@ -67,7 +70,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val exception = Exception()
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleException(mockHttpServletRequest, exception)
-      responseEntity.body?.content?.extensions?.jsonObject?.get("stacktrace")?.shouldBe(JsonPrimitive("disabled"))
+      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.extensions?.stackTrace.shouldBeNull()
     }
 
     it("with detail message") {
@@ -78,6 +82,165 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleException(mockHttpServletRequest, exception)
       responseEntity.body?.content?.detail.shouldBe("Lorem Ipsum")
+    }
+  }
+
+  describe("handleHttpMessageNotReadable()") {
+    it("with stacktrace") {
+      val mockEnvironment = mockk<Environment>(relaxed = true)
+      every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
+      val mockHttpMessageNotReadableException = mockk<HttpMessageNotReadableException>(relaxed = true)
+      val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
+      val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
+      val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
+      val responseEntity = apiExceptionHandler.handleHttpMessageNotReadable(
+        mockHttpMessageNotReadableException,
+        mockHttpHeaders,
+        HttpStatus.I_AM_A_TEAPOT,
+        mockWebRequest,
+      )
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldNotBeNull()
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldBeNull()
+    }
+
+    it("without stacktrace") {
+      val mockEnvironment = mockk<Environment>(relaxed = true)
+      every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns null
+      val mockHttpMessageNotReadableException = mockk<HttpMessageNotReadableException>(relaxed = true)
+      val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
+      val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
+      val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
+      val responseEntity = apiExceptionHandler.handleHttpMessageNotReadable(
+        mockHttpMessageNotReadableException,
+        mockHttpHeaders,
+        HttpStatus.I_AM_A_TEAPOT,
+        mockWebRequest,
+      )
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldBeNull()
+    }
+
+    it("without detail message") {
+      val mockEnvironment = mockk<Environment>(relaxed = true)
+      every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns null
+      val mockHttpMessageNotReadableException = mockk<HttpMessageNotReadableException>(relaxed = true)
+      every { mockHttpMessageNotReadableException.message } returns null
+      val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
+      val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
+      val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
+      val responseEntity = apiExceptionHandler.handleHttpMessageNotReadable(
+        mockHttpMessageNotReadableException,
+        mockHttpHeaders,
+        HttpStatus.I_AM_A_TEAPOT,
+        mockWebRequest,
+      )
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.detail.shouldBe(
+        ApiExceptionHandler.EXCEPTION_MESSAGE_NOT_PRESENT,
+      )
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldBeNull()
+    }
+  }
+
+  describe("handleHandlerMethodValidationException()") {
+    it("with stacktrace") {
+      val mockEnvironment = mockk<Environment>(relaxed = true)
+      every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
+      val mockHandlerMethodValidationException = mockk<HandlerMethodValidationException>(relaxed = true)
+      val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
+      val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
+      val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
+      val responseEntity = apiExceptionHandler.handleHandlerMethodValidationException(
+        mockHandlerMethodValidationException,
+        mockHttpHeaders,
+        HttpStatus.I_AM_A_TEAPOT,
+        mockWebRequest,
+      )
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldNotBeNull()
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+    }
+
+    it("without stacktrace") {
+      val mockEnvironment = mockk<Environment>(relaxed = true)
+      every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns null
+      val mockHandlerMethodValidationException = mockk<HandlerMethodValidationException>(relaxed = true)
+      val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
+      val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
+      val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
+      val responseEntity = apiExceptionHandler.handleHandlerMethodValidationException(
+        mockHandlerMethodValidationException,
+        mockHttpHeaders,
+        HttpStatus.I_AM_A_TEAPOT,
+        mockWebRequest,
+      )
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+    }
+  }
+
+  describe("handleConstraintViolationException()") {
+    it("with stacktrace") {
+      val mockEnvironment = mockk<Environment>(relaxed = true)
+      every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
+      val mockConstraintViolationException = mockk<ConstraintViolationException>(relaxed = true)
+      val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
+      val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
+      val responseEntity = apiExceptionHandler.handleConstraintViolationException(
+        mockHttpServletRequest,
+        mockConstraintViolationException,
+      )
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+    }
+
+    it("without stacktrace") {
+      val mockEnvironment = mockk<Environment>(relaxed = true)
+      every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns null
+      val mockConstraintViolationException = mockk<ConstraintViolationException>(relaxed = true)
+      val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
+      val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
+      val responseEntity = apiExceptionHandler.handleConstraintViolationException(
+        mockHttpServletRequest,
+        mockConstraintViolationException,
+      )
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+    }
+  }
+
+  describe("handleMethodArgumentNotValid()") {
+    it("with stacktrace") {
+      val mockEnvironment = mockk<Environment>(relaxed = true)
+      every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
+      val mockMethodArgumentNotValidException = mockk<MethodArgumentNotValidException>(relaxed = true)
+      val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
+      val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
+      val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
+      val responseEntity = apiExceptionHandler.handleMethodArgumentNotValid(
+        mockMethodArgumentNotValidException,
+        mockHttpHeaders,
+        HttpStatus.I_AM_A_TEAPOT,
+        mockWebRequest,
+      )
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldNotBeNull()
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+    }
+
+    it("without stacktrace") {
+      val mockEnvironment = mockk<Environment>(relaxed = true)
+      every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns null
+      val mockMethodArgumentNotValidException = mockk<MethodArgumentNotValidException>(relaxed = true)
+      val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
+      val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
+      val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
+      val responseEntity = apiExceptionHandler.handleMethodArgumentNotValid(
+        mockMethodArgumentNotValidException,
+        mockHttpHeaders,
+        HttpStatus.I_AM_A_TEAPOT,
+        mockWebRequest,
+      )
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
+      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
     }
   }
 })

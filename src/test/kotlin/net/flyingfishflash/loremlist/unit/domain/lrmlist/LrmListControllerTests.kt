@@ -12,6 +12,7 @@ import io.mockk.verify
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
+import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.association.AssociationService
@@ -160,13 +161,13 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isBadRequest() }
-            content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+            content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("Invalid request content.") }
+            jsonPath("$.message") { value("The following fields contained invalid content: name.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value("Bad Request") }
+            jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
           }
           verify(exactly = 0) { mockLrmListService.create(ofType(LrmListRequest::class)) }
@@ -179,13 +180,13 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isBadRequest() }
-            content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+            content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("Invalid request content.") }
+            jsonPath("$.message") { value("The following fields contained invalid content: description.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value("Bad Request") }
+            jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
           }
           verify(exactly = 0) { mockLrmListService.create(ofType(LrmListRequest::class)) }

@@ -10,6 +10,7 @@ import io.mockk.verify
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
+import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.association.AssociationService
@@ -22,7 +23,6 @@ import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemService
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -178,18 +178,19 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("requested item name is an empty string") {
           val instance = "/items"
           mockMvc.post(instance) {
-            content = Json.encodeToString(LrmListRequest("", lrmItem().description))
+            content = Json.encodeToString(LrmItemRequest("", lrmItem().description))
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isBadRequest() }
-            content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+            content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("Invalid request content.") }
+            jsonPath("$.message") { value("The following fields contained invalid content: name.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value("Bad Request") }
+            jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
           }
           verify(exactly = 0) { lrmItemService.create(ofType(LrmItemRequest::class)) }
         }
@@ -197,18 +198,40 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("requested item description is an empty string") {
           val instance = "/items"
           mockMvc.post(instance) {
-            content = Json.encodeToString(LrmListRequest(lrmItem().name, ""))
+            content = Json.encodeToString(LrmItemRequest(lrmItem().name, ""))
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isBadRequest() }
-            content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+            content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("Invalid request content.") }
+            jsonPath("$.message") { value("The following fields contained invalid content: description.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value("Bad Request") }
+            jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
+          }
+          verify(exactly = 0) { lrmItemService.create(ofType(LrmItemRequest::class)) }
+        }
+
+        it("requested item quantity is less than 0") {
+          val instance = "/items"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(LrmItemRequest(lrmItem().name, lrmItem().description, -1))
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("The following fields contained invalid content: quantity.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
+            jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+            jsonPath("$.content.extensions.validationErrors.[0]") { value("Item quantity must be zero or greater.") }
           }
           verify(exactly = 0) { lrmItemService.create(ofType(LrmItemRequest::class)) }
         }

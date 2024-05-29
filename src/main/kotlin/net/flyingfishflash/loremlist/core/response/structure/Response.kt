@@ -7,6 +7,8 @@ import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.server.ServerHttpRequest
+import org.springframework.web.context.request.ServletWebRequest
+import org.springframework.web.context.request.WebRequest
 import java.util.UUID
 
 /**
@@ -68,6 +70,18 @@ data class ResponseProblem(
     message = responseMessage ?: problemDetail.detail ?: "no detail available for this problem",
     size = calcSize(problemDetail),
     content = ApiProblemDetail(problemDetail),
+  )
+
+  /** Create an API ResponseProblem from a Spring ProblemDetail
+   * @return ResponseProblem
+   */
+  constructor(apiProblemDetail: ApiProblemDetail, responseMessage: String?, request: WebRequest) : this(
+    disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(apiProblemDetail.status)),
+    method = (request as ServletWebRequest).request.method.lowercase(),
+    instance = request.getDescription(false).substringAfter("uri="),
+    message = responseMessage ?: apiProblemDetail.detail,
+    size = calcSize(apiProblemDetail),
+    content = apiProblemDetail,
   )
 }
 

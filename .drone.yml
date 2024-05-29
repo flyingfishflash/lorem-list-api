@@ -94,6 +94,7 @@ steps:
         :test
         :integrationTests
         :bootBuildInfo
+        -Pspring.profiles.active=h2
         -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
       - >
         gradle

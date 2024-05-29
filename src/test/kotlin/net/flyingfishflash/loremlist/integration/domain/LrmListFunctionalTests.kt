@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.post
  * LrmList Integration/Functional Tests
  */
 @SpringBootTest
+@ActiveProfiles("h2")
 @AutoConfigureMockMvc
 class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
@@ -52,6 +54,84 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
   describe("comprehensive functional test") {
     describe("item create, read, and update") {
+      describe("item 1 is not created") {
+        it("name is null") {
+          val instance = "/items"
+          mockMvc.post(instance) {
+            content = "{ \"name\": null, \"description\": \"bLLh|Rvz.x0@W2d9G:a\", \"quantity\": 1073741824 }"
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("Failed to read request.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+          }
+        }
+
+        it("name is only whitespace") {
+          val instance = "/items"
+          mockMvc.post(instance) {
+            content = "{ \"name\": \" \", \"description\": \"bLLh|Rvz.x0@W2d9G:a\", \"quantity\": 1073741824 }"
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("The following fields contained invalid content: name.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+            jsonPath("$.content.extensions.validationErrors.[0]") { value("Item name must not consist only of whitespace characters.") }
+          }
+        }
+
+        it("quantity is less than 0") {
+          val instance = "/items"
+          mockMvc.post(instance) {
+            content = "{ \"name\": \"Lorem Ipsum\", \"description\": \"bLLh|Rvz.x0@W2d9G:a\", \"quantity\": -101 }"
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("The following fields contained invalid content: quantity.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+            jsonPath("$.content.extensions.validationErrors.[0]") { value("Item quantity must be zero or greater.") }
+          }
+        }
+
+        it("multiple validation failures") {
+          val instance = "/items"
+          mockMvc.post(instance) {
+            content = "{ \"name\": \"Lorem Ipsum\", \"description\": \" \", \"quantity\": -101 }"
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("The following fields contained invalid content: description, quantity.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
+            jsonPath(
+              "$.content.extensions.validationErrors.[0]",
+            ) { value("Item description must not consist only of whitespace characters.") }
+            jsonPath("$.content.extensions.validationErrors.[1]") { value("Item quantity must be zero or greater.") }
+          }
+        }
+      }
       it("item 1 is created") {
         val instance = "/items"
         mockMvc.post(instance) {
@@ -126,7 +206,102 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         }
       }
 
-      it("item 1 is found and updated") {
+      describe("item 1 is not updated") {
+        it("name is empty") {
+          val instance = "/items/$itemOneId"
+          mockMvc.patch(instance) {
+            content = "{ \"name\": \"\" }"
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
+            jsonPath("$.message") { value("The following fields contained invalid content: name.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
+            jsonPath(
+              "$.content.extensions.validationErrors.[0]",
+            ) { value("Item name must have at least 1, and no more than 64 characters.") }
+            jsonPath(
+              "$.content.extensions.validationErrors.[1]",
+            ) { value("Item name must not consist only of whitespace characters.") }
+          }
+        }
+
+        it("description is only whitespace") {
+          val instance = "/items/$itemOneId"
+          mockMvc.patch(instance) {
+            content = "{ \"description\": \"\" }"
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
+            jsonPath("$.message") { value("The following fields contained invalid content: description.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
+            jsonPath(
+              "$.content.extensions.validationErrors.[0]",
+            ) { value("Item description must have at least 1, and no more than 2048 characters.") }
+            jsonPath(
+              "$.content.extensions.validationErrors.[1]",
+            ) { value("Item description must not consist only of whitespace characters.") }
+          }
+        }
+
+        it("quantity is less than 0") {
+          val instance = "/items/$itemOneId"
+          mockMvc.patch(instance) {
+            content = "{ \"quantity\": -101 }"
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
+            jsonPath("$.message") { value("The following fields contained invalid content: quantity.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+            jsonPath(
+              "$.content.extensions.validationErrors.[0]",
+            ) { value("Item quantity must be zero or greater.") }
+          }
+        }
+
+        it("multiple validation failures") {
+          val instance = "/items/$itemOneId"
+          mockMvc.patch(instance) {
+            content = "{ \"description\": \" \", \"quantity\": -102 }"
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
+            jsonPath("$.message") { value("The following fields contained invalid content: description, quantity.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
+            jsonPath(
+              "$.content.extensions.validationErrors.[0]",
+            ) { value("Item description must not consist only of whitespace characters.") }
+            jsonPath(
+              "$.content.extensions.validationErrors.[1]",
+            ) { value("Item quantity must be zero or greater.") }
+          }
+        }
+      }
+
+      it("item 1 is updated") {
         val instance = "/items/$itemOneId"
         mockMvc.patch(instance) {
           content = Json.encodeToString(updateLrmItemOneRequest())

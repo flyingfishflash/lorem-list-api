@@ -1,7 +1,6 @@
 package net.flyingfishflash.loremlist.core.response.structure
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
 import org.springframework.http.ProblemDetail
 
 @Serializable
@@ -10,7 +9,7 @@ data class ApiProblemDetail(
   val title: String,
   val status: Int,
   val detail: String,
-  val extensions: JsonElement? = null,
+  val extensions: ApiProblemDetailExtensions? = null,
 ) {
   /** Construct an ApiProblem from a Spring ProblemDetail */
   constructor(problemDetail: ProblemDetail) : this(
@@ -20,3 +19,9 @@ data class ApiProblemDetail(
     detail = problemDetail.detail ?: "default detail",
   )
 }
+
+@Serializable
+data class ApiProblemDetailExtensions(
+  val validationErrors: List<String>? = null,
+  val stackTrace: List<String>? = null,
+)

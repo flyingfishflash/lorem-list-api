@@ -247,7 +247,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   @Operation(summary = "Move an item from one list to another list")
   fun listAssociationsUpdate(
     @PathVariable("id") @Min(1) id: Long,
-    @RequestBody moveToListRequest: ItemToListAssociationUpdateRequest,
+    @Valid @RequestBody moveToListRequest: ItemToListAssociationUpdateRequest,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
     val serviceResponse = associationService.updateItemToList(
