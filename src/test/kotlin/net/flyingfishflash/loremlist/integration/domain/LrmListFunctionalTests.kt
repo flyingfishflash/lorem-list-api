@@ -745,7 +745,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
     describe("association operations") {
       it("item 1 is added to list 1") {
-        val instance = "/items/$itemOneId/list-associations/create"
+        val instance = "/items/$itemOneId/list-associations"
         mockMvc.post(instance) {
           content = Json.encodeToString(listOneId)
           contentType = MediaType.APPLICATION_JSON
@@ -791,7 +791,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 2 is added to list 1") {
-        val instance = "/items/$itemTwoId/list-associations/create"
+        val instance = "/items/$itemTwoId/list-associations"
         mockMvc.post(instance) {
           content = Json.encodeToString(listOneId)
           contentType = MediaType.APPLICATION_JSON
@@ -840,7 +840,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 is not added to list 1 when it's already been added") {
-        val instance = "/items/$itemOneId/list-associations/create"
+        val instance = "/items/$itemOneId/list-associations"
         mockMvc.post(instance) {
           content = Json.encodeToString(listOneId)
           contentType = MediaType.APPLICATION_JSON
@@ -858,7 +858,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 999 is not added to list 1 because the item couldn't be found") {
-        val instance = "/items/999/list-associations/create"
+        val instance = "/items/999/list-associations"
         mockMvc.post(instance) {
           content = Json.encodeToString(listOneId)
           contentType = MediaType.APPLICATION_JSON
@@ -876,7 +876,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 is not added to list 999 because the list couldn't be found") {
-        val instance = "/items/$itemOneId/list-associations/create"
+        val instance = "/items/$itemOneId/list-associations"
         mockMvc.post(instance) {
           content = Json.encodeToString(999)
           contentType = MediaType.APPLICATION_JSON
@@ -894,15 +894,15 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 is moved from list 1 to list 2") {
-        val instance = "/items/$itemOneId/list-associations/update"
-        mockMvc.post(instance) {
+        val instance = "/items/$itemOneId/list-associations"
+        mockMvc.patch(instance) {
           content = Json.encodeToString(ItemToListAssociationUpdateRequest(fromListId = 1, toListId = 2))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-          jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+          jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
           jsonPath("$.message") {
             value("Moved item 'Updated Lorem Item One Name' from list 'Updated Lorem List One Name' to list 'Updated Lorem List Two Name'.")
           }
@@ -1094,13 +1094,13 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("remove item 1 from all lists") {
         val instance = "/items/$itemOneId/list-associations/delete-all"
-        mockMvc.get(instance) {
+        mockMvc.delete(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
           jsonPath("$.message") { value("Removed item '${updateLrmItemOneRequest().name}' from all associated lists (1).") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
@@ -1162,7 +1162,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 2 is added to list 2") {
-        val instance = "/items/$itemTwoId/list-associations/create"
+        val instance = "/items/$itemTwoId/list-associations"
         mockMvc.post(instance) {
           content = Json.encodeToString(listTwoId)
           contentType = MediaType.APPLICATION_JSON

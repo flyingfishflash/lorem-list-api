@@ -94,6 +94,7 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
   ): ResponseEntity<Any>? {
     val fields = exception.beanResults.asSequence().map { it.fieldErrors }.flatten().map { it.field }.distinct().sorted().joinToString()
     val errors = exception.beanResults.asSequence().map { it.fieldErrors }.flatten().map { it.defaultMessage!! }.toList().sorted()
+    val paramErrors = exception.valueResults.asSequence().map { it.resolvableErrors }.flatten().map { it.defaultMessage }.toList()
     val message = "The following fields contained invalid content: $fields."
     val apiProblemDetail = ApiProblemDetail(
       type = PROBLEM_TYPE,
