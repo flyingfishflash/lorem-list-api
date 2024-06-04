@@ -11,6 +11,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler
+import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.association.AssociationService
@@ -185,7 +186,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: name.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE name.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
@@ -205,7 +206,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: description.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE description.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
@@ -225,7 +226,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: quantity.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE quantity.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }

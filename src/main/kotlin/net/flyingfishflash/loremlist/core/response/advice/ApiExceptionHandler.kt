@@ -27,6 +27,7 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
   companion object {
     private const val PROBLEM_TYPE = "about:config"
     const val VALIDATION_FAILURE = "Validation Failure"
+    const val VALIDATION_FAILURE_MESSAGE = "The following fields caused a validation failure:"
     const val EXCEPTION_MESSAGE_NOT_PRESENT = "Exception message not present."
   }
 
@@ -56,9 +57,9 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     request: HttpServletRequest,
     exception: ConstraintViolationException,
   ): ResponseEntity<ResponseProblem?> {
-    val fields = exception.constraintViolations.map { it.propertyPath.toString() }.distinct().sorted().joinToString()
-    val errors = exception.constraintViolations.map { it.message }.sorted()
-    val message = "The following fields contained invalid content: $fields."
+    val fields = exception.constraintViolations.mapNotNull { it.propertyPath.toString() }.distinct().sorted()
+    val errors = exception.constraintViolations.mapNotNull { it.message }.sorted()
+    val message = "$VALIDATION_FAILURE_MESSAGE ${fields.joinToString()}."
     val apiProblemDetail = ApiProblemDetail(
       type = PROBLEM_TYPE,
       title = VALIDATION_FAILURE,
@@ -92,15 +93,20 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     status: HttpStatusCode,
     request: WebRequest,
   ): ResponseEntity<Any>? {
-    val fields = exception.beanResults.asSequence().map { it.fieldErrors }.flatten().map { it.field }.distinct().sorted().joinToString()
-    val errors = exception.beanResults.asSequence().map { it.fieldErrors }.flatten().map { it.defaultMessage!! }.toList().sorted()
-    val paramErrors = exception.valueResults.asSequence().map { it.resolvableErrors }.flatten().map { it.defaultMessage }.toList()
-    val message = "The following fields contained invalid content: $fields."
+    val beanFields = exception.beanResults.asSequence().map { it.fieldErrors }.flatten().mapNotNull { it.field }.toList()
+    val paramFields = exception.valueResults.mapNotNull { it.methodParameter.parameterName }
+    val fields = (beanFields + paramFields).distinct().sorted()
+
+    val beanErrors = exception.beanResults.asSequence().map { it.fieldErrors }.flatten().mapNotNull { it.defaultMessage }.toList()
+    val paramErrors = exception.valueResults.asSequence().map { it.resolvableErrors }.flatten().mapNotNull { it.defaultMessage }.toList()
+    val errors = (beanErrors + paramErrors).distinct().sorted()
+
+    val message = "$VALIDATION_FAILURE_MESSAGE ${fields.joinToString()}."
     val apiProblemDetail = ApiProblemDetail(
       type = PROBLEM_TYPE,
       title = VALIDATION_FAILURE,
       status = status.value(),
-      detail = exception.allValidationResults.toString(),
+      detail = message,
       extensions = ApiProblemDetailExtensions(
         validationErrors = errors,
         stackTrace = if (isStacktraceEnabled()) exception.stackTrace.toListOfString() else null,
@@ -135,9 +141,9 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     status: HttpStatusCode,
     request: WebRequest,
   ): ResponseEntity<Any>? {
-    val fields = exception.bindingResult.fieldErrors.map { it.field }.distinct().sorted().joinToString()
-    val errors = exception.bindingResult.fieldErrors.map { it.defaultMessage!! }.sorted()
-    val message = "The following fields contained invalid content: $fields."
+    val fields = exception.bindingResult.fieldErrors.mapNotNull { it.field }.distinct().sorted()
+    val errors = exception.bindingResult.fieldErrors.mapNotNull { it.defaultMessage }.sorted()
+    val message = "$VALIDATION_FAILURE_MESSAGE ${fields.joinToString()}."
     val apiProblemDetail = ApiProblemDetail(
       type = PROBLEM_TYPE,
       title = VALIDATION_FAILURE,
