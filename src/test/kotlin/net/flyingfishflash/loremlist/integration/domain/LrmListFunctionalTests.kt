@@ -3,6 +3,7 @@ package net.flyingfishflash.loremlist.integration.domain
 import io.kotest.core.spec.style.DescribeSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
@@ -53,7 +54,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
   fun updateLrmListTwoRequest(): LrmListRequest = LrmListRequest("Updated Lorem List Two Name", "Updated Lorem List Two Description")
 
   describe("comprehensive functional test") {
-    describe("item create, read, and update") {
+    describe("item: create, read, update") {
       describe("item 1 is not created") {
         it("name is null") {
           val instance = "/items"
@@ -82,7 +83,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: name.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE name.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
@@ -101,7 +102,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: quantity.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE quantity.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
@@ -120,7 +121,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: description, quantity.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE description, quantity.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
@@ -217,7 +218,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: name.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE name.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
@@ -241,7 +242,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: description.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE description.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
@@ -265,7 +266,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: quantity.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE quantity.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
@@ -286,7 +287,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-            jsonPath("$.message") { value("The following fields contained invalid content: description, quantity.") }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE description, quantity.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
@@ -537,7 +538,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
     }
 
-    describe("list create, read, and update") {
+    describe("list: create, read, update") {
       it("list 1 is created") {
         val instance = "/lists"
         mockMvc.post(instance) {
@@ -743,7 +744,81 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
     }
 
-    describe("association operations") {
+    describe("item -> list association: create, read, update, delete") {
+      describe("invoke validation failures") {
+        // TODO: Parameterize - endpoint and http method can be passed into a function
+        it("count: item id must be greater than zero") {
+          val instance = "/items/0/list-associations/count"
+          mockMvc.get(instance) {
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE id.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+          }
+        }
+
+        it("create: list id must be greater than zero") {
+          val instance = "/items/$itemOneId/list-associations"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(0)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE listId.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+          }
+        }
+
+        it("update: source and destination list id's must be greater than 0") {
+          val instance = "/items/$itemOneId/list-associations"
+          mockMvc.patch(instance) {
+            content = Json.encodeToString(ItemToListAssociationUpdateRequest(fromListId = 0, toListId = -1))
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE fromListId, toListId.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
+          }
+        }
+
+        it("delete: list id must be greater than zero") {
+          val instance = "/items/$itemOneId/list-associations"
+          mockMvc.delete(instance) {
+            content = Json.encodeToString(0)
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isBadRequest() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE listId.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.length()") { value(5) }
+            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+          }
+        }
+      }
+
       it("item 1 is added to list 1") {
         val instance = "/items/$itemOneId/list-associations"
         mockMvc.post(instance) {
