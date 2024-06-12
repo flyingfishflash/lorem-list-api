@@ -1018,6 +1018,23 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         }
       }
 
+      it("item 1 is not deleted from list 1 because the association couldn't be found") {
+        val instance = "/items/$itemOneId/list-associations"
+        mockMvc.delete(instance) {
+          content = listOneId
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isNotFound() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("Item id 1 could not be removed from list id 1: Association not found.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(4) }
+        }
+      }
+
       it("item 2 is associated with only list 1") {
         val instance = "/items/$itemTwoId?includeLists=true"
         mockMvc.get(instance) {

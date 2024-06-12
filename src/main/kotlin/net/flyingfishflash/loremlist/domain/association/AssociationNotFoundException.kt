@@ -20,9 +20,9 @@ class AssociationNotFoundException(
     val HTTP_STATUS = HttpStatus.NOT_FOUND
     fun defaultMessage(id: UUID?): String {
       return if (id == null) {
-        "Association could not be found."
+        "Association not found."
       } else {
-        "Association id $id could not be found."
+        "Association id $id not found."
       }
     }
   }

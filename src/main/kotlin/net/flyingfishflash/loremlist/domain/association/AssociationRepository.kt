@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
+import java.util.UUID
 
 @Repository
 class AssociationRepository {
@@ -30,6 +31,12 @@ class AssociationRepository {
     repositoryTable.insert {
       it[list] = listId
       it[item] = itemId
+    }
+  }
+
+  fun delete(uuid: UUID): Int {
+    return repositoryTable.deleteWhere {
+      (id eq uuid)
     }
   }
 

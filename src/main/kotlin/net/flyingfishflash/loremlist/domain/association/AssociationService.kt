@@ -170,22 +170,27 @@ class AssociationService(
   fun deleteItemToList(itemId: Long, listId: Long): Pair<String, String> {
     val item: LrmItem
     val list: LrmList
+    val association: Association
     val exceptionMessage = "Item id $itemId could not be removed from list id $listId"
 
     try {
       item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
       list = lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
+      association = associationRepository.findByItemIdAndListIdOrNull(
+        itemId = itemId,
+        listId = listId,
+      ) ?: throw AssociationNotFoundException()
     } catch (abstractApiException: AbstractApiException) {
       throw ApiException(
         httpStatus = abstractApiException.httpStatus,
-        message = "$exceptionMessage: $abstractApiException.message",
-        responseMessage = "$exceptionMessage: $abstractApiException.message",
+        message = "$exceptionMessage: ${abstractApiException.message}",
+        responseMessage = "$exceptionMessage: ${abstractApiException.message}",
         cause = abstractApiException,
       )
     }
 
     val deletedCount = try {
-      associationRepository.delete(itemId, listId)
+      associationRepository.delete(association.uuid)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
@@ -200,9 +205,9 @@ class AssociationService(
       }
       deletedCount < 1 -> {
         throw ApiException(
-          httpStatus = HttpStatus.BAD_REQUEST,
-          message = "$exceptionMessage: Item id $itemId exists and list id $listId exists but 0 records were deleted.",
-          responseMessage = "$exceptionMessage: Item id $itemId is not associated with list id $listId.",
+          message = "$exceptionMessage: Item id $itemId exists, list id $listId exists and association id ${association.uuid} exists, " +
+            "but 0 records were deleted.",
+          responseMessage = "$exceptionMessage: Item, list, and association were found, but 0 records were deleted.",
         )
       }
       else -> {
