@@ -160,7 +160,9 @@ steps:
       # nyx requires git tags to infer the current version
       - git fetch --tags -q
       - nyx infer --fatal
-      - nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n' > $TAGS
+      - nyx infer --fatal | grep 'current version' | awk '{ print $4 > ".version.tmp" }'
+      - tr -d '\n' < .version.tmp > $VERSION
+      - cp $VERSION $TAGS
       - cat $TAGS && echo
 
   - name: publish
