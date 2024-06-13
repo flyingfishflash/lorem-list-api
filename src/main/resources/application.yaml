@@ -86,6 +86,7 @@ trace: 'false'
 springdoc:
   api-docs:
     version: openapi_3_1
+  show-actuator: true
   swagger-ui:
     defaultModelsExpandDepth: 3
     operationsSorter: alpha

@@ -54,6 +54,30 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
   fun updateLrmListTwoRequest(): LrmListRequest = LrmListRequest("Updated Lorem List Two Name", "Updated Lorem List Two Description")
 
   describe("comprehensive functional test") {
+    describe("management") {
+      it("health") {
+        val instance = "/management/health"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          jsonPath("$.length()") { value(1) }
+          jsonPath("$.status") { value("UP") }
+        }
+      }
+
+      it("info") {
+        val instance = "/management/info"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          jsonPath("$.build.length()") { value(8) }
+          jsonPath("$.build.name") { value("lorem-list api") }
+        }
+      }
+    }
+
     describe("item: create, read, update") {
       describe("item 1 is not created") {
         it("name is null") {
