@@ -78,7 +78,7 @@ class LrmListServiceTests : DescribeSpec({
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldNotBeNull().shouldBeEqual("List could not be created.")
       exception.responseMessage.shouldBeEqual("List could not be created.")
-      exception.title.shouldBeEqual("API Exception")
+      exception.title.shouldBeEqual(ApiException::class.java.simpleName)
     }
   }
 
@@ -111,7 +111,7 @@ class LrmListServiceTests : DescribeSpec({
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldNotBeNull().shouldBeEqual("List 1 could not be deleted.")
       exception.responseMessage.shouldBeEqual("List 1 could not be deleted.")
-      exception.title.shouldBeEqual("API Exception")
+      exception.title.shouldBeEqual(ApiException::class.java.simpleName)
     }
   }
 
@@ -171,7 +171,7 @@ class LrmListServiceTests : DescribeSpec({
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldNotBeNull().shouldBeEqual("List id 1 could not be retrieved.")
       exception.responseMessage.shouldBeEqual("List id 1 could not be retrieved.")
-      exception.title.shouldBeEqual("API Exception")
+      exception.title.shouldBeEqual(ApiException::class.java.simpleName)
     }
   }
 
@@ -197,7 +197,7 @@ class LrmListServiceTests : DescribeSpec({
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldNotBeNull().shouldBeEqual("List id 1 (including associated items) could not be retrieved.")
       exception.responseMessage.shouldBeEqual("List id 1 (including associated items) could not be retrieved.")
-      exception.title.shouldBeEqual("API Exception")
+      exception.title.shouldBeEqual(ApiException::class.java.simpleName)
     }
   }
 
@@ -268,7 +268,7 @@ class LrmListServiceTests : DescribeSpec({
       val exception = shouldThrow<ApiException> { lrmListService.patch(1, mapOf("name" to expectedName)).first }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeNull()
-      exception.detail.shouldBeEqual(
+      exception.message?.shouldBeEqual(
         "List id ${lrmList().id} could not be updated. 2 records would have been updated rather than 1.",
       )
       exception.responseMessage.shouldBeEqual(
@@ -285,7 +285,7 @@ class LrmListServiceTests : DescribeSpec({
       val exception = shouldThrow<ApiException> { lrmListService.patch(1, mapOf("name" to expectedName)).first }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
-      exception.detail.shouldBeEqual(
+      exception.message?.shouldBeEqual(
         "List id ${lrmList().id} could not be updated. " +
           "The list was found and patch request is valid but an exception was thrown by the list repository.",
       )

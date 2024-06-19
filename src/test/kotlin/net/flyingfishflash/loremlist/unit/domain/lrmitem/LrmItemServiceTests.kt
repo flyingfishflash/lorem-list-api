@@ -16,7 +16,6 @@ import io.mockk.verify
 import jakarta.validation.ConstraintViolationException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.association.AssociationService
-import net.flyingfishflash.loremlist.domain.lrmitem.ItemDeleteWithListAssociationException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
@@ -81,27 +80,38 @@ class LrmItemServiceTests : DescribeSpec({
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldNotBeNull().shouldBeEqual("Item could not be inserted.")
       exception.responseMessage.shouldBeEqual("Item could not be inserted.")
-      exception.title.shouldBeEqual("API Exception")
+      exception.title.shouldBeEqual(ApiException::class.java.simpleName)
       verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest) }
     }
   }
 
   describe("deleteSingleById()") {
     it("item is not found") {
-      every { mockAssociationService.countItemToList(1) } throws ItemNotFoundException(999)
+      every { mockLrmItemRepository.findByIdOrNull(1) } returns null
       val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(1, removeListAssociations = false) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
-      exception.responseMessage.shouldBe("Item id 1 could not be deleted because it could not be found.")
-      verify(exactly = 1) { mockAssociationService.countItemToList(any()) }
+      exception.responseMessage.shouldBe("Item id 1 could not be deleted: Item id 1 could not be found.")
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
+    }
+
+    it("runtime exception thrown by association service") {
+      every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
+      every { mockAssociationService.countItemToList(any()) } throws RuntimeException("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(1, removeListAssociations = false) }
+      exception.cause.shouldBeInstanceOf<RuntimeException>()
+      exception.responseMessage.shouldBe("Item id 1 could not be deleted.")
+      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
     }
 
     describe("associated lists") {
       it("item is deleted (removeListAssociations = true)") {
+        every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
         every { mockAssociationService.countItemToList(1) } returns 1
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(1) } returns lrmItemWithLists()
         every { mockAssociationService.deleteAllItemToListForItem(1) } returns Pair(lrmItem().name, 999)
         every { mockLrmItemRepository.deleteById(1) } returns 1
         lrmItemService.deleteSingleById(1, removeListAssociations = true)
+        verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
         verify(exactly = 1) { mockAssociationService.countItemToList(any()) }
         verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
         verify(exactly = 1) { mockAssociationService.deleteAllItemToListForItem(any()) }
@@ -109,39 +119,40 @@ class LrmItemServiceTests : DescribeSpec({
       }
 
       it("item is not deleted (removeListAssociations = false)") {
+        val expected = "Item id 1 could not be deleted: Item 1 is associated with 1 list(s). First remove the item from each list."
+        every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
         every { mockAssociationService.countItemToList(1) } returns 1
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(1) } returns lrmItemWithLists()
-        val exception = shouldThrow<ItemDeleteWithListAssociationException> {
+        val exception = shouldThrow<ApiException> {
           lrmItemService.deleteSingleById(1, removeListAssociations = false)
         }
-        exception.associationDetail.countItemToListAssociations.shouldBe(lrmItemWithLists().lists!!.size)
-        exception.associationDetail.associatedListNames.size.shouldBe(lrmItemWithLists().lists!!.size)
-        exception.associationDetail.associatedListNames[0].shouldBe(lrmItemWithLists().lists!!.toList()[0].name)
-        exception.message.shouldBe(
-          "Item id 1 could not be deleted because it's associated with 1 list(s). " +
-            "First remove the item from each list.",
-        )
-        exception.responseMessage.shouldBe(
-          "Item id 1 could not be deleted because it's associated with 1 list(s). First remove the item from each list.",
-        )
+        // TODO: when extension properties are added
+//        exception.associationDetail.countItemToListAssociations.shouldBe(lrmItemWithLists().lists!!.size)
+//        exception.associationDetail.associatedListNames.size.shouldBe(lrmItemWithLists().lists!!.size)
+//        exception.associationDetail.associatedListNames[0].shouldBe(lrmItemWithLists().lists!!.toList()[0].name)
+        exception.message.shouldBe(expected)
+        exception.responseMessage.shouldBe(expected)
         verify(exactly = 1) { mockAssociationService.countItemToList(any()) }
       }
 
       it("item repository returns > 1 deleted records") {
+        val expected = "Item id 1 could not be deleted: More than one item with id 1 were found."
+        every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
         every { mockAssociationService.countItemToList(1) } returns 1
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(1) } returns lrmItemWithLists()
         every { mockAssociationService.deleteAllItemToListForItem(1) } returns Pair("Lorem Ipsum", 999)
         every { mockLrmItemRepository.deleteById(1) } returns 2
         val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(1, removeListAssociations = true) }
-        exception.cause.shouldBeNull()
+        exception.cause.shouldBeInstanceOf<ApiException>()
         exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-        exception.message.shouldBe("More than one item with id 1 were found. No items have been deleted.")
-        exception.responseMessage.shouldBe("More than one item with id 1 were found. No items have been deleted.")
+        exception.message.shouldBe(expected)
+        exception.responseMessage.shouldBe(expected)
       }
     }
 
     describe("no associated lists") {
       it("item is deleted") {
+        every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
         every { mockAssociationService.countItemToList(1) } returns 0
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(1) } returns lrmItem()
         every { mockLrmItemRepository.deleteById(1) } returns 1
@@ -152,15 +163,17 @@ class LrmItemServiceTests : DescribeSpec({
       }
 
       it("item repository returns > 1 deleted records") {
+        val expected = "Item id 1 could not be deleted: More than one item with id 1 were found."
+        every { mockLrmItemRepository.findByIdOrNull(1) } returns lrmItem()
         every { mockAssociationService.countItemToList(1) } returns 0
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(1) } returns lrmItem()
         every { mockAssociationService.deleteAllItemToListForItem(1) } returns Pair("Lorem Ipsum", 999)
         every { mockLrmItemRepository.deleteById(1) } returns 2
         val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(1, removeListAssociations = false) }
-        exception.cause.shouldBeNull()
+        exception.cause.shouldBeInstanceOf<ApiException>()
         exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-        exception.message.shouldBe("More than one item with id 1 were found. No items have been deleted.")
-        exception.responseMessage.shouldBe("More than one item with id 1 were found. No items have been deleted.")
+        exception.message.shouldBe(expected)
+        exception.responseMessage.shouldBe(expected)
         verify(exactly = 1) { mockAssociationService.countItemToList(any()) }
         verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
       }
@@ -327,7 +340,7 @@ class LrmItemServiceTests : DescribeSpec({
       val exception = shouldThrow<ApiException> { lrmItemService.patch(1, mapOf("name" to expectedName)).first }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeNull()
-      exception.detail.shouldBeEqual(
+      exception.message?.shouldBeEqual(
         "Item id ${lrmItem().id} could not be updated. " +
           "2 records would have been updated rather than 1.",
       )
@@ -346,7 +359,7 @@ class LrmItemServiceTests : DescribeSpec({
       val exception = shouldThrow<ApiException> { lrmItemService.patch(1, mapOf("name" to expectedName)).first }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
-      exception.detail.shouldBeEqual(
+      exception.message?.shouldBeEqual(
         "Item id ${lrmItem().id} could not be updated. " +
           "The item was found and patch request is valid but an exception was thrown by the item repository.",
       )

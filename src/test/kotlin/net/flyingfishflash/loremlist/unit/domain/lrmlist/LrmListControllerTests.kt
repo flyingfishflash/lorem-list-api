@@ -244,7 +244,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("List id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $id could not be found.") }
           }
@@ -322,7 +322,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("List id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $id could not be found.") }
           }
@@ -391,7 +391,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("List id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $id could not be found.") }
           }

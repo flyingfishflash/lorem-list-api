@@ -158,7 +158,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
         it("item is not created") {
           println(Json.encodeToString(lrmItemRequest))
-          every { lrmItemService.create(lrmItemRequest) } throws ApiException(HttpStatus.INTERNAL_SERVER_ERROR)
+          every { lrmItemService.create(lrmItemRequest) } throws ApiException()
           val instance = "/items"
           mockMvc.post(instance) {
             content = Json.encodeToString(lrmItemRequest)
@@ -168,10 +168,10 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfProblem.ERROR.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("API Exception") }
+            jsonPath("$.message") { value(ApiException.DEFAULT_TITLE) }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.detail") { value("API Exception") }
+            jsonPath("$.content.detail") { value(ApiException.DEFAULT_TITLE) }
           }
           verify(exactly = 1) { lrmItemService.create(lrmItemRequest) }
         }
@@ -273,7 +273,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("Item id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ItemNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $id could not be found.") }
           }
@@ -298,7 +298,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ItemDeleteWithListAssociationException.TITLE) }
+            jsonPath("$.content.title") { value(ItemDeleteWithListAssociationException::class.java.simpleName) }
             jsonPath("$.content.status") { ItemDeleteWithListAssociationException.HTTP_STATUS.value() }
             jsonPath("$.content.detail") {
               value(
@@ -380,7 +380,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("Item id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ItemNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $id could not be found.") }
           }
@@ -447,7 +447,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("List id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $id could not be found.") }
           }
@@ -492,7 +492,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("Item id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ItemNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $id could not be found.") }
           }
@@ -513,7 +513,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("List id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $id could not be found.") }
           }
@@ -545,7 +545,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
         it("item is not moved") {
           every { associationService.updateItemToList(id, 2, 3) } throws
-            ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, title = "Api Exception Title", responseMessage = "Api Exception Detail")
+            ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, responseMessage = "Api Exception Detail")
           val instance = "/items/$id/list-associations"
           mockMvc.patch(instance) {
             content = Json.encodeToString(itemToListAssociationUpdateRequest)
@@ -598,7 +598,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("Item id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ItemNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $id could not be found.") }
           }
@@ -619,7 +619,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("List id $id could not be found.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException.TITLE) }
+            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $id could not be found.") }
           }

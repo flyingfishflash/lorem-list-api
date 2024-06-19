@@ -368,7 +368,7 @@ class AssociationServiceTests : DescribeSpec({
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldBe("Item id 1 could not be removed from list id 2.")
       exception.responseMessage.shouldBe("Item id 1 could not be removed from list id 2.")
-      exception.title.shouldBe("API Exception")
+      exception.title.shouldBe(ApiException::class.java.simpleName)
     }
   }
 })

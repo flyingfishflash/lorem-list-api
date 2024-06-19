@@ -22,7 +22,7 @@ class AssociationNotFoundTests : DescribeSpec({
     it("custom message") {
       val exception = AssociationNotFoundException(message = "Lorem Ipsum")
       exception.message.shouldBe("Lorem Ipsum")
-      exception.responseMessage.shouldBe("Association not found.")
+      exception.responseMessage.shouldBe("Lorem Ipsum")
     }
   }
 })

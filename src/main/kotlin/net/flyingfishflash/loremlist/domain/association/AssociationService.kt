@@ -1,6 +1,5 @@
 package net.flyingfishflash.loremlist.domain.association
 
-import net.flyingfishflash.loremlist.core.exceptions.AbstractApiException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
@@ -30,35 +29,33 @@ class AssociationService(
       item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
       list = lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
       associationRepository.create(itemId = itemId, listId = listId)
-    } catch (abstractApiException: AbstractApiException) {
+    } catch (apiException: ApiException) {
       throw ApiException(
-        httpStatus = abstractApiException.httpStatus,
-        message = "$exceptionMessage: ${abstractApiException.message}",
-        responseMessage = "$exceptionMessage: ${abstractApiException.message}",
-        cause = abstractApiException,
+        cause = apiException,
+        httpStatus = apiException.httpStatus,
+        message = "$exceptionMessage: ${apiException.message}",
       )
     } catch (sqlException: SQLException) {
       when {
         sqlException.message?.contains("duplicate key value violates unique constraint") == true || // postgresql
           sqlException.message?.contains("Unique index or primary key violation") == true -> { // h2
           throw ApiException(
-            httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-            responseMessage = "$exceptionMessage: It's already been added.",
             cause = sqlException,
+            httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
+            message = "$exceptionMessage: It's already been added.",
           )
         }
         else -> {
           throw ApiException(
-            responseMessage = "$exceptionMessage: Unanticipated SQL exception.",
             cause = sqlException,
+            message = "$exceptionMessage: Unanticipated SQL exception.",
           )
         }
       }
     } catch (exception: Exception) {
       throw ApiException(
-        message = "$exceptionMessage.",
-        responseMessage = "$exceptionMessage.",
         cause = exception,
+        message = "$exceptionMessage.",
       )
     }
     return Pair(item.name, list.name)
@@ -74,13 +71,12 @@ class AssociationService(
         cause = itemNotFoundException,
         httpStatus = itemNotFoundException.httpStatus,
         message = "$exceptionMessage: ${itemNotFoundException.message}",
-        responseMessage = "$exceptionMessage: ${itemNotFoundException.message}",
+//        responseMessage = "$exceptionMessage: ${itemNotFoundException.message}",
       )
     } catch (exception: Exception) {
       throw ApiException(
         cause = exception,
         message = "$exceptionMessage.",
-        responseMessage = "$exceptionMessage.",
       )
     }
     return associations
@@ -96,13 +92,12 @@ class AssociationService(
         cause = listNotFoundException,
         httpStatus = listNotFoundException.httpStatus,
         message = "$exceptionMessage: ${listNotFoundException.message}",
-        responseMessage = "$exceptionMessage: ${listNotFoundException.message}",
+//        responseMessage = "$exceptionMessage: ${listNotFoundException.message}",
       )
     } catch (exception: Exception) {
       throw ApiException(
         cause = exception,
         message = "$exceptionMessage.",
-        responseMessage = "$exceptionMessage.",
       )
     }
     return associations
@@ -122,18 +117,16 @@ class AssociationService(
       association = associationRepository.findByItemIdAndListIdOrNull(itemId, fromListId) ?: throw AssociationNotFoundException()
       val updatedAssociation = association.copy(listId = toListId)
       associationRepository.update(updatedAssociation)
-    } catch (exception: AbstractApiException) {
+    } catch (apiException: ApiException) {
       throw ApiException(
-        httpStatus = exception.httpStatus,
-        message = "$exceptionMessage $exception.message",
-        responseMessage = "$exceptionMessage $exception.message",
-        cause = exception,
+        cause = apiException,
+        httpStatus = apiException.httpStatus,
+        message = "$exceptionMessage $apiException.message",
       )
     } catch (exception: Exception) {
       throw ApiException(
-        message = "$exceptionMessage.",
-        responseMessage = "$exceptionMessage.",
         cause = exception,
+        message = "$exceptionMessage.",
       )
     }
     return Triple(
@@ -156,13 +149,12 @@ class AssociationService(
         cause = itemNotFoundException,
         httpStatus = itemNotFoundException.httpStatus,
         message = "$exceptionMessage: ${itemNotFoundException.message}",
-        responseMessage = "$exceptionMessage: ${itemNotFoundException.message}",
+//        responseMessage = "$exceptionMessage: ${itemNotFoundException.message}",
       )
     } catch (exception: Exception) {
       throw ApiException(
         cause = exception,
         message = "$exceptionMessage.",
-        responseMessage = "$exceptionMessage.",
       )
     }
   }
@@ -180,12 +172,11 @@ class AssociationService(
         itemId = itemId,
         listId = listId,
       ) ?: throw AssociationNotFoundException()
-    } catch (abstractApiException: AbstractApiException) {
+    } catch (apiException: ApiException) {
       throw ApiException(
-        httpStatus = abstractApiException.httpStatus,
-        message = "$exceptionMessage: ${abstractApiException.message}",
-        responseMessage = "$exceptionMessage: ${abstractApiException.message}",
-        cause = abstractApiException,
+        cause = apiException,
+        httpStatus = apiException.httpStatus,
+        message = "$exceptionMessage: ${apiException.message}",
       )
     }
 
@@ -195,7 +186,6 @@ class AssociationService(
       throw ApiException(
         cause = cause,
         message = "$exceptionMessage.",
-        responseMessage = "$exceptionMessage.",
       )
     }
 

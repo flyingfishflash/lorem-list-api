@@ -8,12 +8,16 @@ import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 @Transactional
-class LrmItemService(private val associationService: AssociationService, private val lrmItemRepository: LrmItemRepository) {
+class LrmItemService(
+  private val associationService: AssociationService,
+  private val lrmItemRepository: LrmItemRepository,
+) {
   private val logger = KotlinLogging.logger {}
 
   fun count(): Long {
@@ -44,26 +48,31 @@ class LrmItemService(private val associationService: AssociationService, private
 
   fun deleteSingleById(id: Long, removeListAssociations: Boolean): LrmItemDeleteResponse {
     try {
-      val countItemToListAssociations = associationService.countItemToList(id)
-      val associatedListNames: List<String> = findByIdIncludeLists(id).lists?.map { it.name } ?: emptyList()
-      if (countItemToListAssociations > 0) {
+      findById(id)
+      val lrmItemDeleteResponse = LrmItemDeleteResponse(
+        countItemToListAssociations = associationService.countItemToList(id),
+        associatedListNames = findByIdIncludeLists(id).lists?.map { it.name } ?: emptyList(),
+      )
+      if (lrmItemDeleteResponse.countItemToListAssociations > 0) {
         if (removeListAssociations) {
           associationService.deleteAllItemToListForItem(id)
           val deletedCount = lrmItemRepository.deleteById(id)
           if (deletedCount > 1) {
             throw ApiException(
-              message = "More than one item with id $id were found. No items have been deleted.",
-              responseMessage = "More than one item with id $id were found. No items have been deleted.",
+              message = "More than one item with id $id were found.",
+              responseMessage = "More than one item with id $id were found.",
             )
           }
         } else {
           // throw an exception rather than removing the item from all lists and then deleting it
-          throw ItemDeleteWithListAssociationException(
-            id = id,
-            associationDetail = LrmItemDeleteResponse(
-              countItemToListAssociations = countItemToListAssociations,
-              associatedListNames = associatedListNames,
-            ),
+          val message = "Item $id is associated with ${lrmItemDeleteResponse.countItemToListAssociations} list(s). " +
+            "First remove the item from each list."
+          throw ApiException(
+            httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
+            // TODO: extension properties holding below
+//            associationDetail = lrmItemDeleteResponse,
+            message = message,
+            responseMessage = message,
           )
         }
       } else {
@@ -71,20 +80,26 @@ class LrmItemService(private val associationService: AssociationService, private
         val deletedCount = lrmItemRepository.deleteById(id)
         if (deletedCount > 1) {
           throw ApiException(
-            message = "More than one item with id $id were found. No items have been deleted.",
-            responseMessage = "More than one item with id $id were found. No items have been deleted.",
+            message = "More than one item with id $id were found.",
+            responseMessage = "More than one item with id $id were found.",
           )
         }
       }
-      return LrmItemDeleteResponse(
-        countItemToListAssociations = countItemToListAssociations,
-        associatedListNames = associatedListNames,
-      )
-    } catch (itemNotFoundException: ItemNotFoundException) {
+      return lrmItemDeleteResponse
+    } catch (apiException: ApiException) {
+      val message = "Item id $id could not be deleted: ${apiException.responseMessage}"
       throw ApiException(
-        cause = itemNotFoundException,
-        httpStatus = itemNotFoundException.httpStatus,
-        responseMessage = "Item id $id could not be deleted because it could not be found.",
+        cause = apiException,
+        httpStatus = apiException.httpStatus,
+        responseMessage = message,
+        message = message,
+      )
+    } catch (exception: Exception) {
+      val message = "Item id $id could not be deleted."
+      throw ApiException(
+        cause = exception,
+        responseMessage = message,
+        message = message,
       )
     }
   }

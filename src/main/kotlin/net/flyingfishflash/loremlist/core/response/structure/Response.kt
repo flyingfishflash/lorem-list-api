@@ -55,7 +55,7 @@ data class ResponseProblem(
     disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(problemDetail.status)),
     method = request.method.name().lowercase(),
     instance = request.uri.path.lowercase(),
-    message = problemDetail.detail ?: "no detail available for this problem",
+    message = problemDetail.detail ?: "problemDetail.detail is null.",
     size = calcSize(problemDetail),
     content = ApiProblemDetail(problemDetail),
   )
@@ -67,7 +67,7 @@ data class ResponseProblem(
     disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(problemDetail.status)),
     method = request.method.name().lowercase(),
     instance = request.uri.path.lowercase(),
-    message = responseMessage ?: problemDetail.detail ?: "no detail available for this problem",
+    message = responseMessage ?: problemDetail.detail ?: "responseMessage and problemDetail.detail are both null.",
     size = calcSize(problemDetail),
     content = ApiProblemDetail(problemDetail),
   )
@@ -79,7 +79,7 @@ data class ResponseProblem(
     disposition = DispositionOfProblem.calcDisposition(HttpStatus.valueOf(apiProblemDetail.status)),
     method = (request as ServletWebRequest).request.method.lowercase(),
     instance = request.getDescription(false).substringAfter("uri="),
-    message = responseMessage ?: apiProblemDetail.detail,
+    message = responseMessage ?: apiProblemDetail.detail ?: "responseMessage and problemDetail.detail are both null.",
     size = calcSize(apiProblemDetail),
     content = apiProblemDetail,
   )

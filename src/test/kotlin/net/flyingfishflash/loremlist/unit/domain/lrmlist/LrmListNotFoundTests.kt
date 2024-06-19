@@ -8,7 +8,7 @@ class LrmListNotFoundTests : DescribeSpec({
   describe("ListNotFoundException()") {
     it("non-default message") {
       val itemNotFoundException = ListNotFoundException(id = 1, message = "Lorem Ipsum")
-      itemNotFoundException.detail.shouldBe("Lorem Ipsum")
+      itemNotFoundException.message?.shouldBe("Lorem Ipsum")
     }
   }
 })
