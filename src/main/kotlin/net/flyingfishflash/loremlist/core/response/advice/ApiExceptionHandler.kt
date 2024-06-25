@@ -26,7 +26,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 class ApiExceptionHandler(private val environment: Environment) : ResponseEntityExceptionHandler() {
   companion object {
-    const val VALIDATION_FAILURE = "Validation Failure"
     const val VALIDATION_FAILURE_MESSAGE = "The following fields caused a validation failure:"
     const val EXCEPTION_MESSAGE_NOT_PRESENT = "Exception message not present."
   }
@@ -113,7 +112,7 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     )
     val apiProblemDetail = ApiProblemDetail(
       type = ApiException.DEFAULT_PROBLEM_TYPE.toString(),
-      title = VALIDATION_FAILURE,
+      title = ConstraintViolationException::class.java.simpleName,
       status = HttpStatus.BAD_REQUEST.value(),
       detail = responseMessage,
       extensions = if (extensions.isEachExtensionNull) null else extensions,
@@ -152,14 +151,14 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     val errors = (beanErrors + paramErrors).distinct().sorted()
     val commonExtensions = buildCommonExtensions(exception)
     val extensions = ApiProblemDetailExtensions(
-      cause = commonExtensions.cause,
+      cause = ExceptionCauseDetail(name = exception.javaClass.simpleName, message = null),
       validationErrors = errors,
       stackTrace = commonExtensions.stackTrace,
     )
     val responseMessage = "$VALIDATION_FAILURE_MESSAGE ${fields.joinToString()}."
     val apiProblemDetail = ApiProblemDetail(
       type = ApiException.DEFAULT_PROBLEM_TYPE.toString(),
-      title = VALIDATION_FAILURE,
+      title = exception.javaClass.simpleName,
       status = status.value(),
       detail = responseMessage,
       extensions = if (extensions.isEachExtensionNull) null else extensions,
@@ -177,7 +176,7 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     val extensions = buildCommonExtensions(exception)
     val apiProblemDetail = ApiProblemDetail(
       type = ApiException.DEFAULT_PROBLEM_TYPE.toString(),
-      title = "Http Message Not Readable",
+      title = exception.javaClass.simpleName,
       status = status.value(),
       detail = exception.message ?: EXCEPTION_MESSAGE_NOT_PRESENT,
       extensions = if (extensions.isEachExtensionNull) null else extensions,
@@ -203,7 +202,7 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     )
     val apiProblemDetail = ApiProblemDetail(
       type = ApiException.DEFAULT_PROBLEM_TYPE.toString(),
-      title = VALIDATION_FAILURE,
+      title = exception::class.java.simpleName,
       status = status.value(),
       detail = responseMessage,
       extensions = if (extensions.isEachExtensionNull) null else extensions,

@@ -10,7 +10,6 @@ import io.mockk.verify
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
-import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler
 import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
@@ -33,6 +32,7 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
+import org.springframework.web.bind.MethodArgumentNotValidException
 
 /**
  * LrmListController Unit Tests
@@ -189,7 +189,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE name.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
+            jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
             jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
           }
@@ -209,7 +209,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE description.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
+            jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
             jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
           }
@@ -229,7 +229,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE quantity.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ApiExceptionHandler.VALIDATION_FAILURE) }
+            jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
             jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
             jsonPath("$.content.extensions.validationErrors.[0]") { value("Item quantity must be zero or greater.") }
