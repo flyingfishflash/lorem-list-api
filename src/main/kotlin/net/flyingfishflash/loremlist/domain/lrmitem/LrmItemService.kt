@@ -8,6 +8,7 @@ import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
+import net.flyingfishflash.loremlist.toJsonElement
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -50,10 +51,10 @@ class LrmItemService(
     try {
       findById(id)
       val lrmItemDeleteResponse = LrmItemDeleteResponse(
-        countItemToListAssociations = associationService.countItemToList(id),
+        listAssociations = associationService.countItemToList(id),
         associatedListNames = findByIdIncludeLists(id).lists?.map { it.name } ?: emptyList(),
       )
-      if (lrmItemDeleteResponse.countItemToListAssociations > 0) {
+      if (lrmItemDeleteResponse.listAssociations > 0) {
         if (removeListAssociations) {
           associationService.deleteAllItemToListForItem(id)
           val deletedCount = lrmItemRepository.deleteById(id)
@@ -65,12 +66,14 @@ class LrmItemService(
           }
         } else {
           // throw an exception rather than removing the item from all lists and then deleting it
-          val message = "Item $id is associated with ${lrmItemDeleteResponse.countItemToListAssociations} list(s). " +
+          val message = "Item $id is associated with ${lrmItemDeleteResponse.listAssociations} list(s). " +
             "First remove the item from each list."
           throw ApiException(
             httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-            // TODO: extension properties holding below
-//            associationDetail = lrmItemDeleteResponse,
+            supplemental = mapOf(
+              "listAssociations" to lrmItemDeleteResponse.listAssociations.toJsonElement(),
+              "associatedListNames" to lrmItemDeleteResponse.associatedListNames.toJsonElement(),
+            ),
             message = message,
             responseMessage = message,
           )
@@ -93,6 +96,7 @@ class LrmItemService(
         httpStatus = apiException.httpStatus,
         responseMessage = message,
         message = message,
+        supplemental = apiException.supplemental,
       )
     } catch (exception: Exception) {
       val message = "Item id $id could not be deleted."

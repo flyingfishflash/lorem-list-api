@@ -36,9 +36,9 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val apiException = ApiException()
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
-      responseEntity.body?.content?.extensions?.cause.shouldBeNull()
-      responseEntity.body?.content?.extensions?.stackTrace.shouldBeNull()
-      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.cause.shouldBeNull()
+      responseEntity.body?.content?.stackTrace.shouldBeNull()
+      responseEntity.body?.content?.validationErrors.shouldBeNull()
     }
 
     it("extensions: cause") {
@@ -48,9 +48,9 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val apiException = ApiException(cause = RuntimeException())
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
-      responseEntity.body?.content?.extensions?.cause.shouldNotBeNull()
-      responseEntity.body?.content?.extensions?.stackTrace.shouldBeNull()
-      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.cause.shouldNotBeNull()
+      responseEntity.body?.content?.stackTrace.shouldBeNull()
+      responseEntity.body?.content?.validationErrors.shouldBeNull()
     }
 
     it("extensions: stacktrace") {
@@ -60,9 +60,9 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val apiException = ApiException()
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
-      responseEntity.body?.content?.extensions?.cause.shouldBeNull()
-      responseEntity.body?.content?.extensions?.stackTrace.shouldNotBeNull()
-      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.cause.shouldBeNull()
+      responseEntity.body?.content?.stackTrace.shouldNotBeNull()
+      responseEntity.body?.content?.validationErrors.shouldBeNull()
     }
 
     it("extensions: stacktrace, cause wth no message") {
@@ -72,11 +72,11 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val apiException = ApiException(cause = RuntimeException())
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
-      responseEntity.body?.content?.extensions?.cause.shouldNotBeNull()
-      responseEntity.body?.content?.extensions?.stackTrace.shouldNotBeNull()
-      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
-      responseEntity.body?.content?.extensions?.cause?.name.shouldBe("RuntimeException")
-      responseEntity.body?.content?.extensions?.cause?.message.shouldBe("Exception message not present.")
+      responseEntity.body?.content?.cause.shouldNotBeNull()
+      responseEntity.body?.content?.stackTrace.shouldNotBeNull()
+      responseEntity.body?.content?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.cause?.name.shouldBe("RuntimeException")
+      responseEntity.body?.content?.cause?.message.shouldBe("Exception message not present.")
     }
 
     it("extensions: stacktrace, cause is nested exception") {
@@ -89,11 +89,11 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val topLevelException = ApiException(message = "Top level exception", cause = intermediateCause)
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, topLevelException)
-      responseEntity.body?.content?.extensions?.cause.shouldNotBeNull()
-      responseEntity.body?.content?.extensions?.cause?.name.shouldBe("IllegalArgumentException")
-      responseEntity.body?.content?.extensions?.cause?.message.shouldBe("Root cause exception")
-      responseEntity.body?.content?.extensions?.stackTrace.shouldNotBeNull()
-      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.supplemental?.shouldNotBeNull()
+      responseEntity.body?.content?.cause?.name.shouldBe("IllegalArgumentException")
+      responseEntity.body?.content?.cause?.message.shouldBe("Root cause exception")
+      responseEntity.body?.content?.stackTrace.shouldNotBeNull()
+      responseEntity.body?.content?.validationErrors.shouldBeNull()
     }
   }
 
@@ -105,8 +105,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val exception = Exception()
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleException(mockHttpServletRequest, exception)
-      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
-      responseEntity.body?.content?.extensions?.stackTrace.shouldNotBeNull()
+      responseEntity.body?.content?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.stackTrace.shouldNotBeNull()
     }
 
     it("without stacktrace") {
@@ -116,8 +116,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
       val exception = Exception()
       val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
       val responseEntity = apiExceptionHandler.handleException(mockHttpServletRequest, exception)
-      responseEntity.body?.content?.extensions?.validationErrors.shouldBeNull()
-      responseEntity.body?.content?.extensions?.stackTrace.shouldBeNull()
+      responseEntity.body?.content?.validationErrors.shouldBeNull()
+      responseEntity.body?.content?.stackTrace.shouldBeNull()
     }
 
     it("with detail message") {
@@ -145,8 +145,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
         HttpStatus.I_AM_A_TEAPOT,
         mockWebRequest,
       )
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldNotBeNull()
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldBeNull()
     }
 
     it("without stacktrace") {
@@ -162,8 +162,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
         HttpStatus.I_AM_A_TEAPOT,
         mockWebRequest,
       )
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldBeNull()
     }
 
     it("without detail message") {
@@ -180,11 +180,11 @@ class ApiExceptionHandlerTests : DescribeSpec({
         HttpStatus.I_AM_A_TEAPOT,
         mockWebRequest,
       )
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.detail.shouldBe(
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.detail.shouldBe(
         ApiExceptionHandler.EXCEPTION_MESSAGE_NOT_PRESENT,
       )
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldBeNull()
     }
   }
 
@@ -202,8 +202,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
         HttpStatus.I_AM_A_TEAPOT,
         mockWebRequest,
       )
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldNotBeNull()
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldNotBeNull()
     }
 
     it("without stacktrace") {
@@ -219,8 +219,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
         HttpStatus.I_AM_A_TEAPOT,
         mockWebRequest,
       )
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldNotBeNull()
     }
   }
 
@@ -236,8 +236,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
         mockHttpServletRequest,
         mockConstraintViolationException,
       )
-      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldNotBeNull()
-      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldNotBeNull()
     }
 
     it("without stacktrace") {
@@ -251,8 +251,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
         mockHttpServletRequest,
         mockConstraintViolationException,
       )
-      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
-      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldNotBeNull()
     }
   }
 
@@ -270,8 +270,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
         HttpStatus.I_AM_A_TEAPOT,
         mockWebRequest,
       )
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldNotBeNull()
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldNotBeNull()
     }
 
     it("without stacktrace") {
@@ -287,8 +287,8 @@ class ApiExceptionHandlerTests : DescribeSpec({
         HttpStatus.I_AM_A_TEAPOT,
         mockWebRequest,
       )
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.stackTrace.shouldBeNull()
-      responseEntity?.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.extensions?.validationErrors.shouldNotBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldBeNull()
+      responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldNotBeNull()
     }
   }
 })

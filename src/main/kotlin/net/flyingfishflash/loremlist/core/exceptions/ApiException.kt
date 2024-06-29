@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.core.exceptions
 
+import kotlinx.serialization.json.JsonElement
 import org.springframework.http.HttpStatus
 import java.net.URI
 
@@ -10,8 +11,8 @@ open class ApiException(
   responseMessage: String? = null,
   title: String? = null,
   type: URI? = null,
+  val supplemental: Map<String, JsonElement>? = null,
 ) : Exception(message ?: DEFAULT_MESSAGE, cause) {
-
   val httpStatus: HttpStatus = httpStatus ?: DEFAULT_HTTP_STATUS
   val responseMessage: String = responseMessage ?: message ?: DEFAULT_MESSAGE
   val title: String = title ?: DEFAULT_TITLE

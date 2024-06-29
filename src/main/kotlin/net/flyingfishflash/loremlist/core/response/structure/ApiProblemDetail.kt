@@ -1,12 +1,11 @@
 package net.flyingfishflash.loremlist.core.response.structure
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
+import kotlinx.serialization.json.JsonElement
 import org.springframework.http.ProblemDetail
 
-/** Required members as defined in RFC 9457 - Problem Details for HTTP APIs: 3.1 **/
+/** RFC 9457 - Problem Details for HTTP APIs **/
 @Serializable
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 data class ApiProblemDetail(
@@ -14,7 +13,10 @@ data class ApiProblemDetail(
   val title: String,
   val status: Int,
   val detail: String?,
-  val extensions: ApiProblemDetailExtensions? = null,
+  val cause: ExceptionCauseDetail? = null,
+  val validationErrors: List<String>? = null,
+  val supplemental: Map<String, JsonElement>? = null,
+  val stackTrace: List<String>? = null,
 ) {
   /** Construct an ApiProblemDetail from a Spring ProblemDetail */
   constructor(problemDetail: ProblemDetail) : this(
@@ -30,15 +32,4 @@ data class ApiProblemDetail(
 data class ExceptionCauseDetail(
   val name: String,
   val message: String?,
-)
-
-/** Extension members as permitted by RFC 9457 - Problem Details for HTTP APIs: 3.2 **/
-@Serializable
-@JsonIgnoreProperties(value = ["eachExtensionNull"])
-data class ApiProblemDetailExtensions(
-  val cause: ExceptionCauseDetail? = null,
-  val stackTrace: List<String>? = null,
-  val validationErrors: List<String>? = null,
-  @Transient
-  val isEachExtensionNull: Boolean = (cause == null && validationErrors == null && stackTrace == null),
 )

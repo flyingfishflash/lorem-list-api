@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class LrmItemDeleteResponse(
-  val countItemToListAssociations: Long,
+  val listAssociations: Long,
   val associatedListNames: List<String>,
 ) 

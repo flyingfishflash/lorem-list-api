@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.core.response.structure.ApiProblemDetail
-import net.flyingfishflash.loremlist.core.response.structure.ApiProblemDetailExtensions
 import net.flyingfishflash.loremlist.core.response.structure.ExceptionCauseDetail
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import org.springframework.core.env.Environment
@@ -48,10 +47,6 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     return exceptionCauseDetails
   }
 
-  private fun isStacktraceEnabled(): Boolean {
-    return (environment.getProperty("server.error.include-stacktrace") ?: "never") == "always"
-  }
-
   private fun isJsonRenderedByKotlin(exception: Exception): Boolean {
     return when (exception) {
       is HttpMessageNotReadableException -> false
@@ -61,18 +56,16 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     }
   }
 
-  private fun buildCommonExtensions(exception: Exception): ApiProblemDetailExtensions {
-    return if (
-      (isStacktraceEnabled()) ||
-      (exception.cause != null)
-    ) {
-      ApiProblemDetailExtensions(
-        cause = if (isJsonRenderedByKotlin(exception) && (exception.cause != null)) extractCauses(exception) else null,
-        stackTrace = if (isStacktraceEnabled()) exception.stackTrace.toListOfString() else null,
-      )
-    } else {
-      ApiProblemDetailExtensions()
-    }
+  private fun isStacktraceEnabled(): Boolean {
+    return (environment.getProperty("server.error.include-stacktrace") ?: "never") == "always"
+  }
+
+  private fun buildCause(exception: Exception): ExceptionCauseDetail? {
+    return if (isJsonRenderedByKotlin(exception) && (exception.cause != null)) extractCauses(exception) else null
+  }
+
+  private fun buildStackTrace(exception: Exception): List<String>? {
+    return if (isStacktraceEnabled()) exception.stackTrace.toListOfString() else null
   }
 
   private fun Array<StackTraceElement>.toListOfString(): List<String> {
@@ -83,13 +76,14 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
 
   @ExceptionHandler(ApiException::class)
   fun handleAbstractApiException(request: HttpServletRequest, exception: ApiException): ResponseEntity<ResponseProblem> {
-    val extensions = buildCommonExtensions(exception)
     val apiProblemDetail = ApiProblemDetail(
       type = exception.type.toString(),
       title = exception.title,
       status = exception.httpStatus.value(),
       detail = exception.message,
-      extensions = if (extensions.isEachExtensionNull) null else extensions,
+      supplemental = exception.supplemental,
+      cause = buildCause(exception),
+      stackTrace = buildStackTrace(exception),
     )
 
     val applicationResponse = ResponseProblem(apiProblemDetail, exception.responseMessage, request)
@@ -104,18 +98,14 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     val fields = exception.constraintViolations.mapNotNull { it.propertyPath.toString() }.distinct().sorted()
     val errors = exception.constraintViolations.mapNotNull { it.message }.sorted()
     val responseMessage = "$VALIDATION_FAILURE_MESSAGE ${fields.joinToString()}."
-    val commonExtensions = buildCommonExtensions(exception)
-    val extensions = ApiProblemDetailExtensions(
-      cause = commonExtensions.cause,
-      validationErrors = errors,
-      stackTrace = commonExtensions.stackTrace,
-    )
     val apiProblemDetail = ApiProblemDetail(
       type = ApiException.DEFAULT_PROBLEM_TYPE.toString(),
       title = ConstraintViolationException::class.java.simpleName,
       status = HttpStatus.BAD_REQUEST.value(),
       detail = responseMessage,
-      extensions = if (extensions.isEachExtensionNull) null else extensions,
+      validationErrors = errors,
+      cause = buildCause(exception),
+      stackTrace = buildStackTrace(exception),
     )
     val applicationResponse = ResponseProblem(apiProblemDetail, responseMessage, request)
     return ResponseEntity<ResponseProblem>(applicationResponse, HttpStatus.BAD_REQUEST)
@@ -123,13 +113,13 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
 
   @ExceptionHandler(Exception::class)
   fun handleException(request: HttpServletRequest, exception: Exception): ResponseEntity<ResponseProblem> {
-    val extensions = buildCommonExtensions(exception)
     val apiProblemDetail = ApiProblemDetail(
       type = ApiException.DEFAULT_PROBLEM_TYPE.toString(),
       title = exception.javaClass.simpleName,
       status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
       detail = exception.message ?: EXCEPTION_MESSAGE_NOT_PRESENT,
-      extensions = if (extensions.isEachExtensionNull) null else extensions,
+      cause = buildCause(exception),
+      stackTrace = buildStackTrace(exception),
     )
     val applicationResponse = ResponseProblem(apiProblemDetail, "There was an error processing the request.", request)
     return ResponseEntity<ResponseProblem>(applicationResponse, HttpStatus.INTERNAL_SERVER_ERROR)
@@ -149,19 +139,15 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     val beanErrors = exception.beanResults.asSequence().map { it.fieldErrors }.flatten().mapNotNull { it.defaultMessage }.toList()
     val paramErrors = exception.valueResults.asSequence().map { it.resolvableErrors }.flatten().mapNotNull { it.defaultMessage }.toList()
     val errors = (beanErrors + paramErrors).distinct().sorted()
-    val commonExtensions = buildCommonExtensions(exception)
-    val extensions = ApiProblemDetailExtensions(
-      cause = ExceptionCauseDetail(name = exception.javaClass.simpleName, message = null),
-      validationErrors = errors,
-      stackTrace = commonExtensions.stackTrace,
-    )
     val responseMessage = "$VALIDATION_FAILURE_MESSAGE ${fields.joinToString()}."
     val apiProblemDetail = ApiProblemDetail(
       type = ApiException.DEFAULT_PROBLEM_TYPE.toString(),
       title = exception.javaClass.simpleName,
       status = status.value(),
       detail = responseMessage,
-      extensions = if (extensions.isEachExtensionNull) null else extensions,
+      validationErrors = errors,
+      cause = buildCause(exception),
+      stackTrace = buildStackTrace(exception),
     )
     val applicationResponse = ResponseProblem(apiProblemDetail, responseMessage, request)
     return ResponseEntity<Any>(applicationResponse, status)
@@ -173,13 +159,13 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     status: HttpStatusCode,
     request: WebRequest,
   ): ResponseEntity<Any> {
-    val extensions = buildCommonExtensions(exception)
     val apiProblemDetail = ApiProblemDetail(
       type = ApiException.DEFAULT_PROBLEM_TYPE.toString(),
       title = exception.javaClass.simpleName,
       status = status.value(),
       detail = exception.message ?: EXCEPTION_MESSAGE_NOT_PRESENT,
-      extensions = if (extensions.isEachExtensionNull) null else extensions,
+      cause = buildCause(exception),
+      stackTrace = buildStackTrace(exception),
     )
     val applicationResponse = ResponseProblem(apiProblemDetail, "Failed to read request.", request)
     return ResponseEntity<Any>(applicationResponse, status)
@@ -194,18 +180,14 @@ class ApiExceptionHandler(private val environment: Environment) : ResponseEntity
     val fields = exception.bindingResult.fieldErrors.mapNotNull { it.field }.distinct().sorted()
     val errors = exception.bindingResult.fieldErrors.mapNotNull { it.defaultMessage }.sorted()
     val responseMessage = "$VALIDATION_FAILURE_MESSAGE ${fields.joinToString()}."
-    val commonExtensions = buildCommonExtensions(exception)
-    val extensions = ApiProblemDetailExtensions(
-      cause = commonExtensions.cause,
-      validationErrors = errors,
-      stackTrace = commonExtensions.stackTrace,
-    )
     val apiProblemDetail = ApiProblemDetail(
       type = ApiException.DEFAULT_PROBLEM_TYPE.toString(),
       title = exception::class.java.simpleName,
       status = status.value(),
       detail = responseMessage,
-      extensions = if (extensions.isEachExtensionNull) null else extensions,
+      validationErrors = errors,
+      cause = buildCause(exception),
+      stackTrace = buildStackTrace(exception),
     )
     val applicationResponse = ResponseProblem(apiProblemDetail, responseMessage, request)
     return ResponseEntity<Any>(applicationResponse, status)

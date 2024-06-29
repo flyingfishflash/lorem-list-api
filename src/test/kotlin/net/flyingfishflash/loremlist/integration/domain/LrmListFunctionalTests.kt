@@ -137,8 +137,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
                 jsonPath("$.size") { value(1) }
 //                jsonPath("$.content.length()") { value(5) }
                 if (condition.value.expectedErrorCount > 0) {
-                  jsonPath("$.content.extensions.validationErrors.length()") { value(condition.value.expectedErrorCount) }
-                  jsonPath("$.content.extensions.validationErrors[*]") { isArray() }
+                  jsonPath("$.content.validationErrors.length()") { value(condition.value.expectedErrorCount) }
+                  jsonPath("$.content.validationErrors[*]") { isArray() }
                 }
               }
             }
@@ -292,8 +292,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
                 jsonPath("$.instance") { value(instance) }
                 jsonPath("$.size") { value(1) }
                 jsonPath("$.content.length()") { value(5) }
-                jsonPath("$.content.extensions.validationErrors.length()") { value(condition.value.expectedErrorCount) }
-                jsonPath("$.content.extensions.validationErrors[*]") { isArray() }
+                jsonPath("$.content.validationErrors.length()") { value(condition.value.expectedErrorCount) }
+                jsonPath("$.content.validationErrors[*]") { isArray() }
               }
             }
           }
@@ -382,8 +382,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
                 jsonPath("$.size") { value(1) }
 //                jsonPath("$.content.length()") { value(5) }
                 if (condition.value.expectedErrorCount > 0) {
-                  jsonPath("$.content.extensions.validationErrors.length()") { value(condition.value.expectedErrorCount) }
-                  jsonPath("$.content.extensions.validationErrors[*]") { isArray() }
+                  jsonPath("$.content.validationErrors.length()") { value(condition.value.expectedErrorCount) }
+                  jsonPath("$.content.validationErrors[*]") { isArray() }
                 }
               }
             }
@@ -526,8 +526,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
                 jsonPath("$.instance") { value(instance) }
                 jsonPath("$.size") { value(1) }
                 jsonPath("$.content.length()") { value(5) }
-                jsonPath("$.content.extensions.validationErrors.length()") { value(condition.value.expectedErrorCount) }
-                jsonPath("$.content.extensions.validationErrors[*]") { isArray() }
+                jsonPath("$.content.validationErrors.length()") { value(condition.value.expectedErrorCount) }
+                jsonPath("$.content.validationErrors[*]") { isArray() }
               }
             }
           }
@@ -613,7 +613,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
-            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+            jsonPath("$.content.validationErrors.length()") { value(1) }
           }
         }
 
@@ -631,7 +631,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
-            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+            jsonPath("$.content.validationErrors.length()") { value(1) }
           }
         }
 
@@ -649,7 +649,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
-            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
+            jsonPath("$.content.validationErrors.length()") { value(2) }
           }
         }
 
@@ -667,7 +667,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(5) }
-            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
+            jsonPath("$.content.validationErrors.length()") { value(1) }
           }
         }
       }
@@ -800,9 +800,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(5) }
           jsonPath("$.content.status") { value(HttpStatus.NOT_FOUND.value()) }
-          jsonPath("$.content.extensions.cause") { isNotEmpty() }
-          jsonPath("$.content.extensions.cause.name") { value(ItemNotFoundException::class.java.simpleName) }
-          jsonPath("$.content.extensions.cause.message") { isNotEmpty() }
+          jsonPath("$.content.cause") { isNotEmpty() }
+          jsonPath("$.content.cause.name") { value(ItemNotFoundException::class.java.simpleName) }
+          jsonPath("$.content.cause.message") { isNotEmpty() }
         }
       }
 
@@ -821,9 +821,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(5) }
           jsonPath("$.content.status") { value(HttpStatus.NOT_FOUND.value()) }
-          jsonPath("$.content.extensions.cause") { isNotEmpty() }
-          jsonPath("$.content.extensions.cause.name") { value(ListNotFoundException::class.java.simpleName) }
-          jsonPath("$.content.extensions.cause.message") { isNotEmpty() }
+          jsonPath("$.content.cause") { isNotEmpty() }
+          jsonPath("$.content.cause.name") { value(ListNotFoundException::class.java.simpleName) }
+          jsonPath("$.content.cause.message") { isNotEmpty() }
         }
       }
 
@@ -891,9 +891,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.message") { value("Item id 1 could not be removed from list id 1: Association not found.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(5) }
-          jsonPath("$.content.extensions.cause") { isNotEmpty() }
-          jsonPath("$.content.extensions.cause.name") { value(AssociationNotFoundException::class.java.simpleName) }
-          jsonPath("$.content.extensions.cause.message") { isNotEmpty() }
+          jsonPath("$.content.cause") { isNotEmpty() }
+          jsonPath("$.content.cause.name") { value(AssociationNotFoundException::class.java.simpleName) }
+          jsonPath("$.content.cause.message") { isNotEmpty() }
         }
       }
 
@@ -1110,7 +1110,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.message") { value("Deleted item id $itemThreeId.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(2) }
-          jsonPath("$.content.countItemToListAssociations") { value(0) }
+          jsonPath("$.content.listAssociations") { value(0) }
           jsonPath("$.content.associatedListNames.length()") { value(0) }
         }
       }
@@ -1166,9 +1166,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.message") { value(expected) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.detail") { value(expected) }
-          jsonPath("$.content.extensions.cause") { isNotEmpty() }
-          jsonPath("$.content.extensions.cause.name") { value(ApiException::class.java.simpleName) }
-          jsonPath("$.content.extensions.cause.message") { isNotEmpty() }
+          jsonPath("$.content.cause") { isNotEmpty() }
+          jsonPath("$.content.cause.name") { value(ApiException::class.java.simpleName) }
+          jsonPath("$.content.cause.message") { isNotEmpty() }
         }
       }
 
@@ -1183,7 +1183,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.message") { value("Deleted item id $itemTwoId.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(2) }
-          jsonPath("$.content.countItemToListAssociations") { value(2) }
+          jsonPath("$.content.listAssociations") { value(2) }
           jsonPath("$.content.associatedListNames.length()") { value(2) }
           jsonPath("$.content.associatedListNames.[0]") { value(updateLrmListOneRequest().name) }
           jsonPath("$.content.associatedListNames.[1]") { value(updateLrmListTwoRequest().name) }

@@ -15,7 +15,6 @@ import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProble
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
-import net.flyingfishflash.loremlist.domain.lrmitem.ItemDeleteWithListAssociationException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemController
@@ -191,7 +190,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
-            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
+            jsonPath("$.content.validationErrors.length()") { value(2) }
           }
           verify(exactly = 0) { lrmItemService.create(ofType(LrmItemRequest::class)) }
         }
@@ -211,7 +210,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
-            jsonPath("$.content.extensions.validationErrors.length()") { value(2) }
+            jsonPath("$.content.validationErrors.length()") { value(2) }
           }
           verify(exactly = 0) { lrmItemService.create(ofType(LrmItemRequest::class)) }
         }
@@ -231,8 +230,8 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
-            jsonPath("$.content.extensions.validationErrors.length()") { value(1) }
-            jsonPath("$.content.extensions.validationErrors.[0]") { value("Item quantity must be zero or greater.") }
+            jsonPath("$.content.validationErrors.length()") { value(1) }
+            jsonPath("$.content.validationErrors.[0]") { value("Item quantity must be zero or greater.") }
           }
           verify(exactly = 0) { lrmItemService.create(ofType(LrmItemRequest::class)) }
         }
@@ -255,7 +254,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("Deleted item id $id.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.countItemToListAssociations") { value(0) }
+            jsonPath("$.content.listAssociations") { value(0) }
             jsonPath("$.content.associatedListNames.length()") { value(1) }
             jsonPath("$.content.associatedListNames.[0]") { value("Lorem Ipsum") }
           }
@@ -276,36 +275,6 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $id could not be found.") }
-          }
-          verify(exactly = 1) { lrmItemService.deleteSingleById(any(), any()) }
-        }
-
-        it("item is not deleted due to list associations") {
-          every {
-            lrmItemService.deleteSingleById(id, removeListAssociations = false)
-          } throws ItemDeleteWithListAssociationException(1, LrmItemDeleteResponse(1, listOf("Lorem Ipsum")))
-          val instance = "/items/$id"
-          mockMvc.delete(instance).andExpect {
-            status { ItemDeleteWithListAssociationException.HTTP_STATUS }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.message") {
-              value(
-                "Item id $id could not be deleted because it's associated with 1 list(s). " +
-                  "First remove the item from each list.",
-              )
-            }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ItemDeleteWithListAssociationException::class.java.simpleName) }
-            jsonPath("$.content.status") { ItemDeleteWithListAssociationException.HTTP_STATUS.value() }
-            jsonPath("$.content.detail") {
-              value(
-                "Item id $id could not be deleted because it's associated with 1 list(s). " +
-                  "First remove the item from each list.",
-              )
-            }
           }
           verify(exactly = 1) { lrmItemService.deleteSingleById(any(), any()) }
         }
