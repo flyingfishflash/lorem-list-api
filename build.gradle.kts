@@ -15,7 +15,7 @@ plugins {
   id("com.diffplug.spotless") version "6.25.0"
   id("com.github.ben-manes.versions") version "0.51.0"
   id("io.spring.dependency-management") version "1.1.5"
-  id("org.sonarqube") version "5.0.0.4638"
+  id("org.sonarqube") version "5.1.0.4882"
   id("org.springframework.boot") version "3.3.1"
   id("org.springdoc.openapi-gradle-plugin") version "1.9.0"
   kotlin("jvm") version "2.0.0"
