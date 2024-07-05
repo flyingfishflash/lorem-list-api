@@ -7,6 +7,7 @@ import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 @Service
 @Transactional
@@ -38,31 +39,31 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
     }
   }
 
-  fun deleteSingleById(id: Long) {
+  fun deleteSingleById(uuid: UUID) {
     val deletedCount =
       try {
-        lrmListRepository.deleteById(id)
+        lrmListRepository.deleteById(uuid)
       } catch (cause: Exception) {
         throw ApiException(
           cause = cause,
-          message = "List $id could not be deleted.",
-          responseMessage = "List $id could not be deleted.",
+          message = "List $uuid could not be deleted.",
+          responseMessage = "List $uuid could not be deleted.",
         )
       }
     if (deletedCount < 1) {
-      throw ListNotFoundException(id)
+      throw ListNotFoundException(uuid)
     } else if (deletedCount > 1) {
       throw ApiException(
-        message = "List id $id could not be deleted. $deletedCount records would have been updated rather than 1.",
-        responseMessage = "List id $id could not be deleted. $deletedCount records would have been updated rather than 1.",
+        message = "List id $uuid could not be deleted. $deletedCount records would have been updated rather than 1.",
+        responseMessage = "List id $uuid could not be deleted. $deletedCount records would have been updated rather than 1.",
       )
     }
   }
 
   @Suppress("kotlin:S3776")
-  fun patch(id: Long, patchRequest: Map<String, Any>): Pair<LrmList, Boolean> {
+  fun patch(uuid: UUID, patchRequest: Map<String, Any>): Pair<LrmList, Boolean> {
     var patched = false
-    var lrmList = findById(id)
+    var lrmList = findById(uuid)
     var newName = lrmList.name
     var newDescription = lrmList.description
 
@@ -99,19 +100,19 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
       } catch (exception: Exception) {
         throw ApiException(
           cause = exception,
-          message = "List id ${lrmList.id} could not be updated. The list was found and patch request is valid" +
+          message = "List id ${lrmList.uuid} could not be updated. The list was found and patch request is valid" +
             " but an exception was thrown by the list repository.",
-          responseMessage = "List id ${lrmList.id} could not be updated.",
+          responseMessage = "List id ${lrmList.uuid} could not be updated.",
         )
       }
 
       if (updatedCount != 1) {
         throw ApiException(
-          message = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
-          responseMessage = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
+          message = "List id ${lrmList.uuid} could not be updated. $updatedCount records would have been updated rather than 1.",
+          responseMessage = "List id ${lrmList.uuid} could not be updated. $updatedCount records would have been updated rather than 1.",
         )
       } else {
-        lrmList = findById(id)
+        lrmList = findById(uuid)
       }
     }
     return Pair(lrmList, patched)
@@ -141,29 +142,29 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
     }
   }
 
-  fun findById(id: Long): LrmList {
+  fun findById(uuid: UUID): LrmList {
     val list = try {
-      lrmListRepository.findByIdOrNull(id)
+      lrmListRepository.findByIdOrNull(uuid)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
-        message = "List id $id could not be retrieved.",
-        responseMessage = "List id $id could not be retrieved.",
+        message = "List id $uuid could not be retrieved.",
+        responseMessage = "List id $uuid could not be retrieved.",
       )
     }
-    return list ?: throw ListNotFoundException(id)
+    return list ?: throw ListNotFoundException(uuid)
   }
 
-  fun findByIdIncludeItems(id: Long): LrmList {
+  fun findByIdIncludeItems(uuid: UUID): LrmList {
     val list = try {
-      lrmListRepository.findByIdOrNullIncludeItems(id)
+      lrmListRepository.findByIdOrNullIncludeItems(uuid)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
-        message = "List id $id (including associated items) could not be retrieved.",
-        responseMessage = "List id $id (including associated items) could not be retrieved.",
+        message = "List id $uuid (including associated items) could not be retrieved.",
+        responseMessage = "List id $uuid (including associated items) could not be retrieved.",
       )
     }
-    return list ?: throw ListNotFoundException(id)
+    return list ?: throw ListNotFoundException(uuid)
   }
 }

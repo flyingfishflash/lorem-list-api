@@ -8,7 +8,6 @@ import java.util.UUID
 
 @Serializable
 data class LrmList(
-  var id: Long,
   @Serializable(with = UUIDSerializer::class)
   var uuid: UUID,
   var name: String,

@@ -9,13 +9,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
-import jakarta.validation.constraints.Min
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
+import net.flyingfishflash.loremlist.core.validation.ValidUuid
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @Tag(name = "item controller")
 @ApiResponses(
@@ -104,7 +105,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   )
   @DeleteMapping("/{id}")
   fun delete(
-    @PathVariable("id") @Min(1, message = "Item id must be greater than zero.") id: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
     @RequestParam(defaultValue = false.toString()) removeListAssociations: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmItemDeleteResponse>> {
@@ -159,7 +160,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   )
   @GetMapping("/{id}")
   fun findById(
-    @PathVariable("id") @Min(1, message = "Item id must be greater than zero.") id: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
     @RequestParam(defaultValue = false.toString()) includeLists: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmItem>> {
@@ -187,7 +188,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   )
   @GetMapping("/{id}/list-associations/count")
   fun listAssociationsCount(
-    @PathVariable("id") @Min(1, message = "Item id must be greater than zero.") id: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
     val serviceResponse = associationService.countItemToList(id)
@@ -215,11 +216,11 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   )
   @PostMapping("/{id}/list-associations")
   fun listAssociationsCreate(
-    @PathVariable("id") @Min(1, message = "Item id must be greater than zero.") id: Long,
-    @RequestBody @Min(1, message = "List id must be greater than zero.") listId: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
+    @RequestBody listId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.addItemToList(itemId = id, listId = listId)
+    val serviceResponse = associationService.addItemToList(itemUuid = id, listUuid = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -243,11 +244,11 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   )
   @DeleteMapping("/{id}/list-associations")
   fun listAssociationsDelete(
-    @PathVariable("id") @Min(1, message = "Item id must be greater than zero.") id: Long,
-    @RequestBody @Min(1) listId: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
+    @RequestBody listId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.deleteItemToList(itemId = id, listId = listId)
+    val serviceResponse = associationService.deleteItemToList(itemUuid = id, listUuid = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -271,10 +272,10 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   )
   @DeleteMapping("/{id}/list-associations/delete-all")
   fun listAssociationsDeleteAll(
-    @PathVariable("id") @Min(1, message = "Item id must be greater than zero.") id: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.deleteAllItemToListForItem(itemId = id)
+    val serviceResponse = associationService.deleteAllItemToListForItem(itemUuid = id)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from all associated lists (${serviceResponse.second})."
     val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
@@ -304,14 +305,14 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   )
   @PatchMapping("/{id}/list-associations")
   fun listAssociationsUpdate(
-    @PathVariable("id") @Min(1, message = "Item id must be greater than zero.") id: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
     @RequestBody @Valid moveToListRequest: ItemToListAssociationUpdateRequest,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
     val serviceResponse = associationService.updateItemToList(
-      itemId = id,
-      fromListId = moveToListRequest.fromListId,
-      toListId = moveToListRequest.toListId,
+      itemUuid = id,
+      fromListUuid = moveToListRequest.fromListUuid,
+      toListUuid = moveToListRequest.toListUuid,
     )
     val responseMessage = "Moved item '${serviceResponse.first}'" +
       " from list '${serviceResponse.second}'" +
@@ -345,7 +346,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   )
   @PatchMapping("/{id}")
   fun patch(
-    @PathVariable("id") @Min(1, message = "Item id must be greater than zero.") id: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
     @RequestBody patchRequest: Map<String, Any>,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmItem>> {

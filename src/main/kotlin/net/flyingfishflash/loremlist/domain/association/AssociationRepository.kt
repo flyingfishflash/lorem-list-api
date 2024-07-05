@@ -17,20 +17,20 @@ import java.util.UUID
 class AssociationRepository {
   private val repositoryTable = LrmListsItemsTable
 
-  fun countItemToList(itemId: Long): Long {
+  fun countItemToList(itemUuid: UUID): Long {
     val itemCount = item.count()
-    return repositoryTable.select(itemCount).where { item eq itemId }.map { it[itemCount] }.first()
+    return repositoryTable.select(itemCount).where { item eq itemUuid }.map { it[itemCount] }.first()
   }
 
-  fun countListToItem(listId: Long): Long {
+  fun countListToItem(listUuid: UUID): Long {
     val listCount = list.count()
-    return repositoryTable.select(listCount).where { list eq listId }.map { it[listCount] }.first()
+    return repositoryTable.select(listCount).where { list eq listUuid }.map { it[listCount] }.first()
   }
 
-  fun create(listId: Long, itemId: Long) {
+  fun create(listUuid: UUID, itemUuid: UUID) {
     repositoryTable.insert {
-      it[list] = listId
-      it[item] = itemId
+      it[list] = listUuid
+      it[item] = itemUuid
     }
   }
 
@@ -40,30 +40,30 @@ class AssociationRepository {
     }
   }
 
-  fun delete(itemId: Long, listId: Long): Int {
+  fun delete(itemUuid: UUID, listUuid: UUID): Int {
     return repositoryTable.deleteWhere {
-      (item eq itemId).and(list eq listId)
+      (item eq itemUuid).and(list eq itemUuid)
     }
   }
 
-  fun deleteAllItemToListForItem(itemId: Long): Int {
-    return repositoryTable.deleteWhere { repositoryTable.item eq itemId }
+  fun deleteAllItemToListForItem(itemUuid: UUID): Int {
+    return repositoryTable.deleteWhere { repositoryTable.item eq itemUuid }
   }
 
-  fun findByItemIdAndListIdOrNull(itemId: Long, listId: Long): Association? {
-    return repositoryTable.selectAll().where { item eq itemId and (list eq listId) }.firstOrNull()?.let {
+  fun findByItemIdAndListIdOrNull(itemUuid: UUID, listUuid: UUID): Association? {
+    return repositoryTable.selectAll().where { item eq itemUuid and (list eq listUuid) }.firstOrNull()?.let {
       Association(
         uuid = it[repositoryTable.id].value,
-        listId = it[repositoryTable.list].value,
-        itemId = it[repositoryTable.item].value,
+        listUuid = it[repositoryTable.list].value,
+        itemUuid = it[repositoryTable.item].value,
       )
     }
   }
 
   fun update(association: Association): Int {
     return repositoryTable.update({ repositoryTable.id eq association.uuid }) {
-      it[repositoryTable.item] = association.itemId
-      it[repositoryTable.list] = association.listId
+      it[repositoryTable.item] = association.itemUuid
+      it[repositoryTable.list] = association.listUuid
     }
   }
 }

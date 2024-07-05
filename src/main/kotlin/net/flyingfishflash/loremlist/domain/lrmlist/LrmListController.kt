@@ -9,13 +9,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
-import jakarta.validation.constraints.Min
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
+import net.flyingfishflash.loremlist.core.validation.ValidUuid
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.http.HttpStatus
@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @Tag(name = "list controller")
 @ApiResponses(
@@ -97,7 +98,7 @@ class LrmListController(private val associationService: AssociationService, priv
     ],
   )
   @DeleteMapping("/{id}")
-  fun delete(@PathVariable("id") @Min(1) id: Long, request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessage>> {
+  fun delete(@PathVariable("id") @ValidUuid id: UUID, request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessage>> {
     lrmListService.deleteSingleById(id)
     val response = ResponseSuccess(ApiMessage("content"), "deleted list id $id", request)
     logger.info { Json.encodeToString(response) }
@@ -120,7 +121,7 @@ class LrmListController(private val associationService: AssociationService, priv
     ],
   )
   fun itemAssociationsCount(
-    @PathVariable("id") @Min(1) id: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
     val serviceResponse = associationService.countListToItem(id)
@@ -170,7 +171,7 @@ class LrmListController(private val associationService: AssociationService, priv
   )
   @GetMapping("/{id}")
   fun findById(
-    @PathVariable("id") @Min(1) id: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
     @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmList>> {
@@ -207,7 +208,7 @@ class LrmListController(private val associationService: AssociationService, priv
   )
   @PatchMapping("/{id}")
   fun patch(
-    @PathVariable("id") @Min(1) id: Long,
+    @PathVariable("id") @ValidUuid id: UUID,
     @RequestBody patchRequest: Map<String, Any>,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmList>> {

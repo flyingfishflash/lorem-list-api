@@ -6,7 +6,6 @@ import java.util.UUID
 
 @Serializable
 data class LrmListSuccinct(
-  val id: Long,
   @Serializable(with = UUIDSerializer::class)
   var uuid: UUID,
   val name: String,

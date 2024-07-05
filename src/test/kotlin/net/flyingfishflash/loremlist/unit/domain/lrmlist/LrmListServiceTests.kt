@@ -7,6 +7,7 @@ import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContainIgnoringCase
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -35,8 +36,10 @@ class LrmListServiceTests : DescribeSpec({
 
   val lrmListRequest = LrmListRequest("Lorem List Name", "Lorem List Description")
 
-  val listUuid = UUID.randomUUID()
-  fun lrmList(): LrmList = LrmList(id = 0, uuid = listUuid, name = lrmListRequest.name, description = lrmListRequest.description)
+  val uuid0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
+  val uuid1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
+
+  fun lrmList(): LrmList = LrmList(uuid = uuid0, name = lrmListRequest.name, description = lrmListRequest.description)
 
   fun exposedSQLExceptionGeneric(): ExposedSQLException = ExposedSQLException(
     cause = SQLException("Cause of ExposedSQLException"),
@@ -64,8 +67,8 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("create()") {
     it("list repository returns inserted list id") {
-      every { mockLrmListRepository.insert(ofType(LrmListRequest::class)) } returns 1L
-      every { mockLrmListRepository.findByIdOrNull(1L) } returns lrmList()
+      every { mockLrmListRepository.insert(ofType(LrmListRequest::class)) } returns uuid1
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
       lrmListService.create(lrmListRequest)
       verify(exactly = 1) { mockLrmListRepository.insert(ofType(LrmListRequest::class)) }
       verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(any()) }
@@ -84,33 +87,33 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("delete()") {
     it("list repository returns 0 deleted records") {
-      every { mockLrmListRepository.deleteById(1) } returns 0
+      every { mockLrmListRepository.deleteById(uuid1) } returns 0
       assertThrows<ListNotFoundException> {
-        lrmListService.deleteSingleById(1)
+        lrmListService.deleteSingleById(uuid1)
       }.cause.shouldBeNull()
     }
 
     it("list repository returns > 1 deleted records") {
-      every { mockLrmListRepository.deleteById(1) } returns 2
+      every { mockLrmListRepository.deleteById(uuid1) } returns 2
       assertThrows<ApiException> {
-        lrmListService.deleteSingleById(1)
+        lrmListService.deleteSingleById(uuid1)
       }.cause.shouldBeNull()
     }
 
     it("list repository returns 1 deleted record") {
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
-      every { mockLrmListRepository.deleteById(1) } returns 1
-      lrmListService.deleteSingleById(1)
-      verify(exactly = 1) { mockLrmListRepository.deleteById(1) }
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+      every { mockLrmListRepository.deleteById(uuid1) } returns 1
+      lrmListService.deleteSingleById(uuid1)
+      verify(exactly = 1) { mockLrmListRepository.deleteById(any()) }
     }
 
     it("list repository throws exposed sql exception") {
-      every { mockLrmListRepository.deleteById(1) } throws exposedSQLExceptionGeneric()
-      val exception = shouldThrow<ApiException> { lrmListService.deleteSingleById(1) }
+      every { mockLrmListRepository.deleteById(uuid1) } throws exposedSQLExceptionGeneric()
+      val exception = shouldThrow<ApiException> { lrmListService.deleteSingleById(uuid1) }
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-      exception.message.shouldNotBeNull().shouldBeEqual("List 1 could not be deleted.")
-      exception.responseMessage.shouldBeEqual("List 1 could not be deleted.")
+      exception.message.shouldNotBeNull().shouldBeEqual("List $uuid1 could not be deleted.")
+      exception.responseMessage.shouldBeEqual("List $uuid1 could not be deleted.")
       exception.title.shouldBeEqual(ApiException::class.java.simpleName)
     }
   }
@@ -151,146 +154,157 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("findById()") {
     it("list is found and returned") {
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
-      val result = lrmListService.findById(1)
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+      val result = lrmListService.findById(uuid1)
       result.shouldBe(lrmList())
-      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(any()) }
     }
 
     it("list is not found") {
-      every { mockLrmListRepository.findByIdOrNull(1) } returns null
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns null
       assertThrows<ListNotFoundException> {
-        lrmListService.findById(1)
+        lrmListService.findById(uuid1)
       }
     }
 
     it("list repository throws exception") {
-      every { mockLrmListRepository.findByIdOrNull(1) } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmListService.findById(1) }
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmListService.findById(uuid1) }
       exception.cause.shouldBeInstanceOf<Exception>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-      exception.message.shouldNotBeNull().shouldBeEqual("List id 1 could not be retrieved.")
-      exception.responseMessage.shouldBeEqual("List id 1 could not be retrieved.")
+      exception.message
+        .shouldContainIgnoringCase("$uuid1")
+        .shouldContainIgnoringCase("could not be retrieved")
+      exception.responseMessage
+        .shouldContainIgnoringCase("$uuid1")
+        .shouldContainIgnoringCase("could not be retrieved")
       exception.title.shouldBeEqual(ApiException::class.java.simpleName)
     }
   }
 
   describe("findByIdIncludeItems()") {
     it("list is found and returned") {
-      every { mockLrmListRepository.findByIdOrNullIncludeItems(1) } returns lrmList()
-      val result = lrmListService.findByIdIncludeItems(1)
+      every { mockLrmListRepository.findByIdOrNullIncludeItems(uuid1) } returns lrmList()
+      val result = lrmListService.findByIdIncludeItems(uuid1)
       result.shouldBe(lrmList())
-      verify(exactly = 1) { mockLrmListRepository.findByIdOrNullIncludeItems(1) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNullIncludeItems(uuid1) }
     }
 
     it("list is not found") {
-      every { mockLrmListRepository.findByIdOrNullIncludeItems(1) } returns null
+      every { mockLrmListRepository.findByIdOrNullIncludeItems(uuid1) } returns null
       assertThrows<ListNotFoundException> {
-        lrmListService.findByIdIncludeItems(1)
+        lrmListService.findByIdIncludeItems(uuid1)
       }
     }
 
     it("list repository throws exception") {
-      every { mockLrmListRepository.findByIdOrNullIncludeItems(1) } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmListService.findByIdIncludeItems(1) }
+      every { mockLrmListRepository.findByIdOrNullIncludeItems(uuid1) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmListService.findByIdIncludeItems(uuid1) }
       exception.cause.shouldBeInstanceOf<Exception>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-      exception.message.shouldNotBeNull().shouldBeEqual("List id 1 (including associated items) could not be retrieved.")
-      exception.responseMessage.shouldBeEqual("List id 1 (including associated items) could not be retrieved.")
+      exception.message
+        .shouldContainIgnoringCase("$uuid1")
+        .shouldContainIgnoringCase("including associated items")
+        .shouldContainIgnoringCase("could not be retrieved")
+
+      exception.responseMessage
+        .shouldContainIgnoringCase("$uuid1")
+        .shouldContainIgnoringCase("including associated items")
+        .shouldContainIgnoringCase("could not be retrieved")
       exception.title.shouldBeEqual(ApiException::class.java.simpleName)
     }
   }
 
   describe("patch()") {
     it("list is not found") {
-      every { mockLrmListRepository.findByIdOrNull(1) } returns null
-      shouldThrow<ListNotFoundException> { lrmListService.patch(1, mapOf("name" to "lorum ipsum")) }
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns null
+      shouldThrow<ListNotFoundException> { lrmListService.patch(uuid1, mapOf("name" to "lorum ipsum")) }
     }
 
     it("update name") {
       val expectedName = "patched lorem list"
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
       every { mockLrmListRepository.update(ofType(LrmList::class)) } returns 1
-      val patchedLrmList = lrmListService.patch(1, mapOf("name" to expectedName)).first
+      val patchedLrmList = lrmListService.patch(uuid1, mapOf("name" to expectedName)).first
       patchedLrmList.name.shouldBe(expectedName)
-      verify(exactly = 2) { mockLrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 2) { mockLrmListRepository.findByIdOrNull(uuid1) }
       verify(exactly = 1) { mockLrmListRepository.update(ofType(LrmList::class)) }
     }
 
     it("update name and description to current values") {
       val expectedName = lrmList().name
       val expectedDescription = lrmList().description
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
       every { mockLrmListRepository.update(ofType(LrmList::class)) } returns 1
-      val patchResponse = lrmListService.patch(1, mapOf("name" to expectedName, "description" to (expectedDescription ?: "")))
+      val patchResponse = lrmListService.patch(uuid1, mapOf("name" to expectedName, "description" to (expectedDescription ?: "")))
       patchResponse.second.shouldBeFalse()
       patchResponse.first.name.shouldBe(expectedName)
       patchResponse.first.description.shouldBe(expectedDescription)
-      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(uuid1) }
       verify(exactly = 0) { mockLrmListRepository.update(ofType(LrmList::class)) }
     }
 
     it("update description") {
       val expectedDescription = "patched lorem list description"
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
       every { mockLrmListRepository.update(ofType(LrmList::class)) } returns 1
-      val patchedLrmList = lrmListService.patch(1, mapOf("description" to expectedDescription)).first
+      val patchedLrmList = lrmListService.patch(uuid1, mapOf("description" to expectedDescription)).first
       patchedLrmList.description.shouldBe(expectedDescription)
-      verify(exactly = 2) { mockLrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 2) { mockLrmListRepository.findByIdOrNull(any()) }
       verify(exactly = 1) { mockLrmListRepository.update(ofType(LrmList::class)) }
     }
 
     it("update description to '  '") {
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
-      shouldThrow<ConstraintViolationException> { lrmListService.patch(1, mapOf("description" to "  ")) }
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+      shouldThrow<ConstraintViolationException> { lrmListService.patch(uuid1, mapOf("description" to "  ")) }
     }
 
     it("update an undefined list property") {
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
       shouldThrow<IllegalArgumentException> {
-        lrmListService.patch(1, mapOf("undefined property" to "irrelevant value"))
+        lrmListService.patch(uuid1, mapOf("undefined property" to "irrelevant value"))
       }
     }
 
     it("update no properties") {
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
-      val patchReturn = lrmListService.patch(1, mapOf())
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+      val patchReturn = lrmListService.patch(uuid1, mapOf())
       patchReturn.first.shouldBeEqual(lrmList())
       patchReturn.second.shouldBeFalse()
-      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(any()) }
       verify(exactly = 0) { mockLrmListRepository.update(ofType(LrmList::class)) }
     }
 
     it("list repository updates more than 1 record") {
       val expectedName = "patched lorem list"
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
       every { mockLrmListRepository.update(ofType(LrmList::class)) } returns 2
-      val exception = shouldThrow<ApiException> { lrmListService.patch(1, mapOf("name" to expectedName)).first }
+      val exception = shouldThrow<ApiException> { lrmListService.patch(uuid1, mapOf("name" to expectedName)).first }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeNull()
       exception.message?.shouldBeEqual(
-        "List id ${lrmList().id} could not be updated. 2 records would have been updated rather than 1.",
+        "List id ${lrmList().uuid} could not be updated. 2 records would have been updated rather than 1.",
       )
       exception.responseMessage.shouldBeEqual(
-        "List id ${lrmList().id} could not be updated. 2 records would have been updated rather than 1.",
+        "List id ${lrmList().uuid} could not be updated. 2 records would have been updated rather than 1.",
       )
-      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(1) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(uuid1) }
       verify(exactly = 1) { mockLrmListRepository.update(ofType(LrmList::class)) }
     }
 
     it("list repository throws exposed sql exception") {
       val expectedName = "patched lorem list"
-      every { mockLrmListRepository.findByIdOrNull(1) } returns lrmList()
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
       every { mockLrmListRepository.update(ofType(LrmList::class)) } throws exposedSQLExceptionGeneric()
-      val exception = shouldThrow<ApiException> { lrmListService.patch(1, mapOf("name" to expectedName)).first }
+      val exception = shouldThrow<ApiException> { lrmListService.patch(uuid1, mapOf("name" to expectedName)).first }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.message?.shouldBeEqual(
-        "List id ${lrmList().id} could not be updated. " +
+        "List id ${lrmList().uuid} could not be updated. " +
           "The list was found and patch request is valid but an exception was thrown by the list repository.",
       )
-      exception.responseMessage.shouldBeEqual("List id ${lrmList().id} could not be updated.")
-      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(1) }
+      exception.responseMessage.shouldBeEqual("List id ${lrmList().uuid} could not be updated.")
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(uuid1) }
       verify(exactly = 1) { mockLrmListRepository.update(ofType(LrmList::class)) }
     }
   }

@@ -12,6 +12,7 @@ import net.flyingfishflash.loremlist.toJsonElement
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 @Service
 @Transactional
@@ -47,26 +48,26 @@ class LrmItemService(
     }
   }
 
-  fun deleteSingleById(id: Long, removeListAssociations: Boolean): LrmItemDeleteResponse {
+  fun deleteSingleById(uuid: UUID, removeListAssociations: Boolean): LrmItemDeleteResponse {
     try {
-      findById(id)
+      findById(uuid)
       val lrmItemDeleteResponse = LrmItemDeleteResponse(
-        listAssociations = associationService.countItemToList(id),
-        associatedListNames = findByIdIncludeLists(id).lists?.map { it.name } ?: emptyList(),
+        listAssociations = associationService.countItemToList(uuid),
+        associatedListNames = (findByIdIncludeLists(uuid).lists?.map { it.name })?.sorted() ?: emptyList(),
       )
       if (lrmItemDeleteResponse.listAssociations > 0) {
         if (removeListAssociations) {
-          associationService.deleteAllItemToListForItem(id)
-          val deletedCount = lrmItemRepository.deleteById(id)
+          associationService.deleteAllItemToListForItem(uuid)
+          val deletedCount = lrmItemRepository.deleteById(uuid)
           if (deletedCount > 1) {
             throw ApiException(
-              message = "More than one item with id $id were found.",
-              responseMessage = "More than one item with id $id were found.",
+              message = "More than one item with id $uuid were found.",
+              responseMessage = "More than one item with id $uuid were found.",
             )
           }
         } else {
           // throw an exception rather than removing the item from all lists and then deleting it
-          val message = "Item $id is associated with ${lrmItemDeleteResponse.listAssociations} list(s). " +
+          val message = "Item $uuid is associated with ${lrmItemDeleteResponse.listAssociations} list(s). " +
             "First remove the item from each list."
           throw ApiException(
             httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
@@ -80,17 +81,17 @@ class LrmItemService(
         }
       } else {
         // item is not associated with any lists
-        val deletedCount = lrmItemRepository.deleteById(id)
+        val deletedCount = lrmItemRepository.deleteById(uuid)
         if (deletedCount > 1) {
           throw ApiException(
-            message = "More than one item with id $id were found.",
-            responseMessage = "More than one item with id $id were found.",
+            message = "More than one item with id $uuid were found.",
+            responseMessage = "More than one item with id $uuid were found.",
           )
         }
       }
       return lrmItemDeleteResponse
     } catch (apiException: ApiException) {
-      val message = "Item id $id could not be deleted: ${apiException.responseMessage}"
+      val message = "Item id $uuid could not be deleted: ${apiException.responseMessage}"
       throw ApiException(
         cause = apiException,
         httpStatus = apiException.httpStatus,
@@ -99,7 +100,7 @@ class LrmItemService(
         supplemental = apiException.supplemental,
       )
     } catch (exception: Exception) {
-      val message = "Item id $id could not be deleted."
+      val message = "Item id $uuid could not be deleted."
       throw ApiException(
         cause = exception,
         responseMessage = message,
@@ -132,37 +133,37 @@ class LrmItemService(
     }
   }
 
-  fun findById(id: Long): LrmItem {
+  fun findById(uuid: UUID): LrmItem {
     val item = try {
-      lrmItemRepository.findByIdOrNull(id)
+      lrmItemRepository.findByIdOrNull(uuid)
     } catch (cause: Exception) {
       logger.error { cause }
       throw ApiException(
         cause = cause,
-        message = "Item id $id could not be retrieved.",
-        responseMessage = "Item id $id could not be retrieved.",
+        message = "Item id $uuid could not be retrieved.",
+        responseMessage = "Item id $uuid could not be retrieved.",
       )
     }
-    return item ?: throw ItemNotFoundException(id)
+    return item ?: throw ItemNotFoundException(uuid)
   }
 
-  fun findByIdIncludeLists(id: Long): LrmItem {
+  fun findByIdIncludeLists(uuid: UUID): LrmItem {
     val item = try {
-      lrmItemRepository.findByIdOrNullIncludeLists(id)
+      lrmItemRepository.findByIdOrNullIncludeLists(uuid)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
-        message = "Item id $id (including associated lists) could not be retrieved.",
-        responseMessage = "Item id $id (including associated lists) could not be retrieved.",
+        message = "Item id $uuid (including associated lists) could not be retrieved.",
+        responseMessage = "Item id $uuid (including associated lists) could not be retrieved.",
       )
     }
-    return item ?: throw ItemNotFoundException(id)
+    return item ?: throw ItemNotFoundException(uuid)
   }
 
   @Suppress("kotlin:S3776")
-  fun patch(id: Long, patchRequest: Map<String, Any>): Pair<LrmItem, Boolean> {
+  fun patch(uuid: UUID, patchRequest: Map<String, Any>): Pair<LrmItem, Boolean> {
     var patched = false
-    var lrmItem = findById(id)
+    var lrmItem = findById(uuid)
     var newName = lrmItem.name
     var newDescription = lrmItem.description
     var newQuantity = lrmItem.quantity
@@ -206,19 +207,19 @@ class LrmItemService(
       } catch (exception: Exception) {
         throw ApiException(
           cause = exception,
-          message = "Item id ${lrmItem.id} could not be updated. The item was found and patch request is valid" +
+          message = "Item id ${lrmItem.uuid} could not be updated. The item was found and patch request is valid" +
             " but an exception was thrown by the item repository.",
-          responseMessage = "Item id ${lrmItem.id} could not be updated.",
+          responseMessage = "Item id ${lrmItem.uuid} could not be updated.",
         )
       }
 
       if (updatedCount != 1) {
         throw ApiException(
-          message = "Item id ${lrmItem.id} could not be updated. $updatedCount records would have been updated rather than 1.",
-          responseMessage = "Item id ${lrmItem.id} could not be updated. $updatedCount records would have been updated rather than 1.",
+          message = "Item id ${lrmItem.uuid} could not be updated. $updatedCount records would have been updated rather than 1.",
+          responseMessage = "Item id ${lrmItem.uuid} could not be updated. $updatedCount records would have been updated rather than 1.",
         )
       } else {
-        lrmItem = findById(id)
+        lrmItem = findById(uuid)
       }
     }
     return Pair(lrmItem, patched)

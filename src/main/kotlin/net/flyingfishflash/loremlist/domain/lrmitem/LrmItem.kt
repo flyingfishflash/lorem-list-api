@@ -11,9 +11,8 @@ import java.util.UUID
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
 data class LrmItem(
-  var id: Long,
   @Serializable(with = UUIDSerializer::class)
-  var uuid: UUID? = null,
+  var uuid: UUID,
   var name: String,
   var description: String? = null,
   @EncodeDefault var quantity: Int = 0,

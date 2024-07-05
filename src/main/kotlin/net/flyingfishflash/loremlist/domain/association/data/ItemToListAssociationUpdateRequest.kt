@@ -1,12 +1,16 @@
 package net.flyingfishflash.loremlist.domain.association.data
 
-import jakarta.validation.constraints.Min
 import kotlinx.serialization.Serializable
+import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
+import net.flyingfishflash.loremlist.core.validation.ValidUuid
+import java.util.*
 
 @Serializable
 data class ItemToListAssociationUpdateRequest(
-  @field:Min(value = 1, message = "Source list id must be a positive number.")
-  val fromListId: Long,
-  @field:Min(value = 1, message = "Destination list id must be a positive number.")
-  val toListId: Long,
+  @field:ValidUuid
+  @Serializable(with = UUIDSerializer::class)
+  val fromListUuid: UUID,
+  @field:ValidUuid
+  @Serializable(with = UUIDSerializer::class)
+  val toListUuid: UUID,
 )

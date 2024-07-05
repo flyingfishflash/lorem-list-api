@@ -2,17 +2,16 @@ package net.flyingfishflash.loremlist.domain.lrmitem
 
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import org.springframework.http.HttpStatus
+import java.util.UUID
 
-class ItemNotFoundException(
-  id: Long,
-  message: String? = null,
-) : ApiException(
+class ItemNotFoundException(uuid: UUID, message: String? = null) : ApiException(
   httpStatus = HTTP_STATUS,
   title = "ItemNotFoundException",
-  message = message ?: defaultMessage(id),
+  message = message ?: defaultMessage(uuid),
 ) {
+
   companion object {
     val HTTP_STATUS = HttpStatus.NOT_FOUND
-    fun defaultMessage(id: Long) = "Item id $id could not be found."
+    fun defaultMessage(uuid: UUID) = "Item id $uuid could not be found."
   }
 }

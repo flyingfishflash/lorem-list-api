@@ -8,6 +8,8 @@ import java.util.UUID
 data class Association(
   @Serializable(with = UUIDSerializer::class)
   val uuid: UUID,
-  val listId: Long,
-  val itemId: Long,
+  @Serializable(with = UUIDSerializer::class)
+  val listUuid: UUID,
+  @Serializable(with = UUIDSerializer::class)
+  val itemUuid: UUID,
 )

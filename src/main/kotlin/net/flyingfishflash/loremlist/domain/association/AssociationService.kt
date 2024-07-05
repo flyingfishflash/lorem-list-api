@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.sql.SQLException
+import java.util.UUID
 
 @Service
 @Transactional
@@ -20,15 +21,15 @@ class AssociationService(
   private val lrmListRepository: LrmListRepository,
 ) {
 
-  fun addItemToList(itemId: Long, listId: Long): Pair<String, String> {
+  fun addItemToList(itemUuid: UUID, listUuid: UUID): Pair<String, String> {
     val item: LrmItem
     val list: LrmList
-    val exceptionMessage = "Item id $itemId could not be added to list id $listId"
+    val exceptionMessage = "Item id $itemUuid could not be added to list id $listUuid"
 
     try {
-      item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
-      list = lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
-      associationRepository.create(itemId = itemId, listId = listId)
+      item = lrmItemRepository.findByIdOrNull(itemUuid) ?: throw ItemNotFoundException(itemUuid)
+      list = lrmListRepository.findByIdOrNull(listUuid) ?: throw ListNotFoundException(listUuid)
+      associationRepository.create(itemUuid = itemUuid, listUuid = listUuid)
     } catch (apiException: ApiException) {
       throw ApiException(
         cause = apiException,
@@ -61,11 +62,11 @@ class AssociationService(
     return Pair(item.name, list.name)
   }
 
-  fun countItemToList(itemId: Long): Long {
-    val exceptionMessage = "Count of lists associated with item id $itemId could not be retrieved"
+  fun countItemToList(itemUuid: UUID): Long {
+    val exceptionMessage = "Count of lists associated with item id $itemUuid could not be retrieved"
     val associations = try {
-      lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
-      associationRepository.countItemToList(itemId)
+      lrmItemRepository.findByIdOrNull(itemUuid) ?: throw ItemNotFoundException(itemUuid)
+      associationRepository.countItemToList(itemUuid)
     } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
         cause = itemNotFoundException,
@@ -82,11 +83,11 @@ class AssociationService(
     return associations
   }
 
-  fun countListToItem(listId: Long): Long {
-    val exceptionMessage = "Count of items associated with list id $listId could not be retrieved"
+  fun countListToItem(listUuid: UUID): Long {
+    val exceptionMessage = "Count of items associated with list id $listUuid could not be retrieved"
     val associations = try {
-      lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
-      associationRepository.countListToItem(listId)
+      lrmListRepository.findByIdOrNull(listUuid) ?: throw ListNotFoundException(listUuid)
+      associationRepository.countListToItem(listUuid)
     } catch (listNotFoundException: ListNotFoundException) {
       throw ApiException(
         cause = listNotFoundException,
@@ -103,19 +104,19 @@ class AssociationService(
     return associations
   }
 
-  fun updateItemToList(itemId: Long, fromListId: Long, toListId: Long): Triple<String, String, String> {
+  fun updateItemToList(itemUuid: UUID, fromListUuid: UUID, toListUuid: UUID): Triple<String, String, String> {
     val item: LrmItem
     val fromList: LrmList
     val toList: LrmList
     val association: Association
-    val exceptionMessage = "Item id $itemId was not moved from list id $fromListId to list id $toListId"
+    val exceptionMessage = "Item id $itemUuid was not moved from list id $fromListUuid to list id $toListUuid"
 
     try {
-      item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
-      fromList = lrmListRepository.findByIdOrNull(fromListId) ?: throw ListNotFoundException(fromListId)
-      toList = lrmListRepository.findByIdOrNull(toListId) ?: throw ListNotFoundException(toListId)
-      association = associationRepository.findByItemIdAndListIdOrNull(itemId, fromListId) ?: throw AssociationNotFoundException()
-      val updatedAssociation = association.copy(listId = toListId)
+      item = lrmItemRepository.findByIdOrNull(itemUuid) ?: throw ItemNotFoundException(itemUuid)
+      fromList = lrmListRepository.findByIdOrNull(fromListUuid) ?: throw ListNotFoundException(fromListUuid)
+      toList = lrmListRepository.findByIdOrNull(toListUuid) ?: throw ListNotFoundException(toListUuid)
+      association = associationRepository.findByItemIdAndListIdOrNull(itemUuid, fromListUuid) ?: throw AssociationNotFoundException()
+      val updatedAssociation = association.copy(listUuid = toListUuid)
       associationRepository.update(updatedAssociation)
     } catch (apiException: ApiException) {
       throw ApiException(
@@ -136,13 +137,13 @@ class AssociationService(
     )
   }
 
-  fun deleteAllItemToListForItem(itemId: Long): Pair<String, Int> {
+  fun deleteAllItemToListForItem(itemUuid: UUID): Pair<String, Int> {
     val item: LrmItem
-    val exceptionMessage = "Item id $itemId could not be removed from any/all lists"
+    val exceptionMessage = "Item id $itemUuid could not be removed from any/all lists"
 
     try {
-      item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
-      val deletedCount = associationRepository.deleteAllItemToListForItem(itemId)
+      item = lrmItemRepository.findByIdOrNull(itemUuid) ?: throw ItemNotFoundException(itemUuid)
+      val deletedCount = associationRepository.deleteAllItemToListForItem(itemUuid)
       return Pair(item.name, deletedCount)
     } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
@@ -159,18 +160,18 @@ class AssociationService(
     }
   }
 
-  fun deleteItemToList(itemId: Long, listId: Long): Pair<String, String> {
+  fun deleteItemToList(itemUuid: UUID, listUuid: UUID): Pair<String, String> {
     val item: LrmItem
     val list: LrmList
     val association: Association
-    val exceptionMessage = "Item id $itemId could not be removed from list id $listId"
+    val exceptionMessage = "Item id $itemUuid could not be removed from list id $listUuid"
 
     try {
-      item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
-      list = lrmListRepository.findByIdOrNull(listId) ?: throw ListNotFoundException(listId)
+      item = lrmItemRepository.findByIdOrNull(itemUuid) ?: throw ItemNotFoundException(itemUuid)
+      list = lrmListRepository.findByIdOrNull(listUuid) ?: throw ListNotFoundException(listUuid)
       association = associationRepository.findByItemIdAndListIdOrNull(
-        itemId = itemId,
-        listId = listId,
+        itemUuid = itemUuid,
+        listUuid = listUuid,
       ) ?: throw AssociationNotFoundException()
     } catch (apiException: ApiException) {
       throw ApiException(
@@ -195,7 +196,9 @@ class AssociationService(
       }
       deletedCount < 1 -> {
         throw ApiException(
-          message = "$exceptionMessage: Item id $itemId exists, list id $listId exists and association id ${association.uuid} exists, " +
+          message = "$exceptionMessage: Item id $itemUuid exists, " +
+            "list id $listUuid exists and " +
+            "association id ${association.uuid} exists, " +
             "but 0 records were deleted.",
           responseMessage = "$exceptionMessage: Item, list, and association were found, but 0 records were deleted.",
         )
@@ -204,7 +207,7 @@ class AssociationService(
         throw ApiException(
           httpStatus = HttpStatus.BAD_REQUEST,
           message = "$exceptionMessage: Delete transaction rolled back because the count of deleted records was > 1.",
-          responseMessage = "$exceptionMessage: Item id $itemId is associated with list id $listId multiple times.",
+          responseMessage = "$exceptionMessage: Item id $itemUuid is associated with list id $listUuid multiple times.",
         )
       }
     }
