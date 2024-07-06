@@ -66,7 +66,7 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Create a new list")
+  @Operation(summary = "Create a list")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -105,35 +105,7 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity<ResponseSuccess<ApiMessage>>(response, HttpStatus.OK)
   }
 
-  @GetMapping("/{id}/item-associations/count")
-  @Operation(summary = "Count of items associated with a list")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "Successful count of item associations",
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "List Not Found",
-        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-      ),
-    ],
-  )
-  fun itemAssociationsCount(
-    @PathVariable("id") @ValidUuid id: UUID,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.countListToItem(id)
-    val responseMessage = "List is associated with $serviceResponse items."
-    val responseStatus = HttpStatus.OK
-    val responseContent = ApiMessageNumeric(serviceResponse)
-    val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
-    return ResponseEntity(response, responseStatus)
-  }
-
-  @Operation(summary = "Retrieve all lists details and optionally the items")
+  @Operation(summary = "Retrieve all lists, optionally including the details of each associated item")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -154,7 +126,7 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, HttpStatus.OK)
   }
 
-  @Operation(summary = "Retrieve a single list and optionally exclude its items")
+  @Operation(summary = "Retrieve a single list, optionally including the details of each associated item")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -184,6 +156,117 @@ class LrmListController(private val associationService: AssociationService, priv
     val response = ResponseSuccess(responseContent, "retrieved list id $id", request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
+  }
+
+  @GetMapping("/{id}/item-associations/count")
+  @Operation(summary = "Count of items associated with a list")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Successful count of item associations",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  fun itemAssociationsCount(
+    @PathVariable("id") @ValidUuid id: UUID,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = associationService.countForListId(id)
+    val responseMessage = "List is associated with $serviceResponse items."
+    val responseStatus = HttpStatus.OK
+    val responseContent = ApiMessageNumeric(serviceResponse)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { Json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @Operation(summary = "Create an association with a specified item")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "List -> Item Association Created",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Item/List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  @PostMapping("/{id}/item-associations")
+  fun itemAssociationsCreate(
+    @PathVariable("id") @ValidUuid id: UUID,
+    @RequestBody itemId: UUID,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
+    val serviceResponse = associationService.create(itemUuid = itemId, listUuid = id)
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
+    val responseContent = ApiMessage(responseMessage)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @Operation(summary = "Delete an association with a specified item")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Deleted a list's association with the specified item",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Item/List/Association Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  @DeleteMapping("/{id}/item-associations")
+  fun itemAssociationsDelete(
+    @PathVariable("id") @ValidUuid id: UUID,
+    @RequestBody itemId: UUID,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
+    val serviceResponse = associationService.deleteByItemIdAndListId(itemUuid = itemId, listUuid = id)
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
+    val responseContent = ApiMessage(responseMessage)
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @Operation(summary = "Delete all of a list's item associations")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Deleted all of a list's item associations",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "List Not Found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  @DeleteMapping("/{id}/item-associations/delete-all")
+  fun itemAssociationsDeleteAll(
+    @PathVariable("id") @ValidUuid id: UUID,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = associationService.deleteAllOfList(listUuid = id)
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Removed all associated items (${serviceResponse.second}) from list '${serviceResponse.first}'."
+    val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
+    val response = ResponseSuccess(responseContent, responseMessage, request)
+    return ResponseEntity(response, responseStatus)
   }
 
   @Operation(summary = "Update a list")

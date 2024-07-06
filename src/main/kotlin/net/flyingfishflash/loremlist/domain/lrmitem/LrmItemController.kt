@@ -117,7 +117,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Retrieve all items, optionally including the id and name of each list they're associated with")
+  @Operation(summary = "Retrieve all items, optionally including the id and name of each associated list")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -143,7 +143,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Retrieve a single item, optionally including the id and name of each list it's associated with")
+  @Operation(summary = "Retrieve a single item, optionally including the id and name of each associated list")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -191,7 +191,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @PathVariable("id") @ValidUuid id: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.countItemToList(id)
+    val serviceResponse = associationService.countForItemId(id)
     val responseMessage = "item is associated with $serviceResponse lists."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)
@@ -209,7 +209,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
       ApiResponse(
         responseCode = "404",
-        description = "Item or List Could Not be Found (see response message)",
+        description = "Item/List Not Found",
         content = [Content(schema = Schema(implementation = ResponseProblem::class))],
       ),
     ],
@@ -220,7 +220,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @RequestBody listId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.addItemToList(itemUuid = id, listUuid = listId)
+    val serviceResponse = associationService.create(itemUuid = id, listUuid = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -233,7 +233,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     value = [
       ApiResponse(
         responseCode = "200",
-        description = "Item's association with a specified list deleted if present.",
+        description = "Deleted an item's association with the specified list",
       ),
       ApiResponse(
         responseCode = "404",
@@ -248,7 +248,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @RequestBody listId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.deleteItemToList(itemUuid = id, listUuid = listId)
+    val serviceResponse = associationService.deleteByItemIdAndListId(itemUuid = id, listUuid = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -261,7 +261,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     value = [
       ApiResponse(
         responseCode = "200",
-        description = "Item's association with all lists deleted.",
+        description = "Deleted all of an item's list associations",
       ),
       ApiResponse(
         responseCode = "404",
@@ -275,7 +275,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @PathVariable("id") @ValidUuid id: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.deleteAllItemToListForItem(itemUuid = id)
+    val serviceResponse = associationService.deleteAllOfItem(itemUuid = id)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from all associated lists (${serviceResponse.second})."
     val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
@@ -309,10 +309,10 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @RequestBody @Valid moveToListRequest: ItemToListAssociationUpdateRequest,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.updateItemToList(
+    val serviceResponse = associationService.updateList(
       itemUuid = id,
-      fromListUuid = moveToListRequest.fromListUuid,
-      toListUuid = moveToListRequest.toListUuid,
+      currentListUuid = moveToListRequest.currentListUuid,
+      newListUuid = moveToListRequest.newListUuid,
     )
     val responseMessage = "Moved item '${serviceResponse.first}'" +
       " from list '${serviceResponse.second}'" +

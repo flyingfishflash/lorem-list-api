@@ -9,8 +9,8 @@ import java.util.*
 data class ItemToListAssociationUpdateRequest(
   @field:ValidUuid
   @Serializable(with = UUIDSerializer::class)
-  val fromListUuid: UUID,
+  val currentListUuid: UUID,
   @field:ValidUuid
   @Serializable(with = UUIDSerializer::class)
-  val toListUuid: UUID,
+  val newListUuid: UUID,
 )

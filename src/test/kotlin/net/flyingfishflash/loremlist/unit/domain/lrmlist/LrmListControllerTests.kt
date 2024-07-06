@@ -16,6 +16,7 @@ import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler.Co
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListController
@@ -49,6 +50,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
   init {
     val uuid0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
     val uuid1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
+    val uuid2 = UUID.fromString("00000000-0000-4000-a000-000000000002")
     val lrmListRequest = LrmListRequest("Lorem List Name", "Lorem List Description")
 
     fun lrmList(): LrmList = LrmList(uuid = uuid0, name = lrmListRequest.name, description = lrmListRequest.description)
@@ -397,10 +399,147 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
+    describe("/lists/{id}/item-associations") {
+      describe("delete") {
+        it("item is removed from list") {
+          val lrmItemName = "Lorem Item Name"
+          val lrmListName = "Lorem List Name"
+          every {
+            mockAssociationService.deleteByItemIdAndListId(
+              itemUuid = uuid2,
+              listUuid = uuid1,
+            )
+          } returns Pair(lrmItemName, lrmListName)
+          val instance = "/lists/$uuid1/item-associations"
+          mockMvc.delete(instance) {
+            content = Json.encodeToString(uuid2.toString())
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+            jsonPath("$.message") { value("Removed item '$lrmItemName' from list '$lrmListName'.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.message") { value("Removed item '$lrmItemName' from list '$lrmListName'.") }
+          }
+          verify(exactly = 1) { mockAssociationService.deleteByItemIdAndListId(any(), any()) }
+        }
+
+        it("item is not found") {
+          every { mockAssociationService.deleteByItemIdAndListId(itemUuid = uuid2, listUuid = uuid1) } throws ItemNotFoundException(uuid2)
+          val instance = "/lists/$uuid1/item-associations"
+          mockMvc.delete(instance) {
+            content = Json.encodeToString(uuid2.toString())
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+            jsonPath("$.message") { value("Item id $uuid2 could not be found.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
+            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
+            jsonPath("$.content.detail") { value("Item id $uuid2 could not be found.") }
+          }
+          verify(exactly = 1) { mockAssociationService.deleteByItemIdAndListId(any(), any()) }
+        }
+
+        it("list is not found") {
+          every { mockAssociationService.deleteByItemIdAndListId(itemUuid = uuid2, listUuid = uuid1) } throws ListNotFoundException(uuid1)
+          val instance = "/lists/$uuid1/item-associations"
+          mockMvc.delete(instance) {
+            content = Json.encodeToString(uuid2.toString())
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+            jsonPath("$.message") { value("List id $uuid1 could not be found.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
+            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
+            jsonPath("$.content.detail") { value("List id $uuid1 could not be found.") }
+          }
+          verify(exactly = 1) { mockAssociationService.deleteByItemIdAndListId(any(), any()) }
+        }
+      }
+
+      describe("post") {
+        it("item is added to list") {
+          val lrmItemName = "Lorem Item Name"
+          val lrmListName = "Lorem List Name"
+          every { mockAssociationService.create(itemUuid = uuid1, listUuid = uuid2) } returns Pair(lrmItemName, lrmListName)
+          val instance = "/lists/$uuid2/item-associations"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(uuid1.toString())
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("Assigned item '$lrmItemName' to list '$lrmListName'.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.message") { value("Assigned item '$lrmItemName' to list '$lrmListName'.") }
+          }
+          verify(exactly = 1) { mockAssociationService.create(any(), any()) }
+        }
+
+        it("item is not found") {
+          every { mockAssociationService.create(itemUuid = uuid1, listUuid = uuid2) } throws ItemNotFoundException(uuid1)
+          val instance = "/lists/$uuid2/item-associations"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(uuid1.toString())
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("Item id $uuid1 could not be found.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
+            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
+            jsonPath("$.content.detail") { value("Item id $uuid1 could not be found.") }
+          }
+          verify(exactly = 1) { mockAssociationService.create(any(), any()) }
+        }
+
+        it("list is not found") {
+          every { mockAssociationService.create(itemUuid = uuid1, listUuid = uuid2) } throws ListNotFoundException(uuid2)
+          val instance = "/lists/$uuid2/item-associations"
+          mockMvc.post(instance) {
+            content = Json.encodeToString(uuid1.toString())
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isNotFound() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+            jsonPath("$.message") { value("List id $uuid2 could not be found.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
+            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
+            jsonPath("$.content.detail") { value("List id $uuid2 could not be found.") }
+          }
+          verify(exactly = 1) { mockAssociationService.create(any(), any()) }
+        }
+      }
+    }
+
     describe("/lists/{id}/item-associations/count") {
       describe("get") {
         it("count of item associations is returned") {
-          every { mockAssociationService.countListToItem(uuid1) } returns 999
+          every { mockAssociationService.countForListId(uuid1) } returns 999
           val instance = "/lists/$uuid1/item-associations/count"
           mockMvc.get(instance).andExpect {
             status { isOk() }
@@ -413,11 +552,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.length()") { value(1) }
             jsonPath("$.content.value") { value(999) }
           }
-          verify(exactly = 1) { mockAssociationService.countListToItem(any()) }
+          verify(exactly = 1) { mockAssociationService.countForListId(any()) }
         }
 
         it("item is not found") {
-          every { mockAssociationService.countListToItem(uuid1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
+          every { mockAssociationService.countForListId(uuid1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
           val instance = "/lists/$uuid1/item-associations/count"
           mockMvc.get(instance).andExpect {
             status { isNotFound() }
@@ -427,8 +566,29 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
-          verify(exactly = 1) { mockAssociationService.countListToItem(any()) }
+          verify(exactly = 1) { mockAssociationService.countForListId(any()) }
         }
+      }
+    }
+
+    describe("/lists/{id}/item-associations/delete-all") {
+      it("all items are removed from a list") {
+        val lrmListName = "Lorem List Name"
+        every { mockAssociationService.deleteAllOfList(uuid1) } returns Pair(lrmListName, 999)
+        val instance = "/lists/$uuid1/item-associations/delete-all"
+        mockMvc.delete(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+          jsonPath("$.message") { value("Removed all associated items (999) from list '$lrmListName'.") }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.value") { value(999) }
+        }
+        verify(exactly = 1) { mockAssociationService.deleteAllOfList(any()) }
       }
     }
   }

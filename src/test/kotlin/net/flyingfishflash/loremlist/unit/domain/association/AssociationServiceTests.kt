@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.Runs
 import io.mockk.clearAllMocks
@@ -51,7 +52,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockAssociationRepository.create(itemUuid = uuid1, listUuid = uuid2) } just Runs
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
-      val response = associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2)
+      val response = associationService.create(itemUuid = uuid1, listUuid = uuid2)
       response.first.shouldBeEqual(lrmItem().name)
       response.second.shouldBeEqual(lrmList().name)
       verify(exactly = 1) { mockAssociationRepository.create(itemUuid = uuid1, listUuid = uuid2) }
@@ -61,7 +62,7 @@ class AssociationServiceTests : DescribeSpec({
 
     it("item not found") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns null
-      val exception = shouldThrow<ApiException> { associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.create(itemUuid = uuid1, listUuid = uuid2) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       exception.httpStatus.shouldBe(ItemNotFoundException.HTTP_STATUS)
       exception.responseMessage.shouldBeEqual("Item id $uuid1 could not be added to list id $uuid2: Item id $uuid1 could not be found.")
@@ -73,7 +74,7 @@ class AssociationServiceTests : DescribeSpec({
     it("list not found") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns null
-      val exception = shouldThrow<ApiException> { associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.create(itemUuid = uuid1, listUuid = uuid2) }
       exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       exception.httpStatus.shouldBe(ListNotFoundException.HTTP_STATUS)
       exception.responseMessage.shouldBeEqual("Item id $uuid1 could not be added to list id $uuid2: List id $uuid2 could not be found.")
@@ -91,7 +92,7 @@ class AssociationServiceTests : DescribeSpec({
           listUuid = uuid2,
         )
       } throws SQLException("duplicate key value violates unique constraint")
-      val exception = shouldThrow<ApiException> { associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.create(itemUuid = uuid1, listUuid = uuid2) }
       exception.cause.shouldBeInstanceOf<SQLException>()
       exception.responseMessage.shouldBe("Item id $uuid1 could not be added to list id $uuid2: It's already been added.")
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(uuid1) }
@@ -108,7 +109,7 @@ class AssociationServiceTests : DescribeSpec({
           listUuid = uuid2,
         )
       } throws SQLException("Unique index or primary key violation")
-      val exception = shouldThrow<ApiException> { associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.create(itemUuid = uuid1, listUuid = uuid2) }
       exception.cause.shouldBeInstanceOf<SQLException>()
       exception.responseMessage.shouldBe("Item id $uuid1 could not be added to list id $uuid2: It's already been added.")
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(uuid1) }
@@ -120,7 +121,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockAssociationRepository.create(itemUuid = uuid1, listUuid = uuid2) } throws SQLException()
-      val exception = shouldThrow<ApiException> { associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.create(itemUuid = uuid1, listUuid = uuid2) }
       exception.cause.shouldBeInstanceOf<SQLException>()
       exception.responseMessage.shouldBe(
         "Item id $uuid1 could not be added to list id $uuid2: Unanticipated SQL exception.",
@@ -134,7 +135,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockAssociationRepository.create(itemUuid = uuid1, listUuid = uuid2) } throws SQLException("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.create(itemUuid = uuid1, listUuid = uuid2) }
       exception.cause.shouldBeInstanceOf<SQLException>()
       exception.responseMessage.shouldBe(
         "Item id $uuid1 could not be added to list id $uuid2: Unanticipated SQL exception.",
@@ -148,7 +149,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockAssociationRepository.create(itemUuid = uuid1, listUuid = uuid2) } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.create(itemUuid = uuid1, listUuid = uuid2) }
       exception.cause.shouldBeInstanceOf<Exception>()
       exception.responseMessage.shouldBe("Item id $uuid1 could not be added to list id $uuid2.")
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(uuid1) }
@@ -161,20 +162,20 @@ class AssociationServiceTests : DescribeSpec({
     it("count of list associations is returned") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockAssociationRepository.countItemToList(uuid1) } returns 1
-      associationService.countItemToList(uuid1)
+      associationService.countForItemId(uuid1)
       verify(exactly = 1) { mockAssociationRepository.countItemToList(any()) }
     }
 
     it("item is not found") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns null
-      val exception = shouldThrow<ApiException> { associationService.countItemToList(uuid1) }
+      val exception = shouldThrow<ApiException> { associationService.countForItemId(uuid1) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       exception.httpStatus.shouldBe(HttpStatus.NOT_FOUND)
     }
 
     it("item repository throws exception") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } throws RuntimeException("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { associationService.countItemToList(uuid1) }
+      val exception = shouldThrow<ApiException> { associationService.countForItemId(uuid1) }
       exception.cause.shouldBeInstanceOf<RuntimeException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
     }
@@ -184,20 +185,20 @@ class AssociationServiceTests : DescribeSpec({
     it("count of item associations is returned") {
       every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
       every { mockAssociationRepository.countListToItem(uuid1) } returns 1
-      associationService.countListToItem(uuid1)
+      associationService.countForListId(uuid1)
       verify(exactly = 1) { mockAssociationRepository.countListToItem(any()) }
     }
 
     it("list is not found") {
       every { mockLrmListRepository.findByIdOrNull(uuid1) } returns null
-      val exception = shouldThrow<ApiException> { associationService.countListToItem(uuid1) }
+      val exception = shouldThrow<ApiException> { associationService.countForListId(uuid1) }
       exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       exception.httpStatus.shouldBe(HttpStatus.NOT_FOUND)
     }
 
     it("list repository throws exception") {
       every { mockLrmListRepository.findByIdOrNull(uuid1) } throws RuntimeException("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { associationService.countListToItem(uuid1) }
+      val exception = shouldThrow<ApiException> { associationService.countForListId(uuid1) }
       exception.cause.shouldBeInstanceOf<RuntimeException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
     }
@@ -212,7 +213,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmListRepository.findByIdOrNull(uuid3) } returns lrmList()
       every { mockAssociationRepository.findByItemIdAndListIdOrNull(uuid1, uuid2) } returns association
       every { mockAssociationRepository.update(updatedAssociation) } returns 1
-      associationService.updateItemToList(uuid1, uuid2, uuid3)
+      associationService.updateList(uuid1, uuid2, uuid3)
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
       verify(exactly = 2) { mockLrmListRepository.findByIdOrNull(any()) }
       verify(exactly = 1) { mockAssociationRepository.findByItemIdAndListIdOrNull(any(), any()) }
@@ -221,7 +222,7 @@ class AssociationServiceTests : DescribeSpec({
 
     it("item is not found") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns null
-      val exception = shouldThrow<ApiException> { associationService.updateItemToList(uuid1, uuid2, uuid3) }
+      val exception = shouldThrow<ApiException> { associationService.updateList(uuid1, uuid2, uuid3) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       verify(exactly = 0) { mockAssociationRepository.update(any()) }
     }
@@ -229,7 +230,7 @@ class AssociationServiceTests : DescribeSpec({
     it("from list is not found") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns null
-      val exception = shouldThrow<ApiException> { associationService.updateItemToList(uuid1, uuid2, uuid3) }
+      val exception = shouldThrow<ApiException> { associationService.updateList(uuid1, uuid2, uuid3) }
       exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       verify(exactly = 0) { mockAssociationRepository.update(any()) }
     }
@@ -238,7 +239,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockLrmListRepository.findByIdOrNull(uuid3) } returns null
-      val exception = shouldThrow<ApiException> { associationService.updateItemToList(uuid1, uuid2, uuid3) }
+      val exception = shouldThrow<ApiException> { associationService.updateList(uuid1, uuid2, uuid3) }
       exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       verify(exactly = 0) { mockAssociationRepository.update(any()) }
     }
@@ -248,7 +249,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockLrmListRepository.findByIdOrNull(uuid3) } returns lrmList()
       every { mockAssociationRepository.findByItemIdAndListIdOrNull(uuid1, uuid2) } returns null
-      val exception = shouldThrow<ApiException> { associationService.updateItemToList(uuid1, uuid2, uuid3) }
+      val exception = shouldThrow<ApiException> { associationService.updateList(uuid1, uuid2, uuid3) }
       exception.cause.shouldBeInstanceOf<AssociationNotFoundException>()
       verify(exactly = 0) { mockAssociationRepository.update(any()) }
     }
@@ -258,7 +259,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockLrmListRepository.findByIdOrNull(uuid3) } returns lrmList()
       every { mockAssociationRepository.findByItemIdAndListIdOrNull(uuid1, uuid2) } throws RuntimeException("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { associationService.updateItemToList(uuid1, uuid2, uuid3) }
+      val exception = shouldThrow<ApiException> { associationService.updateList(uuid1, uuid2, uuid3) }
       exception.cause.shouldBeInstanceOf<RuntimeException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.responseMessage.shouldBe("Item id $uuid1 was not moved from list id $uuid2 to list id $uuid3.")
@@ -267,30 +268,57 @@ class AssociationServiceTests : DescribeSpec({
     }
   }
 
-  describe("removeFromAllLists()") {
-    it("remove from all lists") {
-      every { mockAssociationRepository.deleteAllItemToListForItem(uuid1) } returns 999
+  describe("deleteAllForItem()") {
+    it("remove all associations by item") {
+      every { mockAssociationRepository.deleteAllOfItem(uuid1) } returns 999
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
-      associationService.deleteAllItemToListForItem(uuid1)
-      verify(exactly = 1) { mockAssociationRepository.deleteAllItemToListForItem(any()) }
+      associationService.deleteAllOfItem(uuid1)
+      verify(exactly = 1) { mockAssociationRepository.deleteAllOfItem(any()) }
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
     }
 
     it("item not found") {
-      every { mockAssociationRepository.deleteAllItemToListForItem(uuid1) } returns 999
+      every { mockAssociationRepository.deleteAllOfItem(uuid1) } returns 999
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns null
-      val exception = shouldThrow<ApiException> { associationService.deleteAllItemToListForItem(uuid1) }
+      val exception = shouldThrow<ApiException> { associationService.deleteAllOfItem(uuid1) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       exception.httpStatus.shouldBe(ItemNotFoundException.HTTP_STATUS)
-      exception.responseMessage.shouldBe("Item id $uuid1 could not be removed from any/all lists: Item id $uuid1 could not be found.")
+      exception.responseMessage.shouldContain("Item id $uuid1 could not be found.")
     }
 
     it("item repository throws exception") {
-      every { mockAssociationRepository.deleteAllItemToListForItem(uuid1) } throws RuntimeException()
-      val exception = shouldThrow<ApiException> { associationService.deleteAllItemToListForItem(uuid1) }
+      every { mockAssociationRepository.deleteAllOfItem(uuid1) } throws RuntimeException()
+      val exception = shouldThrow<ApiException> { associationService.deleteAllOfItem(uuid1) }
       exception.cause.shouldBeInstanceOf<RuntimeException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.responseMessage.shouldBe("Item id $uuid1 could not be removed from any/all lists.")
+    }
+  }
+
+  describe("deleteAllForList()") {
+    it("remove all associations by list") {
+      every { mockAssociationRepository.deleteAllOfList(uuid1) } returns 999
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+      associationService.deleteAllOfList(uuid1)
+      verify(exactly = 1) { mockAssociationRepository.deleteAllOfList(any()) }
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(any()) }
+    }
+
+    it("list not found") {
+      every { mockAssociationRepository.deleteAllOfList(uuid1) } returns 999
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns null
+      val exception = shouldThrow<ApiException> { associationService.deleteAllOfList(uuid1) }
+      exception.cause.shouldBeInstanceOf<ListNotFoundException>()
+      exception.httpStatus.shouldBe(ListNotFoundException.HTTP_STATUS)
+      exception.responseMessage.shouldContain("List id $uuid1 could not be found.")
+    }
+
+    it("list repository throws exception") {
+      every { mockAssociationRepository.deleteAllOfList(uuid1) } throws RuntimeException()
+      val exception = shouldThrow<ApiException> { associationService.deleteAllOfList(uuid1) }
+      exception.cause.shouldBeInstanceOf<RuntimeException>()
+      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.responseMessage.shouldBe("Could not remove any/all items from List id $uuid1.")
     }
   }
 
@@ -300,7 +328,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockAssociationRepository.findByItemIdAndListIdOrNull(uuid1, uuid2) } returns association()
       every { mockAssociationRepository.delete(any()) } returns 1
-      associationService.deleteItemToList(uuid1, uuid2)
+      associationService.deleteByItemIdAndListId(uuid1, uuid2)
       verify(exactly = 1) { mockAssociationRepository.delete(uuid = any()) }
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(uuid = any()) }
       verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(uuid = any()) }
@@ -310,7 +338,7 @@ class AssociationServiceTests : DescribeSpec({
     it("item not found") {
       every { mockAssociationRepository.delete(uuid1, uuid2) } returns 0
       every { mockLrmItemRepository.findByIdOrNull(any()) } returns null
-      val exception = shouldThrow<ApiException> { associationService.deleteItemToList(uuid1, uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.deleteByItemIdAndListId(uuid1, uuid2) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(uuid = any()) }
     }
@@ -318,7 +346,7 @@ class AssociationServiceTests : DescribeSpec({
     it("list not found") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns null
-      val exception = shouldThrow<ApiException> { associationService.deleteItemToList(uuid1, uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.deleteByItemIdAndListId(uuid1, uuid2) }
       exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(uuid = any()) }
       verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(uuid = any()) }
@@ -328,7 +356,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockAssociationRepository.findByItemIdAndListIdOrNull(uuid1, uuid2) } returns null
-      val exception = shouldThrow<ApiException> { associationService.deleteItemToList(uuid1, uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.deleteByItemIdAndListId(uuid1, uuid2) }
       exception.cause.shouldBeInstanceOf<AssociationNotFoundException>()
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(uuid = any()) }
       verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(uuid = any()) }
@@ -340,7 +368,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockAssociationRepository.findByItemIdAndListIdOrNull(uuid1, uuid2) } returns association()
       every { mockAssociationRepository.delete(any()) } returns 0
-      val exception = shouldThrow<ApiException> { associationService.deleteItemToList(uuid1, uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.deleteByItemIdAndListId(uuid1, uuid2) }
       exception.cause.shouldBeNull()
       exception.responseMessage.shouldBe(
         "Item id $uuid1 could not be removed from list id $uuid2: Item, list, and association were found, but 0 records were deleted.",
@@ -356,7 +384,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockAssociationRepository.findByItemIdAndListIdOrNull(uuid1, uuid2) } returns association()
       every { mockAssociationRepository.delete(uuid = any()) } returns 2
-      val exception = shouldThrow<ApiException> { associationService.deleteItemToList(uuid1, uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.deleteByItemIdAndListId(uuid1, uuid2) }
       exception.cause.shouldBeNull()
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(uuid1) }
       verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(uuid2) }
@@ -369,7 +397,7 @@ class AssociationServiceTests : DescribeSpec({
       every { mockLrmListRepository.findByIdOrNull(uuid2) } returns lrmList()
       every { mockAssociationRepository.findByItemIdAndListIdOrNull(uuid1, uuid2) } returns association()
       every { mockAssociationRepository.delete(uuid1, uuid2) } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { associationService.deleteItemToList(uuid1, uuid2) }
+      val exception = shouldThrow<ApiException> { associationService.deleteByItemIdAndListId(uuid1, uuid2) }
       exception.cause.shouldBeInstanceOf<Exception>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldBe("Item id $uuid1 could not be removed from list id $uuid2.")

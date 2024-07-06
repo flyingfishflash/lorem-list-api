@@ -305,11 +305,6 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
           httpMethod = HttpMethod.GET,
           instance = "/lists/${invalidUuids[0]}/item-associations/count",
         ),
-        "uuid is invalid /lists/{uuid}/item-associations (patch)" to ValidationTest(
-          httpMethod = HttpMethod.PATCH,
-          instance = "/lists/${invalidUuids[0]}/item-associations",
-          requestContent = Json.encodeToString(itemToListAssociationUpdateRequest),
-        ),
       )
 
       conditions.forEach { condition ->

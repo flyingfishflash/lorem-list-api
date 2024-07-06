@@ -46,8 +46,12 @@ class AssociationRepository {
     }
   }
 
-  fun deleteAllItemToListForItem(itemUuid: UUID): Int {
+  fun deleteAllOfItem(itemUuid: UUID): Int {
     return repositoryTable.deleteWhere { repositoryTable.item eq itemUuid }
+  }
+
+  fun deleteAllOfList(listUuid: UUID): Int {
+    return repositoryTable.deleteWhere { repositoryTable.list eq listUuid }
   }
 
   fun findByItemIdAndListIdOrNull(itemUuid: UUID, listUuid: UUID): Association? {

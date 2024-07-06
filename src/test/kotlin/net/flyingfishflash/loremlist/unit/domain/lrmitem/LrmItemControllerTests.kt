@@ -258,7 +258,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("Deleted item id $uuid1.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.listAssociations") { value(0) }
+            jsonPath("$.content.associatedListCount") { value(0) }
             jsonPath("$.content.associatedListNames.length()") { value(1) }
             jsonPath("$.content.associatedListNames.[0]") { value("Lorem Ipsum") }
           }
@@ -363,7 +363,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
       describe("patch") {
         it("item is found and updated") {
-          every { lrmItemService.patch(uuid1, any()) } returns Pair(lrmItem(), true)
+          every { lrmItemService.patch(uuid1, patchRequest = any()) } returns Pair(lrmItem(), true)
           val instance = "/items/$uuid1"
           mockMvc.patch(instance) {
             content = Json.encodeToString(mapOf("name" to lrmItem().name))
@@ -386,7 +386,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         }
 
         it("item is found and not updated") {
-          every { lrmItemService.patch(uuid1, any()) } returns Pair(lrmItem(), false)
+          every { lrmItemService.patch(uuid1, patchRequest = any()) } returns Pair(lrmItem(), false)
           val instance = "/items/$uuid1"
           mockMvc.patch(instance) {
             content = Json.encodeToString(mapOf("name" to lrmItem().name))
@@ -407,7 +407,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         }
 
         it("item is not found") {
-          every { lrmItemService.patch(uuid1, any()) } throws ListNotFoundException(uuid1)
+          every { lrmItemService.patch(uuid1, patchRequest = any()) } throws ListNotFoundException(uuid1)
           val instance = "/items/$uuid1"
           mockMvc.patch(instance) {
             content = Json.encodeToString(mapOf("name" to lrmItem().name))
@@ -433,7 +433,9 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("delete") {
         it("item is removed from list") {
           val lrmListName = "Lorem List Name"
-          every { associationService.deleteItemToList(uuid1, uuid2) } returns Pair(lrmItem().name, lrmListName)
+          every {
+            associationService.deleteByItemIdAndListId(itemUuid = uuid1, listUuid = uuid2)
+          } returns Pair(lrmItem().name, lrmListName)
           val instance = "/items/$uuid1/list-associations"
           mockMvc.delete(instance) {
             content = Json.encodeToString(uuid2.toString())
@@ -448,11 +450,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.message") { value("Removed item '${lrmItem().name}' from list '$lrmListName'.") }
           }
-          verify(exactly = 1) { associationService.deleteItemToList(any(), any()) }
+          verify(exactly = 1) { associationService.deleteByItemIdAndListId(any(), any()) }
         }
 
         it("item is not found") {
-          every { associationService.deleteItemToList(itemUuid = uuid1, listUuid = uuid2) } throws ItemNotFoundException(uuid1)
+          every { associationService.deleteByItemIdAndListId(itemUuid = uuid1, listUuid = uuid2) } throws ItemNotFoundException(uuid1)
           val instance = "/items/$uuid1/list-associations"
           mockMvc.delete(instance) {
             content = Json.encodeToString(uuid2.toString())
@@ -469,11 +471,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $uuid1 could not be found.") }
           }
-          verify(exactly = 1) { associationService.deleteItemToList(any(), any()) }
+          verify(exactly = 1) { associationService.deleteByItemIdAndListId(any(), any()) }
         }
 
         it("list is not found") {
-          every { associationService.deleteItemToList(itemUuid = uuid1, listUuid = uuid2) } throws ListNotFoundException(uuid2)
+          every { associationService.deleteByItemIdAndListId(itemUuid = uuid1, listUuid = uuid2) } throws ListNotFoundException(uuid2)
           val instance = "/items/$uuid1/list-associations"
           mockMvc.delete(instance) {
             content = Json.encodeToString(uuid2.toString())
@@ -490,7 +492,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $uuid2 could not be found.") }
           }
-          verify(exactly = 1) { associationService.deleteItemToList(any(), any()) }
+          verify(exactly = 1) { associationService.deleteByItemIdAndListId(any(), any()) }
         }
       }
 
@@ -498,7 +500,9 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("item is moved from one list to another list") {
           val fromListName = "List A"
           val toListName = "List B"
-          every { associationService.updateItemToList(uuid1, uuid2, uuid3) } returns Triple(lrmItem().name, fromListName, toListName)
+          every {
+            associationService.updateList(itemUuid = uuid1, currentListUuid = uuid2, newListUuid = uuid3)
+          } returns Triple(lrmItem().name, fromListName, toListName)
           val instance = "/items/$uuid1/list-associations"
           mockMvc.patch(instance) {
             content = Json.encodeToString(itemToListAssociationUpdateRequest)
@@ -513,12 +517,13 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.message") { value("Moved item '${lrmItem().name}' from list '$fromListName' to list '$toListName'.") }
           }
-          verify(exactly = 1) { associationService.updateItemToList(any(), any(), any()) }
+          verify(exactly = 1) { associationService.updateList(any(), any(), any()) }
         }
 
         it("item is not moved") {
-          every { associationService.updateItemToList(uuid1, uuid2, uuid3) } throws
-            ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, responseMessage = "Api Exception Detail")
+          every {
+            associationService.updateList(itemUuid = uuid1, currentListUuid = uuid2, newListUuid = uuid3)
+          } throws ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, responseMessage = "Api Exception Detail")
           val instance = "/items/$uuid1/list-associations"
           mockMvc.patch(instance) {
             content = Json.encodeToString(itemToListAssociationUpdateRequest)
@@ -532,14 +537,14 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
           }
-          verify(exactly = 1) { associationService.updateItemToList(any(), any(), any()) }
+          verify(exactly = 1) { associationService.updateList(any(), any(), any()) }
         }
       }
 
       describe("post") {
         it("item is added to list") {
           val lrmListName = "Lorem List Name"
-          every { associationService.addItemToList(uuid1, uuid2) } returns Pair(lrmItem().name, lrmListName)
+          every { associationService.create(itemUuid = uuid1, listUuid = uuid2) } returns Pair(lrmItem().name, lrmListName)
           val instance = "/items/$uuid1/list-associations"
           mockMvc.post(instance) {
             content = Json.encodeToString(uuid2.toString())
@@ -554,11 +559,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.message") { value("Assigned item '${lrmItem().name}' to list '$lrmListName'.") }
           }
-          verify(exactly = 1) { associationService.addItemToList(any(), any()) }
+          verify(exactly = 1) { associationService.create(any(), any()) }
         }
 
         it("item is not found") {
-          every { associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2) } throws ItemNotFoundException(uuid1)
+          every { associationService.create(itemUuid = uuid1, listUuid = uuid2) } throws ItemNotFoundException(uuid1)
           val instance = "/items/$uuid1/list-associations"
           mockMvc.post(instance) {
             content = Json.encodeToString(uuid2.toString())
@@ -575,11 +580,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $uuid1 could not be found.") }
           }
-          verify(exactly = 1) { associationService.addItemToList(any(), any()) }
+          verify(exactly = 1) { associationService.create(any(), any()) }
         }
 
         it("list is not found") {
-          every { associationService.addItemToList(itemUuid = uuid1, listUuid = uuid2) } throws ListNotFoundException(uuid2)
+          every { associationService.create(itemUuid = uuid1, listUuid = uuid2) } throws ListNotFoundException(uuid2)
           val instance = "/items/$uuid1/list-associations"
           mockMvc.post(instance) {
             content = Json.encodeToString(uuid2.toString())
@@ -596,7 +601,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $uuid2 could not be found.") }
           }
-          verify(exactly = 1) { associationService.addItemToList(any(), any()) }
+          verify(exactly = 1) { associationService.create(any(), any()) }
         }
       }
     }
@@ -604,7 +609,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/items/{id}/list-associations/count") {
       describe("get") {
         it("count of list associations is returned") {
-          every { associationService.countItemToList(uuid1) } returns 999
+          every { associationService.countForItemId(uuid1) } returns 999
           val instance = "/items/$uuid1/list-associations/count"
           mockMvc.get(instance).andExpect {
             status { isOk() }
@@ -617,11 +622,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.length()") { value(1) }
             jsonPath("$.content.value") { value(999) }
           }
-          verify(exactly = 1) { associationService.countItemToList(any()) }
+          verify(exactly = 1) { associationService.countForItemId(any()) }
         }
 
         it("item is not found") {
-          every { associationService.countItemToList(uuid1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
+          every { associationService.countForItemId(uuid1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
           val instance = "/items/$uuid1/list-associations/count"
           mockMvc.get(instance).andExpect {
             status { isNotFound() }
@@ -631,14 +636,14 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
-          verify(exactly = 1) { associationService.countItemToList(any()) }
+          verify(exactly = 1) { associationService.countForItemId(any()) }
         }
       }
     }
 
     describe("/items/{id}/list-associations/delete-all") {
       it("item is removed from all lists") {
-        every { associationService.deleteAllItemToListForItem(uuid1) } returns Pair(lrmItem().name, 999)
+        every { associationService.deleteAllOfItem(uuid1) } returns Pair(lrmItem().name, 999)
         val instance = "/items/$uuid1/list-associations/delete-all"
         mockMvc.delete(instance) {
           contentType = MediaType.APPLICATION_JSON
@@ -652,7 +657,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.value") { value(999) }
         }
-        verify(exactly = 1) { associationService.deleteAllItemToListForItem(any()) }
+        verify(exactly = 1) { associationService.deleteAllOfItem(any()) }
       }
     }
 
