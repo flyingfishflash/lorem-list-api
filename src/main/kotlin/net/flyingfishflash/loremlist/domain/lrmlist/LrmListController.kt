@@ -17,6 +17,7 @@ import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.core.validation.ValidUuid
 import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -95,14 +96,25 @@ class LrmListController(private val associationService: AssociationService, priv
         description = "List Not Found",
         content = [Content(schema = Schema(implementation = ResponseProblem::class))],
       ),
+      ApiResponse(
+        responseCode = "422",
+        description = "List Not Deleted Due to Item Associations",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
     ],
   )
   @DeleteMapping("/{id}")
-  fun delete(@PathVariable("id") @ValidUuid id: UUID, request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    lrmListService.deleteSingleById(id)
-    val response = ResponseSuccess(ApiMessage("content"), "deleted list id $id", request)
+  fun delete(
+    @PathVariable("id") @ValidUuid id: UUID,
+    @RequestParam(defaultValue = false.toString()) removeItemAssociations: Boolean,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<LrmListDeleteResponse>> {
+    val serviceResponse = lrmListService.deleteById(id, removeItemAssociations)
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Deleted list id $id."
+    val response = ResponseSuccess(serviceResponse, responseMessage, request)
     logger.info { Json.encodeToString(response) }
-    return ResponseEntity<ResponseSuccess<ApiMessage>>(response, HttpStatus.OK)
+    return ResponseEntity(response, responseStatus)
   }
 
   @Operation(summary = "Retrieve all lists, optionally including the details of each associated item")

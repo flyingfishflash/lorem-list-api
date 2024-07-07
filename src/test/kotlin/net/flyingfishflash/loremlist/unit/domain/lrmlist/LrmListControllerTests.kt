@@ -3,10 +3,8 @@ package net.flyingfishflash.loremlist.unit.domain.lrmlist
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringExtension
-import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.just
 import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.serialization.encodeToString
@@ -21,6 +19,7 @@ import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListController
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpMethod
@@ -221,23 +220,29 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/lists/{id}") {
       describe("delete") {
         it("list is deleted") {
-          every { mockLrmListService.deleteSingleById(uuid1) } just Runs
+          // nonsensical conditioning of the delete response:
+          // if the count of item to list associations is 0, then associatedListNames should be an empty list
+          every {
+            mockLrmListService.deleteById(uuid1, removeItemAssociations = false)
+          } returns LrmListDeleteResponse(0, listOf("Lorem Ipsum"))
           val instance = "/lists/$uuid1"
           mockMvc.delete(instance).andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.message") { value("deleted list id $uuid1") }
+            jsonPath("$.message") { value("Deleted list id $uuid1.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.message") { value("content") }
+            jsonPath("$.content.associatedItemCount") { value(0) }
+            jsonPath("$.content.associatedItemNames.length()") { value(1) }
+            jsonPath("$.content.associatedItemNames.[0]") { value("Lorem Ipsum") }
           }
-          verify(exactly = 1) { mockLrmListService.deleteSingleById(any()) }
+          verify(exactly = 1) { mockLrmListService.deleteById(any(), any()) }
         }
 
         it("list is not found") {
-          every { mockLrmListService.deleteSingleById(uuid1) } throws ListNotFoundException(uuid1)
+          every { mockLrmListService.deleteById(uuid1, removeItemAssociations = false) } throws ListNotFoundException(uuid1)
           val instance = "/lists/$uuid1"
           mockMvc.delete(instance).andExpect {
             status { isNotFound() }
@@ -251,7 +256,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("List id $uuid1 could not be found.") }
           }
-          verify(exactly = 1) { mockLrmListService.deleteSingleById(any()) }
+          verify(exactly = 1) { mockLrmListService.deleteById(any(), any()) }
         }
       }
 

@@ -245,9 +245,9 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/items/{id}") {
       describe("delete") {
         it("item is deleted") {
-          // non-sensical conditioning of the delete response:
+          // nonsensical conditioning of the delete response:
           // if the count of item to list associations is 0, then associatedListNames should be an empty list
-          every { lrmItemService.deleteSingleById(uuid1, removeListAssociations = false) } returns
+          every { lrmItemService.deleteById(uuid1, removeListAssociations = false) } returns
             LrmItemDeleteResponse(0, listOf("Lorem Ipsum"))
           val instance = "/items/$uuid1"
           mockMvc.delete(instance).andExpect {
@@ -262,11 +262,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.associatedListNames.length()") { value(1) }
             jsonPath("$.content.associatedListNames.[0]") { value("Lorem Ipsum") }
           }
-          verify(exactly = 1) { lrmItemService.deleteSingleById(any(), any()) }
+          verify(exactly = 1) { lrmItemService.deleteById(any(), any()) }
         }
 
         it("item is not found") {
-          every { lrmItemService.deleteSingleById(uuid1, removeListAssociations = false) } throws ItemNotFoundException(uuid1)
+          every { lrmItemService.deleteById(uuid1, removeListAssociations = false) } throws ItemNotFoundException(uuid1)
           val instance = "/items/$uuid1"
           mockMvc.delete(instance).andExpect {
             status { isNotFound() }
@@ -280,7 +280,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value("Item id $uuid1 could not be found.") }
           }
-          verify(exactly = 1) { lrmItemService.deleteSingleById(any(), any()) }
+          verify(exactly = 1) { lrmItemService.deleteById(any(), any()) }
         }
       }
 
@@ -616,7 +616,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value("item is associated with 999 lists.") }
+            jsonPath("$.message") { value("Item is associated with 999 lists.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.length()") { value(1) }

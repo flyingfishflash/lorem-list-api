@@ -16,6 +16,8 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import jakarta.validation.ConstraintViolationException
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
+import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
@@ -31,8 +33,9 @@ import java.util.UUID
 
 class LrmListServiceTests : DescribeSpec({
 
+  val mockAssociationService = mockk<AssociationService>()
   val mockLrmListRepository = mockk<LrmListRepository>()
-  val lrmListService = LrmListService(mockLrmListRepository)
+  val lrmListService = LrmListService(mockAssociationService, mockLrmListRepository)
 
   val lrmListRequest = LrmListRequest("Lorem List Name", "Lorem List Description")
 
@@ -40,7 +43,9 @@ class LrmListServiceTests : DescribeSpec({
   val uuid1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
 
   fun lrmList(): LrmList = LrmList(uuid = uuid0, name = lrmListRequest.name, description = lrmListRequest.description)
-
+  fun lrmListWithItems() = lrmList().copy(
+    items = setOf(LrmItem(uuid = uuid0, name = "Lorem Item Name")),
+  )
   fun exposedSQLExceptionGeneric(): ExposedSQLException = ExposedSQLException(
     cause = SQLException("Cause of ExposedSQLException"),
     transaction = mockk<Transaction>(relaxed = true),
@@ -85,36 +90,110 @@ class LrmListServiceTests : DescribeSpec({
     }
   }
 
-  describe("delete()") {
-    it("list repository returns 0 deleted records") {
-      every { mockLrmListRepository.deleteById(uuid1) } returns 0
-      assertThrows<ListNotFoundException> {
-        lrmListService.deleteSingleById(uuid1)
-      }.cause.shouldBeNull()
+  describe("deleteById()") {
+    it("list not found") {
+      every { mockLrmListRepository.findByIdOrNull(uuid1) } returns null
+      val exception = shouldThrow<ApiException> { lrmListService.deleteById(uuid1, removeItemAssociations = false) }
+      exception.cause.shouldBeInstanceOf<ListNotFoundException>()
+      exception.responseMessage.shouldBe("List id $uuid1 could not be deleted: List id $uuid1 could not be found.")
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(any()) }
     }
 
-    it("list repository returns > 1 deleted records") {
-      every { mockLrmListRepository.deleteById(uuid1) } returns 2
-      assertThrows<ApiException> {
-        lrmListService.deleteSingleById(uuid1)
-      }.cause.shouldBeNull()
-    }
-
-    it("list repository returns 1 deleted record") {
+    it("runtime exception thrown by association service") {
       every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
-      every { mockLrmListRepository.deleteById(uuid1) } returns 1
-      lrmListService.deleteSingleById(uuid1)
-      verify(exactly = 1) { mockLrmListRepository.deleteById(any()) }
+      every { mockAssociationService.countForListId(any()) } throws RuntimeException("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmListService.deleteById(uuid1, removeItemAssociations = false) }
+      exception.cause.shouldBeInstanceOf<RuntimeException>()
+      exception.responseMessage.shouldBe("List id $uuid1 could not be deleted.")
+      verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(any()) }
     }
 
-    it("list repository throws exposed sql exception") {
-      every { mockLrmListRepository.deleteById(uuid1) } throws exposedSQLExceptionGeneric()
-      val exception = shouldThrow<ApiException> { lrmListService.deleteSingleById(uuid1) }
-      exception.cause.shouldBeInstanceOf<ExposedSQLException>()
-      exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-      exception.message.shouldNotBeNull().shouldBeEqual("List $uuid1 could not be deleted.")
-      exception.responseMessage.shouldBeEqual("List $uuid1 could not be deleted.")
-      exception.title.shouldBeEqual(ApiException::class.java.simpleName)
+    describe("associated items") {
+      it("list is deleted (removeItemAssociations = true)") {
+        every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+        every { mockAssociationService.countForListId(uuid1) } returns 1
+        every { mockLrmListRepository.findByIdOrNullIncludeItems(uuid1) } returns lrmListWithItems()
+        every { mockAssociationService.deleteAllOfList(uuid1) } returns Pair(lrmList().name, 999)
+        every { mockLrmListRepository.deleteById(uuid1) } returns 1
+        lrmListService.deleteById(uuid1, removeItemAssociations = true)
+        verify(exactly = 1) { mockLrmListRepository.findByIdOrNull(any()) }
+        verify(exactly = 1) { mockAssociationService.countForListId(any()) }
+        verify(exactly = 1) { mockLrmListRepository.findByIdOrNullIncludeItems(any()) }
+        verify(exactly = 1) { mockAssociationService.deleteAllOfList(any()) }
+        verify(exactly = 1) { mockLrmListRepository.deleteById(any()) }
+      }
+
+      it("list is not deleted (removeItemAssociations = false)") {
+        every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+        every { mockAssociationService.countForListId(uuid1) } returns 1
+        every { mockLrmListRepository.findByIdOrNullIncludeItems(uuid1) } returns lrmListWithItems()
+        val exception = shouldThrow<ApiException> {
+          lrmListService.deleteById(uuid1, removeItemAssociations = false)
+        }
+        exception.supplemental.shouldNotBeNull().size.shouldBe(2)
+        exception.message
+          .shouldContainIgnoringCase("$uuid1")
+          .shouldContainIgnoringCase("could not be deleted")
+          .shouldContainIgnoringCase("is associated with")
+        exception.responseMessage
+          .shouldContainIgnoringCase("$uuid1")
+          .shouldContainIgnoringCase("could not be deleted")
+          .shouldContainIgnoringCase("is associated with")
+        verify(exactly = 1) { mockAssociationService.countForListId(any()) }
+      }
+
+      it("list repository returns > 1 deleted records") {
+        every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+        every { mockAssociationService.countForListId(uuid1) } returns 1
+        every { mockLrmListRepository.findByIdOrNullIncludeItems(uuid1) } returns lrmListWithItems()
+        every { mockAssociationService.deleteAllOfList(uuid1) } returns Pair("Lorem Ipsum", 999)
+        every { mockLrmListRepository.deleteById(uuid1) } returns 2
+        val exception = shouldThrow<ApiException> { lrmListService.deleteById(uuid1, removeItemAssociations = true) }
+        exception.cause.shouldBeInstanceOf<ApiException>()
+        exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        exception.message
+          .shouldContainIgnoringCase("$uuid1")
+          .shouldContainIgnoringCase("could not be deleted")
+          .shouldContainIgnoringCase("more than one")
+        exception.responseMessage
+          .shouldContainIgnoringCase("$uuid1")
+          .shouldContainIgnoringCase("could not be deleted")
+          .shouldContainIgnoringCase("more than one")
+      }
+    }
+
+    describe("no associated items") {
+      it("list is deleted") {
+        every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+        every { mockAssociationService.countForListId(uuid1) } returns 0
+        every { mockLrmListRepository.findByIdOrNullIncludeItems(uuid1) } returns lrmList()
+        every { mockLrmListRepository.deleteById(uuid1) } returns 1
+        lrmListService.deleteById(uuid1, removeItemAssociations = false)
+        verify(exactly = 1) { mockAssociationService.countForListId(any()) }
+        verify(exactly = 1) { mockLrmListRepository.findByIdOrNullIncludeItems(any()) }
+        verify(exactly = 1) { mockLrmListRepository.deleteById(uuid1) }
+      }
+
+      it("list repository returns > 1 deleted records") {
+        every { mockLrmListRepository.findByIdOrNull(uuid1) } returns lrmList()
+        every { mockAssociationService.countForListId(uuid1) } returns 0
+        every { mockLrmListRepository.findByIdOrNullIncludeItems(uuid1) } returns lrmList()
+        every { mockAssociationService.deleteAllOfList(uuid1) } returns Pair("Lorem Ipsum", 999)
+        every { mockLrmListRepository.deleteById(uuid1) } returns 2
+        val exception = shouldThrow<ApiException> { lrmListService.deleteById(uuid1, removeItemAssociations = false) }
+        exception.cause.shouldBeInstanceOf<ApiException>()
+        exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        exception.message
+          .shouldContainIgnoringCase("$uuid1")
+          .shouldContainIgnoringCase("could not be deleted")
+          .shouldContainIgnoringCase("more than one")
+        exception.responseMessage
+          .shouldContainIgnoringCase("$uuid1")
+          .shouldContainIgnoringCase("could not be deleted")
+          .shouldContainIgnoringCase("more than one")
+        verify(exactly = 1) { mockAssociationService.countForListId(any()) }
+        verify(exactly = 1) { mockLrmListRepository.findByIdOrNullIncludeItems(any()) }
+      }
     }
   }
 

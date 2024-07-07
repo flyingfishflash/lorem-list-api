@@ -44,15 +44,19 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
   fun createLrmItemOneRequest(): LrmItemRequest = LrmItemRequest("Lorem Item One Name", "Lorem Item One Description", 0)
   fun createLrmItemTwoRequest(): LrmItemRequest = LrmItemRequest("Lorem Item Two Name", "Lorem Item Two Description", 0)
   fun createLrmItemThreeRequest(): LrmItemRequest = LrmItemRequest("Lorem Item Three Name", "Lorem Item Three Description", 0)
+
   val itemCreateRequests = listOf(createLrmItemOneRequest(), createLrmItemTwoRequest(), createLrmItemThreeRequest())
 
   fun updateLrmItemOneRequest(): LrmItemRequest = LrmItemRequest("Updated Lorem Item One Name", "Updated Lorem Item One Description", 1001)
+
   fun updateLrmItemTwoRequest(): LrmItemRequest = LrmItemRequest("Updated Lorem Item Two Name", "Updated Lorem Item Two Description", 1002)
+
   fun updateLrmItemThreeRequest(): LrmItemRequest = LrmItemRequest(
     "Updated Lorem Item Three Name",
     "Updated Lorem Item Three Description",
     1003,
   )
+
   val itemUpdateRequests = listOf(updateLrmItemOneRequest(), updateLrmItemTwoRequest(), updateLrmItemThreeRequest())
 
   val itemUuids: MutableMap<Int, UUID> = HashMap()
@@ -63,7 +67,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
   val listCreateRequests = listOf(createLrmListOneRequest(), createLrmListTwoRequest())
 
   fun updateLrmListOneRequest(): LrmListRequest = LrmListRequest("Updated Lorem List One Name", "Updated Lorem List One Description")
+
   fun updateLrmListTwoRequest(): LrmListRequest = LrmListRequest("Updated Lorem List Two Name", "Updated Lorem List Two Description")
+
   val listUpdateRequests = listOf(updateLrmListOneRequest(), updateLrmListTwoRequest())
 
   describe("comprehensive functional test") {
@@ -447,7 +453,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
     }
 
-    describe("item -> list association: create, read, update, delete") {
+    describe("item: list association: create, read, update, delete") {
       it("item 0 is added to list 0") {
         val instance = "/items/${itemUuids[0]}/list-associations"
         mockMvc.post(instance) {
@@ -767,7 +773,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("item is associated with 1 lists.") }
+          jsonPath("$.message") { value("Item is associated with 1 lists.") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(1) }
@@ -784,7 +790,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("item is associated with 1 lists.") }
+          jsonPath("$.message") { value("Item is associated with 1 lists.") }
           jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(1) }
@@ -853,7 +859,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
           jsonPath("$.instance") { value(instance) }
-          jsonPath("$.message") { value("item is associated with 0 lists.") }
+          jsonPath("$.message") { value("Item is associated with 0 lists.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(1) }
           jsonPath("$.content.value") { value(0) }
@@ -861,7 +867,295 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
     }
 
-    describe("item delete") {
+    describe("list: item association: create, read, delete)") {
+      it("list 0 has one item associations") {
+        val instance = "/lists/${listUuids[0]}/item-associations/count"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("List is associated with 1 items.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(1) }
+        }
+      }
+
+      it("list 1 has zero item associations") {
+        val instance = "/lists/${listUuids[1]}/item-associations/count"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("List is associated with 0 items.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(0) }
+        }
+      }
+
+      it("item 0 is added to list 1") {
+        val instance = "/lists/${listUuids[1]}/item-associations"
+        mockMvc.post(instance) {
+          content = Json.encodeToString(itemUuids[0].toString())
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+          jsonPath("$.message") { value("Assigned item '${updateLrmItemOneRequest().name}' to list '${updateLrmListTwoRequest().name}'.") }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.message") {
+            value(
+              "Assigned item '${updateLrmItemOneRequest().name}' to list '${updateLrmListTwoRequest().name}'.",
+            )
+          }
+        }
+      }
+
+      it("item 0 is not added to list 1 when it's already been added") {
+        val instance = "/lists/${listUuids[1]}/item-associations"
+        mockMvc.post(instance) {
+          content = Json.encodeToString(itemUuids[0].toString())
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isUnprocessableEntity() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+          jsonPath("$.message") { value("Item id ${itemUuids[0]} could not be added to list id ${listUuids[1]}: It's already been added.") }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(5) }
+          jsonPath("$.content.status") { value(HttpStatus.UNPROCESSABLE_ENTITY.value()) }
+        }
+      }
+
+      it("item 1 is added to list 1") {
+        val expected = "Assigned item '${updateLrmItemTwoRequest().name}' to list '${updateLrmListTwoRequest().name}'."
+        val instance = "/lists/${listUuids[1]}/item-associations"
+        mockMvc.post(instance) {
+          content = Json.encodeToString(itemUuids[1].toString())
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+          jsonPath("$.message") { value(expected) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.message") { value(expected) }
+        }
+      }
+
+      it("item 2 is added to list 1") {
+        val expected = "Assigned item '${updateLrmItemThreeRequest().name}' to list '${updateLrmListTwoRequest().name}'."
+        val instance = "/lists/${listUuids[1]}/item-associations"
+        mockMvc.post(instance) {
+          content = Json.encodeToString(itemUuids[2].toString())
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+          jsonPath("$.message") { value(expected) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.message") { value(expected) }
+        }
+      }
+
+      it("list 1 includes three items") {
+        val instance = "/lists/${listUuids[1]}?includeItems=true"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.message") { value("retrieved list id ${listUuids[1]}") }
+          jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.uuid") { value("${listUuids[1]}") }
+          jsonPath("$.content.name") { value(updateLrmListTwoRequest().name) }
+          jsonPath("$.content.description") { value(updateLrmListTwoRequest().description) }
+          jsonPath("$.content.created") { isNotEmpty() }
+          jsonPath("$.content.updated") { isNotEmpty() }
+          jsonPath("$.content.items.length()") { value(3) }
+        }
+      }
+
+      it("item 2 is deleted from list 1") {
+        val expected = "Removed item '${updateLrmItemThreeRequest().name}' from list '${updateLrmListTwoRequest().name}'."
+        val instance = "/lists/${listUuids[1]}/item-associations"
+        mockMvc.delete(instance) {
+          content = "\"${itemUuids[2]}\""
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value(expected) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+        }
+      }
+
+      it("item 2 is not deleted from list 1 because the association couldn't be found") {
+        val instance = "/lists/${listUuids[1]}/item-associations"
+        mockMvc.delete(instance) {
+          content = "\"${itemUuids[2]}\""
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isNotFound() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath(
+            "$.message",
+          ) { value("Item id ${itemUuids[2]} could not be removed from list id ${listUuids[1]}: Association not found.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(5) }
+          jsonPath("$.content.cause") { isNotEmpty() }
+          jsonPath("$.content.cause.name") { value(AssociationNotFoundException::class.java.simpleName) }
+          jsonPath("$.content.cause.message") { isNotEmpty() }
+        }
+      }
+
+      it("list 1 has 2 item associations") {
+        val instance = "/lists/${listUuids[1]}/item-associations/count"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("List is associated with 2 items.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(2) }
+        }
+      }
+
+      it("items 0 and 1 are deleted from list 1") {
+        val expected = "Removed all associated items (2) from list '${updateLrmListTwoRequest().name}'."
+        val instance = "/lists/${listUuids[1]}/item-associations/delete-all"
+        mockMvc.delete(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value(expected) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+        }
+      }
+
+      it("an item is not added to list 0 because the item couldn't be found") {
+        val randomUuid = UUID.randomUUID()
+        val instance = "/lists/${listUuids[1]}/item-associations"
+        mockMvc.post(instance) {
+          content = Json.encodeToString(randomUuid.toString())
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isNotFound() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+          jsonPath("$.message") {
+            value("Item id $randomUuid could not be added to list id ${listUuids[1]}: Item id $randomUuid could not be found.")
+          }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(5) }
+          jsonPath("$.content.status") { value(HttpStatus.NOT_FOUND.value()) }
+          jsonPath("$.content.cause") { isNotEmpty() }
+          jsonPath("$.content.cause.name") { value(ItemNotFoundException::class.java.simpleName) }
+          jsonPath("$.content.cause.message") { isNotEmpty() }
+        }
+      }
+
+      it("item 0 is not added to a list because the list couldn't be found") {
+        val randomUuid = UUID.randomUUID()
+        val instance = "/lists/$randomUuid/item-associations"
+        mockMvc.post(instance) {
+          content = Json.encodeToString(itemUuids[0].toString())
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isNotFound() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+          jsonPath("$.message") {
+            value("Item id ${itemUuids[0]} could not be added to list id $randomUuid: List id $randomUuid could not be found.")
+          }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(5) }
+          jsonPath("$.content.status") { value(HttpStatus.NOT_FOUND.value()) }
+          jsonPath("$.content.cause") { isNotEmpty() }
+          jsonPath("$.content.cause.name") { value(ListNotFoundException::class.java.simpleName) }
+          jsonPath("$.content.cause.message") { isNotEmpty() }
+        }
+      }
+
+      it("list 0 has one item associations+") {
+        val instance = "/lists/${listUuids[0]}/item-associations/count"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("List is associated with 1 items.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(1) }
+        }
+      }
+
+      it("list 1 has zero item associations+") {
+        val instance = "/lists/${listUuids[1]}/item-associations/count"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("List is associated with 0 items.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(0) }
+        }
+      }
+    }
+
+    describe("item: delete") {
       it("item 2 has zero list associations") {
         val instance = "/items/${itemUuids[2]}/list-associations/count"
         mockMvc.get(instance) {
@@ -872,7 +1166,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
           jsonPath("$.instance") { value(instance) }
-          jsonPath("$.message") { value("item is associated with 0 lists.") }
+          jsonPath("$.message") { value("Item is associated with 0 lists.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(1) }
           jsonPath("$.content.value") { value(0) }
@@ -926,7 +1220,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
           jsonPath("$.instance") { value(instance) }
-          jsonPath("$.message") { value("item is associated with 2 lists.") }
+          jsonPath("$.message") { value("Item is associated with 2 lists.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(1) }
           jsonPath("$.content.value") { value(2) }
@@ -987,28 +1281,168 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
     }
 
-    describe("list delete") {
-      it("delete list with no item associations") {
-        TODO()
+    describe("list: delete") {
+      it("list 1 has zero item associations+") {
+        val instance = "/lists/${listUuids[1]}/item-associations/count"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("List is associated with 0 items.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(0) }
+        }
       }
 
-      it("delete list with item associations") {
-        TODO()
+      it("delete list 1") {
+        val instance = "/lists/${listUuids[1]}"
+        mockMvc.delete(instance).andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("Deleted list id ${listUuids[1]}.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(2) }
+          jsonPath("$.content.associatedItemCount") { value(0) }
+          jsonPath("$.content.associatedItemNames.length()") { value(0) }
+        }
       }
 
-      it("total list count is zero") {
+      it("total list count is one") {
         val instance = "/lists/count"
         mockMvc.get(instance).andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("0 lists.") }
+          jsonPath("$.message") { value("1 lists.") }
           jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(1) }
+        }
+      }
+
+      describe("delete list with item associations") {
+        val instance = "/lists/${listUuids[0]}/item-associations/count"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("List is associated with 0 items.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(1) }
           jsonPath("$.content.value") { value(0) }
         }
+      }
+
+      it("item 0 is added to list 0") {
+        val instance = "/lists/${listUuids[0]}/item-associations"
+        mockMvc.post(instance) {
+          content = Json.encodeToString(itemUuids[0].toString())
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
+          jsonPath("$.message") {
+            value(
+              "Assigned item '${updateLrmItemOneRequest().name}' " +
+                "to list '${updateLrmListOneRequest().name}'.",
+            )
+          }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.message") {
+            value(
+              "Assigned item '${updateLrmItemOneRequest().name}' " +
+                "to list '${updateLrmListOneRequest().name}'.",
+            )
+          }
+        }
+      }
+
+      it("delete list 0 (removeItemAssociations = false)") {
+        val expected =
+          "List id ${listUuids[0]} could not be deleted: List ${listUuids[0]} is associated with 1 item(s). " +
+            "First remove each item from the list."
+        val instance = "/lists/${listUuids[0]}"
+        mockMvc.delete(instance).andExpect {
+          // client should be checking for http 422 error and proceed to confirm removal from X lists
+          status { isUnprocessableEntity() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value(expected) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.detail") { value(expected) }
+          jsonPath("$.content.cause") { isNotEmpty() }
+          jsonPath("$.content.cause.name") { value(ApiException::class.java.simpleName) }
+          jsonPath("$.content.cause.message") { isNotEmpty() }
+        }
+      }
+
+      it("list 0 has one item associations") {
+        val instance = "/lists/${listUuids[0]}/item-associations/count"
+        mockMvc.get(instance) {
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.message") { value("List is associated with 1 items.") }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(1) }
+          jsonPath("$.content.value") { value(1) }
+        }
+      }
+
+      it("delete list 0 (removeItemAssociations = true)") {
+        val expected = "Deleted list id ${listUuids[0]}."
+        val instance = "/lists/${listUuids[0]}?removeItemAssociations=true"
+        mockMvc.delete(instance).andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+          jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
+          jsonPath("$.message") { value(expected) }
+          jsonPath("$.size") { value(1) }
+          jsonPath("$.content.length()") { value(2) }
+          jsonPath("$.content.associatedItemCount") { value(1) }
+          jsonPath("$.content.associatedItemNames.length()") { value(1) }
+          jsonPath("$.content.associatedItemNames.[0]") { value(updateLrmItemOneRequest().name) }
+        }
+      }
+    }
+
+    it("total list count is zero") {
+      val instance = "/lists/count"
+      mockMvc.get(instance).andExpect {
+        status { isOk() }
+        content { contentType(MediaType.APPLICATION_JSON) }
+        jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+        jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+        jsonPath("$.message") { value("0 lists.") }
+        jsonPath("$.instance") { value(instance) }
+        jsonPath("$.size") { value(1) }
+        jsonPath("$.content.length()") { value(1) }
+        jsonPath("$.content.value") { value(0) }
       }
     }
   }

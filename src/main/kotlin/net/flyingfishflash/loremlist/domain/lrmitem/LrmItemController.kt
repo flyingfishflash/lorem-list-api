@@ -109,7 +109,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @RequestParam(defaultValue = false.toString()) removeListAssociations: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmItemDeleteResponse>> {
-    val serviceResponse = lrmItemService.deleteSingleById(id, removeListAssociations)
+    val serviceResponse = lrmItemService.deleteById(id, removeListAssociations)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Deleted item id $id."
     val response = ResponseSuccess(serviceResponse, responseMessage, request)
@@ -192,7 +192,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
     val serviceResponse = associationService.countForItemId(id)
-    val responseMessage = "item is associated with $serviceResponse lists."
+    val responseMessage = "Item is associated with $serviceResponse lists."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)
     val response = ResponseSuccess(responseContent, responseMessage, request)

@@ -4,14 +4,21 @@ import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
+import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
+import net.flyingfishflash.loremlist.toJsonElement
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
 @Transactional
-class LrmListService(val lrmListRepository: LrmListRepository) {
+class LrmListService(
+  private val associationService: AssociationService,
+  private val lrmListRepository: LrmListRepository,
+) {
 
   fun count(): Long {
     try {
@@ -39,23 +46,65 @@ class LrmListService(val lrmListRepository: LrmListRepository) {
     }
   }
 
-  fun deleteSingleById(uuid: UUID) {
-    val deletedCount =
-      try {
-        lrmListRepository.deleteById(uuid)
-      } catch (cause: Exception) {
-        throw ApiException(
-          cause = cause,
-          message = "List $uuid could not be deleted.",
-          responseMessage = "List $uuid could not be deleted.",
-        )
+  fun deleteById(uuid: UUID, removeItemAssociations: Boolean): LrmListDeleteResponse {
+    try {
+      findById(uuid)
+      val lrmListDeleteResponse = LrmListDeleteResponse(
+        associatedItemCount = associationService.countForListId(uuid),
+        associatedItemNames = (findByIdIncludeItems(uuid).items?.map { it.name })?.sorted() ?: emptyList(),
+      )
+
+      if (lrmListDeleteResponse.associatedItemCount > 0) {
+        if (removeItemAssociations) {
+          associationService.deleteAllOfList(uuid)
+          val deletedCount = lrmListRepository.deleteById(uuid)
+          if (deletedCount > 1) {
+            throw ApiException(
+              message = "More than one list with id $uuid were found.",
+              responseMessage = "More than one list with id $uuid were found.",
+            )
+          }
+        } else {
+          // throw an exception rather than removing the item from all lists and then deleting it
+          val message = "List $uuid is associated with ${lrmListDeleteResponse.associatedItemCount} item(s). " +
+            "First remove each item from the list."
+          throw ApiException(
+            httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
+            supplemental = mapOf(
+              "associatedItemCount" to lrmListDeleteResponse.associatedItemCount.toJsonElement(),
+              "associatedItemNames" to lrmListDeleteResponse.associatedItemCount.toJsonElement(),
+            ),
+            message = message,
+            responseMessage = message,
+          )
+        }
+      } else {
+        // list is not associated with any items
+        val deletedCount = lrmListRepository.deleteById(uuid)
+        if (deletedCount > 1) {
+          throw ApiException(
+            message = "More than one list with id $uuid were found.",
+            responseMessage = "More than one list with id $uuid were found.",
+          )
+        }
       }
-    if (deletedCount < 1) {
-      throw ListNotFoundException(uuid)
-    } else if (deletedCount > 1) {
+
+      return lrmListDeleteResponse
+    } catch (apiException: ApiException) {
+      val message = "List id $uuid could not be deleted: ${apiException.responseMessage}"
       throw ApiException(
-        message = "List id $uuid could not be deleted. $deletedCount records would have been updated rather than 1.",
-        responseMessage = "List id $uuid could not be deleted. $deletedCount records would have been updated rather than 1.",
+        cause = apiException,
+        httpStatus = apiException.httpStatus,
+        responseMessage = message,
+        message = message,
+        supplemental = apiException.supplemental,
+      )
+    } catch (exception: Exception) {
+      val message = "List id $uuid could not be deleted."
+      throw ApiException(
+        cause = exception,
+        responseMessage = message,
+        message = message,
       )
     }
   }

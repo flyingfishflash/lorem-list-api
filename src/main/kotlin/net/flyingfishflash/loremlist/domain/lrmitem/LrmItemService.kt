@@ -48,7 +48,7 @@ class LrmItemService(
     }
   }
 
-  fun deleteSingleById(uuid: UUID, removeListAssociations: Boolean): LrmItemDeleteResponse {
+  fun deleteById(uuid: UUID, removeListAssociations: Boolean): LrmItemDeleteResponse {
     try {
       findById(uuid)
       val lrmItemDeleteResponse = LrmItemDeleteResponse(
@@ -72,7 +72,7 @@ class LrmItemService(
           throw ApiException(
             httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
             supplemental = mapOf(
-              "listAssociations" to lrmItemDeleteResponse.associatedListCount.toJsonElement(),
+              "associatedListCount" to lrmItemDeleteResponse.associatedListCount.toJsonElement(),
               "associatedListNames" to lrmItemDeleteResponse.associatedListNames.toJsonElement(),
             ),
             message = message,

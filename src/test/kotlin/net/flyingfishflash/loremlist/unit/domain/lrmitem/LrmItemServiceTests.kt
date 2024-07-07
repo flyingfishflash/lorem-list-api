@@ -89,10 +89,10 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("deleteSingleById()") {
-    it("item is not found") {
+  describe("deleteById()") {
+    it("item not found") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns null
-      val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(uuid1, removeListAssociations = false) }
+      val exception = shouldThrow<ApiException> { lrmItemService.deleteById(uuid1, removeListAssociations = false) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       exception.responseMessage.shouldBe("Item id $uuid1 could not be deleted: Item id $uuid1 could not be found.")
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
@@ -101,7 +101,7 @@ class LrmItemServiceTests : DescribeSpec({
     it("runtime exception thrown by association service") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
       every { mockAssociationService.countForItemId(any()) } throws RuntimeException("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(uuid1, removeListAssociations = false) }
+      val exception = shouldThrow<ApiException> { lrmItemService.deleteById(uuid1, removeListAssociations = false) }
       exception.cause.shouldBeInstanceOf<RuntimeException>()
       exception.responseMessage.shouldBe("Item id $uuid1 could not be deleted.")
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
@@ -114,7 +114,7 @@ class LrmItemServiceTests : DescribeSpec({
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItemWithLists()
         every { mockAssociationService.deleteAllOfItem(uuid1) } returns Pair(lrmItem().name, 999)
         every { mockLrmItemRepository.deleteById(uuid1) } returns 1
-        lrmItemService.deleteSingleById(uuid1, removeListAssociations = true)
+        lrmItemService.deleteById(uuid1, removeListAssociations = true)
         verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
         verify(exactly = 1) { mockAssociationService.countForItemId(any()) }
         verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
@@ -127,7 +127,7 @@ class LrmItemServiceTests : DescribeSpec({
         every { mockAssociationService.countForItemId(uuid1) } returns 1
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItemWithLists()
         val exception = shouldThrow<ApiException> {
-          lrmItemService.deleteSingleById(uuid1, removeListAssociations = false)
+          lrmItemService.deleteById(uuid1, removeListAssociations = false)
         }
         exception.supplemental.shouldNotBeNull().size.shouldBe(2)
         exception.message
@@ -147,7 +147,7 @@ class LrmItemServiceTests : DescribeSpec({
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItemWithLists()
         every { mockAssociationService.deleteAllOfItem(uuid1) } returns Pair("Lorem Ipsum", 999)
         every { mockLrmItemRepository.deleteById(uuid1) } returns 2
-        val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(uuid1, removeListAssociations = true) }
+        val exception = shouldThrow<ApiException> { lrmItemService.deleteById(uuid1, removeListAssociations = true) }
         exception.cause.shouldBeInstanceOf<ApiException>()
         exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
         exception.message
@@ -167,7 +167,7 @@ class LrmItemServiceTests : DescribeSpec({
         every { mockAssociationService.countForItemId(uuid1) } returns 0
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItem()
         every { mockLrmItemRepository.deleteById(uuid1) } returns 1
-        lrmItemService.deleteSingleById(uuid1, removeListAssociations = false)
+        lrmItemService.deleteById(uuid1, removeListAssociations = false)
         verify(exactly = 1) { mockAssociationService.countForItemId(any()) }
         verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
         verify(exactly = 1) { mockLrmItemRepository.deleteById(uuid1) }
@@ -179,7 +179,7 @@ class LrmItemServiceTests : DescribeSpec({
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItem()
         every { mockAssociationService.deleteAllOfItem(uuid1) } returns Pair("Lorem Ipsum", 999)
         every { mockLrmItemRepository.deleteById(uuid1) } returns 2
-        val exception = shouldThrow<ApiException> { lrmItemService.deleteSingleById(uuid1, removeListAssociations = false) }
+        val exception = shouldThrow<ApiException> { lrmItemService.deleteById(uuid1, removeListAssociations = false) }
         exception.cause.shouldBeInstanceOf<ApiException>()
         exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
         exception.message
