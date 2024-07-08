@@ -23,6 +23,7 @@ import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
+import net.flyingfishflash.loremlist.toJsonElement
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.statements.StatementContext
@@ -131,6 +132,10 @@ class LrmListServiceTests : DescribeSpec({
           lrmListService.deleteById(uuid1, removeItemAssociations = false)
         }
         exception.supplemental.shouldNotBeNull().size.shouldBe(2)
+        exception.supplemental.shouldNotBeNull()["associatedItemCount"]
+          .shouldBe(1.toJsonElement())
+        exception.supplemental.shouldNotBeNull()["associatedItemNames"]
+          .shouldBe(lrmListWithItems().items?.map { it.name }.toJsonElement())
         exception.message
           .shouldContainIgnoringCase("$uuid1")
           .shouldContainIgnoringCase("could not be deleted")

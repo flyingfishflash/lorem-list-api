@@ -72,7 +72,7 @@ class LrmListService(
             httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
             supplemental = mapOf(
               "associatedItemCount" to lrmListDeleteResponse.associatedItemCount.toJsonElement(),
-              "associatedItemNames" to lrmListDeleteResponse.associatedItemCount.toJsonElement(),
+              "associatedItemNames" to lrmListDeleteResponse.associatedItemNames.toJsonElement(),
             ),
             message = message,
             responseMessage = message,
