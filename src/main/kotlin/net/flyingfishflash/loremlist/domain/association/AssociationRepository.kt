@@ -6,6 +6,7 @@ import net.flyingfishflash.loremlist.domain.LrmListsItemsTable.list
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -16,6 +17,12 @@ import java.util.UUID
 @Repository
 class AssociationRepository {
   private val repositoryTable = LrmListsItemsTable
+
+  fun count(): Long {
+    val uuidCount = repositoryTable.id.count()
+    val count = repositoryTable.select(uuidCount).first()[uuidCount]
+    return count
+  }
 
   fun countItemToList(itemUuid: UUID): Long {
     val itemCount = item.count()
@@ -44,6 +51,10 @@ class AssociationRepository {
     return repositoryTable.deleteWhere {
       (item eq itemUuid).and(list eq itemUuid)
     }
+  }
+
+  fun deleteAll(): Int {
+    return repositoryTable.deleteAll()
   }
 
   fun deleteAllOfItem(itemUuid: UUID): Int {

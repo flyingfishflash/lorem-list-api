@@ -59,6 +59,27 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     afterSpec { unmockkAll() }
 
     describe("/lists") {
+      describe("delete") {
+        it("lists are deleted") {
+          val mockReturn = LrmListDeleteResponse(listNames = listOf("Lorem List Name"), associatedItemNames = listOf("Lorem Item Name"))
+          every { mockLrmListService.deleteAll() } returns mockReturn
+          val instance = "/lists"
+          mockMvc.delete(instance) {
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
+            jsonPath("$.message") { value("Deleted all lists and their item associations.") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(1) }
+            jsonPath("$.content.listNames[0]") { value(mockReturn.listNames[0]) }
+            jsonPath("$.content.associatedItemNames[0]") { value(mockReturn.associatedItemNames[0]) }
+          }
+        }
+      }
+
       describe("get") {
         it("lists are found") {
           val mockReturn = listOf(lrmList())
@@ -224,7 +245,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           // if the count of item to list associations is 0, then associatedListNames should be an empty list
           every {
             mockLrmListService.deleteById(uuid1, removeItemAssociations = false)
-          } returns LrmListDeleteResponse(0, listOf("Lorem Ipsum"))
+          } returns LrmListDeleteResponse(listNames = listOf("dolor sit amet"), associatedItemNames = listOf("Lorem Ipsum"))
           val instance = "/lists/$uuid1"
           mockMvc.delete(instance).andExpect {
             status { isOk() }
@@ -234,7 +255,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.message") { value("Deleted list id $uuid1.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
-            jsonPath("$.content.associatedItemCount") { value(0) }
+            jsonPath("$.content.listNames.length()") { value(1) }
+            jsonPath("$.content.listNames.[0]") { value("dolor sit amet") }
             jsonPath("$.content.associatedItemNames.length()") { value(1) }
             jsonPath("$.content.associatedItemNames.[0]") { value("Lorem Ipsum") }
           }

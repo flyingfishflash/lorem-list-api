@@ -158,6 +158,18 @@ class AssociationServiceTests : DescribeSpec({
     }
   }
 
+  describe("countAll()") {
+    it("count of all associations is returned") {
+      every { mockAssociationRepository.count() } returns 999
+      associationService.countAll().shouldBe(999)
+    }
+
+    it("association repository throws exception") {
+      every { mockAssociationRepository.count() } throws RuntimeException("Lorem Ipsum")
+      shouldThrow<ApiException> { associationService.countAll() }
+    }
+  }
+
   describe("countItemToList()") {
     it("count of list associations is returned") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
@@ -265,6 +277,18 @@ class AssociationServiceTests : DescribeSpec({
       exception.responseMessage.shouldBe("Item id $uuid1 was not moved from list id $uuid2 to list id $uuid3.")
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
       verify(exactly = 2) { mockLrmListRepository.findByIdOrNull(any()) }
+    }
+  }
+
+  describe("deleteAll()") {
+    it("delete all associations") {
+      every { mockAssociationRepository.deleteAll() } returns 999
+      associationService.deleteAll().shouldBe(999)
+    }
+
+    it("association repository throws exception") {
+      every { mockAssociationRepository.deleteAll() } throws RuntimeException("Lorem Ipsum")
+      shouldThrow<ApiException> { associationService.deleteAll() }
     }
   }
 

@@ -46,15 +46,45 @@ class LrmListService(
     }
   }
 
+  fun deleteAll(): LrmListDeleteResponse {
+    try {
+      val lrmListDeleteResponse = LrmListDeleteResponse(
+        listNames = findAll().map { it.name }.sorted(),
+        associatedItemNames = findAllIncludeItems().flatMap { it.items.orEmpty() }.map { it.name }.sorted(),
+      )
+      if (lrmListDeleteResponse.listNames.isNotEmpty()) {
+        associationService.deleteAll()
+        lrmListRepository.deleteAll()
+      }
+      return lrmListDeleteResponse
+    } catch (apiException: ApiException) {
+      val message = "No lists were deleted: ${apiException.responseMessage}"
+      throw ApiException(
+        cause = apiException,
+        httpStatus = apiException.httpStatus,
+        responseMessage = message,
+        message = message,
+        supplemental = apiException.supplemental,
+      )
+    } catch (exception: Exception) {
+      val message = "No lists were deleted."
+      throw ApiException(
+        cause = exception,
+        responseMessage = message,
+        message = message,
+      )
+    }
+  }
+
   fun deleteById(uuid: UUID, removeItemAssociations: Boolean): LrmListDeleteResponse {
     try {
-      findById(uuid)
+      val listName = findById(uuid).name
       val lrmListDeleteResponse = LrmListDeleteResponse(
-        associatedItemCount = associationService.countForListId(uuid),
-        associatedItemNames = (findByIdIncludeItems(uuid).items?.map { it.name })?.sorted() ?: emptyList(),
+        listNames = listOf(listName),
+        associatedItemNames = (findByIdIncludeItems(uuid).items.orEmpty().map { it.name }).sorted(),
       )
 
-      if (lrmListDeleteResponse.associatedItemCount > 0) {
+      if (lrmListDeleteResponse.associatedItemNames.isNotEmpty()) {
         if (removeItemAssociations) {
           associationService.deleteAllOfList(uuid)
           val deletedCount = lrmListRepository.deleteById(uuid)
@@ -66,12 +96,12 @@ class LrmListService(
           }
         } else {
           // throw an exception rather than removing the item from all lists and then deleting it
-          val message = "List $uuid is associated with ${lrmListDeleteResponse.associatedItemCount} item(s). " +
+          val message = "List $uuid is associated with ${lrmListDeleteResponse.associatedItemNames.size} item(s). " +
             "First remove each item from the list."
           throw ApiException(
             httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
             supplemental = mapOf(
-              "associatedItemCount" to lrmListDeleteResponse.associatedItemCount.toJsonElement(),
+              "listNames" to lrmListDeleteResponse.listNames.toJsonElement(),
               "associatedItemNames" to lrmListDeleteResponse.associatedItemNames.toJsonElement(),
             ),
             message = message,

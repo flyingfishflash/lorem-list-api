@@ -22,13 +22,31 @@ class AssociationService(
 ) {
 
   /**
+   * Count of all associations
+   *
+   * @return association count
+   */
+  fun countAll(): Long {
+    val exceptionMessage = "Count of associations could not be retrieved."
+    val associations = try {
+      associationRepository.count()
+    } catch (exception: Exception) {
+      throw ApiException(
+        cause = exception,
+        message = "$exceptionMessage.",
+      )
+    }
+    return associations
+  }
+
+  /**
    * Count of associations for a specified item
    *
    *  @param UUID item uuid
    *  @return association count
    */
   fun countForItemId(itemUuid: UUID): Long {
-    val exceptionMessage = "Count of lists associated with item id $itemUuid could not be retrieved"
+    val exceptionMessage = "Count of lists associated with item id $itemUuid could not be retrieved."
     val associations = try {
       lrmItemRepository.findByIdOrNull(itemUuid) ?: throw ItemNotFoundException(itemUuid)
       associationRepository.countItemToList(itemUuid)
@@ -121,6 +139,24 @@ class AssociationService(
       )
     }
     return Pair(item.name, list.name)
+  }
+
+  /**
+   * Delete all associations
+   *
+   * @return count of deleted associations
+   */
+  fun deleteAll(): Int {
+    val exceptionMessage = "Could not delete any associations."
+    val deletedCount = try {
+      associationRepository.deleteAll()
+    } catch (exception: Exception) {
+      throw ApiException(
+        cause = exception,
+        message = "$exceptionMessage.",
+      )
+    }
+    return deletedCount
   }
 
   /**

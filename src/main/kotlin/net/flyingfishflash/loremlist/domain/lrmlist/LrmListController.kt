@@ -87,6 +87,22 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
+  @Operation(summary = "Delete all lists. List items are disassociated, not deleted.")
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "200", description = "All Lists Deleted. All Items disassociated."),
+    ],
+  )
+  @DeleteMapping
+  fun deleteAll(request: HttpServletRequest): ResponseEntity<ResponseSuccess<LrmListDeleteResponse>> {
+    val serviceResponse = lrmListService.deleteAll()
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Deleted all lists and their item associations."
+    val response = ResponseSuccess(serviceResponse, responseMessage, request)
+    logger.info { Json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
   @Operation(summary = "Delete a list")
   @ApiResponses(
     value = [
@@ -104,7 +120,7 @@ class LrmListController(private val associationService: AssociationService, priv
     ],
   )
   @DeleteMapping("/{id}")
-  fun delete(
+  fun deleteById(
     @PathVariable("id") @ValidUuid id: UUID,
     @RequestParam(defaultValue = false.toString()) removeItemAssociations: Boolean,
     request: HttpServletRequest,
