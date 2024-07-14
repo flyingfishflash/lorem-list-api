@@ -9,6 +9,7 @@ import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
@@ -25,6 +26,8 @@ class LrmItemRepository {
     val count = repositoryTable.select(uuidCount).first()[uuidCount]
     return count
   }
+
+  fun deleteAll(): Int = repositoryTable.deleteAll()
 
   fun deleteById(uuid: UUID): Int = repositoryTable.deleteWhere { repositoryTable.id eq uuid }
 

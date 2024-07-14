@@ -71,7 +71,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.message") { value("Deleted all lists and their item associations.") }
+            jsonPath("$.message") { value("Deleted all lists and disassociated all items.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.listNames[0]") { value(mockReturn.listNames[0]) }

@@ -7,6 +7,7 @@ import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldContainIgnoringCase
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.clearAllMocks
@@ -89,6 +90,47 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
+  describe("deleteAll()") {
+    it("all items deleted") {
+      every { mockLrmItemRepository.findAll() } returns listOf(lrmItem())
+      every { mockLrmItemRepository.findAllIncludeLists() } returns listOf(lrmItemWithLists())
+      every { mockAssociationService.deleteAll() } returns 999
+      every { mockLrmItemRepository.deleteAll() } returns 999
+      val lrmListDeleteResponse = lrmItemService.deleteAll()
+      lrmListDeleteResponse.itemNames.size.shouldBe(1)
+      lrmListDeleteResponse.associatedListNames.size.shouldBe(1)
+      verify(exactly = 1) { mockLrmItemRepository.findAll() }
+      verify(exactly = 1) { mockLrmItemRepository.findAllIncludeLists() }
+      verify(exactly = 1) { mockAssociationService.deleteAll() }
+      verify(exactly = 1) { mockLrmItemRepository.deleteAll() }
+    }
+
+    it("no lists deleted (none present)") {
+      every { mockLrmItemRepository.findAll() } returns emptyList()
+      every { mockLrmItemRepository.findAllIncludeLists() } returns emptyList()
+      every { mockAssociationService.deleteAll() } returns 999
+      every { mockLrmItemRepository.deleteAll() } returns 999
+      val lrmListDeleteResponse = lrmItemService.deleteAll()
+      lrmListDeleteResponse.itemNames.size.shouldBe(0)
+      lrmListDeleteResponse.associatedListNames.size.shouldBe(0)
+      verify(exactly = 1) { mockLrmItemRepository.findAll() }
+      verify(exactly = 1) { mockLrmItemRepository.findAllIncludeLists() }
+      verify(exactly = 0) { mockAssociationService.deleteAll() }
+      verify(exactly = 0) { mockLrmItemRepository.deleteAll() }
+    }
+
+    it("no lists deleted (api exception)") {
+      every { mockLrmItemRepository.findAll() } throws (Exception("Lorem Ipsum"))
+      val apiException = shouldThrow<ApiException> { lrmItemService.deleteAll() }
+      apiException.message.shouldContain("No items were deleted")
+      apiException.message.shouldContain("Items could not be retrieved")
+      verify(exactly = 1) { mockLrmItemRepository.findAll() }
+      verify(exactly = 0) { mockLrmItemRepository.findAllIncludeLists() }
+      verify(exactly = 0) { mockAssociationService.deleteAll() }
+      verify(exactly = 0) { mockLrmItemRepository.deleteAll() }
+    }
+  }
+
   describe("deleteById()") {
     it("item not found") {
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns null
@@ -98,25 +140,14 @@ class LrmItemServiceTests : DescribeSpec({
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
     }
 
-    it("runtime exception thrown by association service") {
-      every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
-      every { mockAssociationService.countForItemId(any()) } throws RuntimeException("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.deleteById(uuid1, removeListAssociations = false) }
-      exception.cause.shouldBeInstanceOf<RuntimeException>()
-      exception.responseMessage.shouldBe("Item id $uuid1 could not be deleted.")
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
-    }
-
     describe("associated lists") {
       it("item is deleted (removeListAssociations = true)") {
         every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
-        every { mockAssociationService.countForItemId(uuid1) } returns 1
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItemWithLists()
         every { mockAssociationService.deleteAllOfItem(uuid1) } returns Pair(lrmItem().name, 999)
         every { mockLrmItemRepository.deleteById(uuid1) } returns 1
         lrmItemService.deleteById(uuid1, removeListAssociations = true)
         verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
-        verify(exactly = 1) { mockAssociationService.countForItemId(any()) }
         verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
         verify(exactly = 1) { mockAssociationService.deleteAllOfItem(any()) }
         verify(exactly = 1) { mockLrmItemRepository.deleteById(any()) }
@@ -124,7 +155,6 @@ class LrmItemServiceTests : DescribeSpec({
 
       it("item is not deleted (removeListAssociations = false)") {
         every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
-        every { mockAssociationService.countForItemId(uuid1) } returns 1
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItemWithLists()
         val exception = shouldThrow<ApiException> {
           lrmItemService.deleteById(uuid1, removeListAssociations = false)
@@ -138,12 +168,10 @@ class LrmItemServiceTests : DescribeSpec({
           .shouldContainIgnoringCase("$uuid1")
           .shouldContainIgnoringCase("could not be deleted")
           .shouldContainIgnoringCase("is associated with")
-        verify(exactly = 1) { mockAssociationService.countForItemId(any()) }
       }
 
       it("item repository returns > 1 deleted records") {
         every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
-        every { mockAssociationService.countForItemId(uuid1) } returns 1
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItemWithLists()
         every { mockAssociationService.deleteAllOfItem(uuid1) } returns Pair("Lorem Ipsum", 999)
         every { mockLrmItemRepository.deleteById(uuid1) } returns 2
@@ -164,18 +192,15 @@ class LrmItemServiceTests : DescribeSpec({
     describe("no associated lists") {
       it("item is deleted") {
         every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
-        every { mockAssociationService.countForItemId(uuid1) } returns 0
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItem()
         every { mockLrmItemRepository.deleteById(uuid1) } returns 1
         lrmItemService.deleteById(uuid1, removeListAssociations = false)
-        verify(exactly = 1) { mockAssociationService.countForItemId(any()) }
         verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
         verify(exactly = 1) { mockLrmItemRepository.deleteById(uuid1) }
       }
 
       it("item repository returns > 1 deleted records") {
         every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns lrmItem()
-        every { mockAssociationService.countForItemId(uuid1) } returns 0
         every { mockLrmItemRepository.findByIdOrNullIncludeLists(uuid1) } returns lrmItem()
         every { mockAssociationService.deleteAllOfItem(uuid1) } returns Pair("Lorem Ipsum", 999)
         every { mockLrmItemRepository.deleteById(uuid1) } returns 2
@@ -190,7 +215,6 @@ class LrmItemServiceTests : DescribeSpec({
           .shouldContainIgnoringCase("$uuid1")
           .shouldContainIgnoringCase("could not be deleted")
           .shouldContainIgnoringCase("more than one")
-        verify(exactly = 1) { mockAssociationService.countForItemId(any()) }
         verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
       }
     }

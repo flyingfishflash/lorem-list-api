@@ -1184,7 +1184,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.message") { value("Deleted item id ${itemUuids[2]}.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(2) }
-          jsonPath("$.content.associatedListCount") { value(0) }
+          jsonPath("$.content.itemNames.length()") { value(1) }
+          jsonPath("$.content.itemNames[0]") { value(updateLrmItemThreeRequest().name) }
           jsonPath("$.content.associatedListNames.length()") { value(0) }
         }
       }
@@ -1258,7 +1259,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.message") { value("Deleted item id ${itemUuids[1]}.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(2) }
-          jsonPath("$.content.associatedListCount") { value(2) }
+          jsonPath("$.content.itemNames.length()") { value(1) }
+          jsonPath("$.content.itemNames[0]") { value(updateLrmItemTwoRequest().name) }
           jsonPath("$.content.associatedListNames.length()") { value(2) }
           jsonPath("$.content.associatedListNames.[0]") { value(updateLrmListOneRequest().name) }
           jsonPath("$.content.associatedListNames.[1]") { value(updateLrmListTwoRequest().name) }
