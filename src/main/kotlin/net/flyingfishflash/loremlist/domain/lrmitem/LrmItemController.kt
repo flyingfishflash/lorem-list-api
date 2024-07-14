@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
-@Tag(name = "item controller")
+@Tag(name = "item")
 @ApiResponses(
   value = [
     ApiResponse(
