@@ -12,7 +12,7 @@ open class ApiException(
   title: String? = null,
   type: URI? = null,
   val supplemental: Map<String, JsonElement>? = null,
-) : Exception(message ?: DEFAULT_MESSAGE, cause) {
+) : RuntimeException(message ?: DEFAULT_MESSAGE, cause) {
   val httpStatus: HttpStatus = httpStatus ?: DEFAULT_HTTP_STATUS
   val responseMessage: String = responseMessage ?: message ?: DEFAULT_MESSAGE
   val title: String = title ?: DEFAULT_TITLE
