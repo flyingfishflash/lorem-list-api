@@ -100,7 +100,7 @@ steps:
         gradle
         :integrationTests
         -Pspring.profiles.active=postgresql
-        -Pspring.datasource.url=jdbc:postgresql://postgres:5432/lorem-list
+        -Pspring.datasource.url=jdbc:postgresql://postgres:5432/lorem-list?reWriteBatchedInserts=true
         -Pspring.datasource.username=lorem-list
         -Pspring.datasource.password=lorem-list
         -Pspring.datasource.platform=postgresql
