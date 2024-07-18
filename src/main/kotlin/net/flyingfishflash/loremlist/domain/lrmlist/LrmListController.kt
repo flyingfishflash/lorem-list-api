@@ -9,14 +9,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Size
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
+import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
 import net.flyingfishflash.loremlist.core.validation.ValidUuid
+import net.flyingfishflash.loremlist.domain.LrmComponentType
 import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.association.data.AssociationCreatedResponse
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.http.HttpStatus
@@ -44,7 +49,7 @@ import java.util.UUID
 )
 @RestController
 @RequestMapping("/lists")
-class LrmListController(private val associationService: AssociationService, private val lrmListService: LrmListService) {
+class LrmListController(private val associationService: AssociationService, private val lrmListService: LrmListService, val json: Json) {
   private val logger = KotlinLogging.logger {}
 
   @GetMapping("/count")
@@ -214,7 +219,7 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Create an association with a specified item")
+  @Operation(summary = "Create an association with a specified item or items")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -231,14 +236,23 @@ class LrmListController(private val associationService: AssociationService, priv
   @PostMapping("/{id}/item-associations")
   fun itemAssociationsCreate(
     @PathVariable("id") @ValidUuid id: UUID,
-    @RequestBody itemId: UUID,
+    @RequestBody
+    @Size(min = 1, message = "List of UUID's must contain at least one element")
+    itemUuidCollection: Set<
+      @Serializable(UUIDSerializer::class)
+      UUID,
+      >,
     request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.create(itemUuid = itemId, listUuid = id)
+  ): ResponseEntity<ResponseSuccess<AssociationCreatedResponse>> {
+    val serviceResponse = associationService.create(uuid = id, uuidCollection = itemUuidCollection.toList(), type = LrmComponentType.List)
     val responseStatus = HttpStatus.OK
-    val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
-    val responseContent = ApiMessage(responseMessage)
-    val response = ResponseSuccess(responseContent, responseMessage, request)
+    val responseMessage = if (serviceResponse.associatedComponents.size <= 1) {
+      "Assigned item '${serviceResponse.associatedComponents.first().name}' to list '${serviceResponse.componentName}'."
+    } else {
+      "Assigned ${serviceResponse.associatedComponents.size} items to list '${serviceResponse.componentName}'."
+    }
+    val response = ResponseSuccess(serviceResponse, responseMessage, request)
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 

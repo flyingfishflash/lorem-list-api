@@ -136,7 +136,7 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findByIdOrNull(uuid1) } returns null
       val exception = shouldThrow<ApiException> { lrmItemService.deleteById(uuid1, removeListAssociations = false) }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
-      exception.responseMessage.shouldBe("Item id $uuid1 could not be deleted: Item id $uuid1 could not be found.")
+      exception.responseMessage.shouldBe("Item id $uuid1 could not be deleted: Item could not be found.")
       verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
     }
 

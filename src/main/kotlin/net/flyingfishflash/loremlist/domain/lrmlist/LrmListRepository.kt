@@ -82,7 +82,7 @@ class LrmListRepository {
     val listsAndItems = resultRows
       .map { it.toLrmlist() }
       .distinct()
-      .map { it.copy(items = listItemsByList[it.uuid]?.toSet() ?: setOf()) }
+      .map { it.copy(items = listItemsByList[it.uuid]?.sortedBy { item -> item.name }?.toSet() ?: setOf()) }
 
     return listsAndItems
   }
@@ -126,8 +126,7 @@ class LrmListRepository {
       .filter {
         @Suppress("SENSELESS_COMPARISON")
         it[LrmListItemTable.id] != null
-      }
-      .map {
+      }.map {
         LrmItem(
           uuid = it[LrmListItemTable.id].value,
           name = it[LrmListItemTable.name],
@@ -136,7 +135,7 @@ class LrmListRepository {
           created = it[LrmListItemTable.created],
           updated = it[LrmListItemTable.updated],
         )
-      }.toSet()
+      }.sortedBy { item -> item.name }.toSet()
 
     val listWithItems = resultRows
       .map { it.toLrmlist() }
@@ -144,6 +143,19 @@ class LrmListRepository {
       .map { it.copy(items = listItems) }
       .firstOrNull()
     return listWithItems
+  }
+
+  fun notFoundByIdCollection(listIdCollection: List<UUID>): Set<UUID> {
+    val resultIdCollection = findByIdCollection(listIdCollection)
+    val notFoundListIdCollection = (listIdCollection subtract resultIdCollection.toSet())
+    return notFoundListIdCollection
+  }
+
+  fun findByIdCollection(listIdCollection: List<UUID>): List<UUID> {
+    val resultIdCollection = repositoryTable.select(repositoryTable.id).where {
+      repositoryTable.id inList (listIdCollection)
+    }.map { row -> row[repositoryTable.id].value }.toList()
+    return resultIdCollection
   }
 
   fun insert(lrmListRequest: LrmListRequest): UUID {

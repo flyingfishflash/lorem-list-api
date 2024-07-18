@@ -73,10 +73,23 @@ class LrmItemRepository {
     val itemsAndLists = resultRows.map {
       it.toLrmItem()
     }.distinct().map {
-      it.copy(lists = listsByItems[it.uuid]?.toSet() ?: setOf())
+      it.copy(lists = listsByItems[it.uuid]?.sortedBy { succinctList -> succinctList.name }?.toSet() ?: setOf())
     }
 
     return itemsAndLists
+  }
+
+  fun notFoundByIdCollection(itemIdCollection: List<UUID>): Set<UUID> {
+    val resultIdCollection = findByIdCollection(itemIdCollection)
+    val notFoundItemUuidCollection = (itemIdCollection subtract resultIdCollection.toSet())
+    return notFoundItemUuidCollection
+  }
+
+  fun findByIdCollection(itemIdCollection: List<UUID>): List<UUID> {
+    val resultIdCollection = repositoryTable.select(repositoryTable.id).where {
+      repositoryTable.id inList (itemIdCollection)
+    }.map { row -> row[repositoryTable.id].value }.toList()
+    return resultIdCollection
   }
 
   fun findByIdOrNull(uuid: UUID): LrmItem? = repositoryTable.selectAll()
@@ -111,7 +124,7 @@ class LrmItemRepository {
         )
       }
 
-    val itemAndLists = resultRows.first().toLrmItem().copy(lists = listsByItems.toSet())
+    val itemAndLists = resultRows.first().toLrmItem().copy(lists = listsByItems.sortedBy { succinctList -> succinctList.name }.toSet())
 
     return itemAndLists
   }

@@ -5,6 +5,7 @@ import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemSuccinct
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import java.util.UUID
 
@@ -20,3 +21,5 @@ data class LrmItem(
   var updated: Instant? = null,
   val lists: Set<LrmListSuccinct>? = null,
 )
+
+fun LrmItem.succinct() = LrmItemSuccinct(uuid = this.uuid, name = this.name)

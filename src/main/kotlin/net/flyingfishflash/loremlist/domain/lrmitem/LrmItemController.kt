@@ -9,14 +9,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Size
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
+import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
 import net.flyingfishflash.loremlist.core.validation.ValidUuid
+import net.flyingfishflash.loremlist.domain.LrmComponentType
 import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.association.data.AssociationCreatedResponse
 import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
@@ -31,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
+import java.util.*
 
 @Tag(name = "item")
 @ApiResponses(
@@ -45,7 +50,7 @@ import java.util.UUID
 )
 @RestController
 @RequestMapping("/items")
-class LrmItemController(val associationService: AssociationService, val lrmItemService: LrmItemService) {
+class LrmItemController(val associationService: AssociationService, val lrmItemService: LrmItemService, val json: Json) {
   private val logger = KotlinLogging.logger {}
 
   @Operation(summary = "Count of all items")
@@ -64,7 +69,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseMessage = "$serviceResponse items."
     val responseContent = ApiMessageNumeric(serviceResponse)
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -83,7 +88,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseContent = lrmItemService.create(lrmItemRequest)
     val responseMessage = "created new item"
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -99,7 +104,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseStatus = HttpStatus.OK
     val responseMessage = "Deleted all items and disassociated all lists."
     val response = ResponseSuccess(serviceResponse, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -129,7 +134,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseStatus = HttpStatus.OK
     val responseMessage = "Deleted item id $id."
     val response = ResponseSuccess(serviceResponse, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -155,7 +160,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     }
     val responseContent = if (includeLists) lrmItemService.findAllIncludeLists() else lrmItemService.findAll()
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -184,7 +189,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseMessage = if (includeLists) "retrieved item id $id and it's associated lists" else "retrieved item id $id"
     val responseContent = if (includeLists) lrmItemService.findByIdIncludeLists(id) else lrmItemService.findById(id)
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -212,11 +217,11 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Create an association with a specified list")
+  @Operation(summary = "Create an association with specified list or lists")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -233,14 +238,23 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   @PostMapping("/{id}/list-associations")
   fun listAssociationsCreate(
     @PathVariable("id") @ValidUuid id: UUID,
-    @RequestBody listId: UUID,
+    @RequestBody
+    @Size(min = 1, message = "List of UUID's must contain at least one element")
+    listUuidCollection: Set<
+      @Serializable(UUIDSerializer::class)
+      UUID,
+      >,
     request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.create(itemUuid = id, listUuid = listId)
+  ): ResponseEntity<ResponseSuccess<AssociationCreatedResponse>> {
+    val serviceResponse = associationService.create(uuid = id, uuidCollection = listUuidCollection.toList(), type = LrmComponentType.Item)
     val responseStatus = HttpStatus.OK
-    val responseMessage = "Assigned item '${serviceResponse.first}' to list '${serviceResponse.second}'."
-    val responseContent = ApiMessage(responseMessage)
-    val response = ResponseSuccess(responseContent, responseMessage, request)
+    val responseMessage = if (serviceResponse.associatedComponents.size <= 1) {
+      "Assigned item '${serviceResponse.componentName}' to list '${serviceResponse.associatedComponents.first().name}'."
+    } else {
+      "Assigned item '${serviceResponse.componentName}' to ${serviceResponse.associatedComponents.size} lists."
+    }
+    val response = ResponseSuccess(serviceResponse, responseMessage, request)
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -269,6 +283,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
     val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -296,6 +311,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseMessage = "Removed item '${serviceResponse.first}' from all associated lists (${serviceResponse.second})."
     val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
     val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -336,7 +352,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessage(responseMessage)
     val response = ResponseSuccess(responseContent, responseMessage, request)
-    logger.info { Json.encodeToString(response) }
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -376,7 +392,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       response = ResponseSuccess(responseContent, "not patched", request)
       responseEntity = ResponseEntity(response, HttpStatus.NO_CONTENT)
     }
-    logger.info { Json.encodeToString(response) }
+    logger.info { json.encodeToString(response) }
     return responseEntity
   }
 }

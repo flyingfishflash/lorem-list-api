@@ -1,6 +1,8 @@
 package net.flyingfishflash.loremlist.domain.association
 
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
+import net.flyingfishflash.loremlist.domain.LrmComponentType
+import net.flyingfishflash.loremlist.domain.association.data.AssociationCreatedResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
@@ -93,27 +95,72 @@ class AssociationService(
     return associations
   }
 
+  private fun doCreateForItem(itemUuid: UUID, listUuidCollection: List<UUID>): AssociationCreatedResponse {
+    // ensure the item exists
+    val item = lrmItemRepository.findByIdOrNull(itemUuid) ?: throw ItemNotFoundException(itemUuid)
+    // ensure the lists exist
+    val notFoundListUuidCollection = lrmListRepository.notFoundByIdCollection(listUuidCollection)
+    if (notFoundListUuidCollection.isNotEmpty()) throw ListNotFoundException(notFoundListUuidCollection)
+    // create the associations
+    val associationCollection = listUuidCollection.map { listUuid -> Pair(listUuid, itemUuid) }.toSet()
+    val createdAssociations = associationRepository.create(associationCollection)
+    if (createdAssociations.size != listUuidCollection.size) {
+      throw ApiException(
+        message = "Count of created associations is not equal to the count of associations requested " +
+          "(created = ${createdAssociations.size} / requested = ${listUuidCollection.size})",
+      )
+    }
+    // capture the names of the newly associated lists
+    val associatedLists = createdAssociations.map { it.list }.sortedBy { it.name }
+    return AssociationCreatedResponse(componentName = item.name, associatedComponents = associatedLists)
+  }
+
+  private fun doCreateForList(listUuid: UUID, itemUuidCollection: List<UUID>): AssociationCreatedResponse {
+    // ensure the list exists
+    val list = lrmListRepository.findByIdOrNull(listUuid) ?: throw ListNotFoundException(listUuid)
+    // ensure the items exist
+    val notFoundItemUuidCollection = lrmItemRepository.notFoundByIdCollection(itemUuidCollection)
+    if (notFoundItemUuidCollection.isNotEmpty()) throw ItemNotFoundException(notFoundItemUuidCollection)
+    // create the associations
+    val associationCollection = itemUuidCollection.map { itemUuid -> Pair(listUuid, itemUuid) }.toSet()
+    val createdAssociations = associationRepository.create(associationCollection)
+    if (createdAssociations.size != itemUuidCollection.size) {
+      throw ApiException(
+        message = "Count of created associations is not equal to the count of associations requested " +
+          "(created = ${createdAssociations.size} / requested = ${itemUuidCollection.size})",
+      )
+    }
+    // capture the names of the newly associated items
+    val associatedItems = createdAssociations.map { it.item }.sortedBy { it.name }
+    return AssociationCreatedResponse(componentName = list.name, associatedComponents = associatedItems)
+  }
+
   /**
    * Create a new association
    *
-   * @param UUID item uuid
-   * @param UUID list uuid
-   * @return item name, list name
+   * @param uuid anchor uuid
+   * @param uuidCollection collection of uuid's for components to associate
+   * @param type component type
+   * @return [AssociationCreatedResponse]
    */
-  fun create(itemUuid: UUID, listUuid: UUID): Pair<String, String> {
-    val item: LrmItem
-    val list: LrmList
-    val exceptionMessage = "Item id $itemUuid could not be added to list id $listUuid"
-
+  fun create(uuid: UUID, uuidCollection: List<UUID>, type: LrmComponentType): AssociationCreatedResponse {
+    val exceptionMessage = "Could not create a new association"
     try {
-      item = lrmItemRepository.findByIdOrNull(itemUuid) ?: throw ItemNotFoundException(itemUuid)
-      list = lrmListRepository.findByIdOrNull(listUuid) ?: throw ListNotFoundException(listUuid)
-      associationRepository.create(itemUuid = itemUuid, listUuid = listUuid)
+      val result = when (type) {
+        LrmComponentType.Item -> {
+          doCreateForItem(uuid, uuidCollection)
+        }
+        LrmComponentType.List -> {
+          doCreateForList(uuid, uuidCollection)
+        }
+      }
+      return result
     } catch (apiException: ApiException) {
       throw ApiException(
         cause = apiException,
         httpStatus = apiException.httpStatus,
         message = "$exceptionMessage: ${apiException.message}",
+        supplemental = apiException.supplemental,
       )
     } catch (sqlException: SQLException) {
       when {
@@ -122,7 +169,7 @@ class AssociationService(
           throw ApiException(
             cause = sqlException,
             httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-            message = "$exceptionMessage: It's already been added.",
+            message = "$exceptionMessage: It already exists.",
           )
         }
         else -> {
@@ -138,7 +185,6 @@ class AssociationService(
         message = "$exceptionMessage.",
       )
     }
-    return Pair(item.name, list.name)
   }
 
   /**

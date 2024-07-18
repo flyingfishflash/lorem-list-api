@@ -1,10 +1,15 @@
 package net.flyingfishflash.loremlist.domain.association
 
+import net.flyingfishflash.loremlist.domain.LrmListItemTable
+import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable.item
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable.list
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemSuccinct
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
@@ -13,6 +18,8 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
 import java.util.UUID
+
+data class SuccinctLrmComponentPair(val list: LrmListSuccinct, val item: LrmItemSuccinct)
 
 @Repository
 class AssociationRepository {
@@ -32,6 +39,25 @@ class AssociationRepository {
   fun countListToItem(listUuid: UUID): Long {
     val listCount = list.count()
     return repositoryTable.select(listCount).where { list eq listUuid }.map { it[listCount] }.first()
+  }
+
+  fun create(associationCollection: Set<Pair<UUID, UUID>>): List<SuccinctLrmComponentPair> {
+    val associationIdSet = repositoryTable.batchInsert(associationCollection) { (listUuid, itemUuid) ->
+      this[repositoryTable.list] = listUuid
+      this[repositoryTable.item] = itemUuid
+    }.map { it[repositoryTable.id].value }.toSet()
+
+    val succinctLrmComponentPairs = (repositoryTable innerJoin LrmListTable innerJoin LrmListItemTable)
+      .select(LrmListTable.id, LrmListTable.name, LrmListItemTable.id, LrmListItemTable.name)
+      .where { repositoryTable.id inList (associationIdSet) }
+      .map {
+        SuccinctLrmComponentPair(
+          list = LrmListSuccinct(it[LrmListTable.id].value, it[LrmListTable.name]),
+          item = LrmItemSuccinct(it[LrmListItemTable.id].value, it[LrmListItemTable.name]),
+        )
+      }
+
+    return succinctLrmComponentPairs
   }
 
   fun create(listUuid: UUID, itemUuid: UUID) {
