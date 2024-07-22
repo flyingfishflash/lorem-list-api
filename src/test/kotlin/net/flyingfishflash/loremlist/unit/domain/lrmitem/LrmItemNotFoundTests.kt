@@ -8,30 +8,30 @@ import java.util.*
 class LrmItemNotFoundTests : DescribeSpec({
   describe("ItemNotFoundException()") {
     it("primary constructor: default message") {
-      val uuid = UUID.randomUUID()
-      val itemNotFoundException = ItemNotFoundException(uuid = uuid)
+      val id = UUID.randomUUID()
+      val itemNotFoundException = ItemNotFoundException(id = id)
       itemNotFoundException.message.shouldBe(ItemNotFoundException.defaultMessage())
     }
 
     it("primary constructor: non-default message") {
-      val itemNotFoundException = ItemNotFoundException(uuid = UUID.randomUUID(), message = "Lorem Ipsum")
+      val itemNotFoundException = ItemNotFoundException(id = UUID.randomUUID(), message = "Lorem Ipsum")
       itemNotFoundException.message.shouldBe("Lorem Ipsum")
     }
 
     it("secondary constructor: default message, set size = 1") {
-      val uuids = setOf(UUID.randomUUID())
-      val itemNotFoundException = ItemNotFoundException(uuidCollection = uuids)
-      itemNotFoundException.message.shouldBe(ItemNotFoundException.defaultMessage(uuids))
+      val ids = setOf(UUID.randomUUID())
+      val itemNotFoundException = ItemNotFoundException(idCollection = ids)
+      itemNotFoundException.message.shouldBe(ItemNotFoundException.defaultMessage(ids))
     }
 
     it("secondary constructor: default message, set size > 1") {
-      val uuids = setOf(UUID.randomUUID(), UUID.randomUUID())
-      val itemNotFoundException = ItemNotFoundException(uuidCollection = uuids)
-      itemNotFoundException.message.shouldBe(ItemNotFoundException.defaultMessage(uuids))
+      val ids = setOf(UUID.randomUUID(), UUID.randomUUID())
+      val itemNotFoundException = ItemNotFoundException(idCollection = ids)
+      itemNotFoundException.message.shouldBe(ItemNotFoundException.defaultMessage(ids))
     }
 
     it("secondary constructor: non-default message") {
-      val itemNotFoundException = ItemNotFoundException(uuidCollection = setOf(UUID.randomUUID()), message = "Lorem Ipsum")
+      val itemNotFoundException = ItemNotFoundException(idCollection = setOf(UUID.randomUUID()), message = "Lorem Ipsum")
       itemNotFoundException.message.shouldBe("Lorem Ipsum")
     }
   }

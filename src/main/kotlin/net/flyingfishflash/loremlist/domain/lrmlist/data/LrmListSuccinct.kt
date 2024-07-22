@@ -10,6 +10,6 @@ import java.util.UUID
 @SerialName("list")
 data class LrmListSuccinct(
   @Serializable(with = UUIDSerializer::class)
-  override var uuid: UUID,
+  override val id: UUID,
   override val name: String,
 ) : SuccinctLrmComponent

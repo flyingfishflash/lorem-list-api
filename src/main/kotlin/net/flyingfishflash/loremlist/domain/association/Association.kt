@@ -7,9 +7,9 @@ import java.util.UUID
 @Serializable
 data class Association(
   @Serializable(with = UUIDSerializer::class)
-  val uuid: UUID,
+  val id: UUID,
   @Serializable(with = UUIDSerializer::class)
-  val listUuid: UUID,
+  val listId: UUID,
   @Serializable(with = UUIDSerializer::class)
-  val itemUuid: UUID,
+  val itemId: UUID,
 )

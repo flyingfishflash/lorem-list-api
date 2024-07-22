@@ -50,8 +50,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
   fun updateLrmItemThreeRequest(): LrmItemRequest = LrmItemRequest("Updated Lorem Item 3 Name", "Updated Lorem Item 3 Description", 1003)
   val itemUpdateRequests = listOf(updateLrmItemOneRequest(), updateLrmItemTwoRequest(), updateLrmItemThreeRequest())
 
-  val itemUuids: MutableMap<Int, UUID> = HashMap()
-  val listUuids: MutableMap<Int, UUID> = HashMap()
+  val itemIds: MutableMap<Int, UUID> = HashMap()
+  val listIds: MutableMap<Int, UUID> = HashMap()
 
   fun createLrmListOneRequest(): LrmListRequest = LrmListRequest("Lorem List 1 Name", "Lorem List 1 Description")
   fun createLrmListTwoRequest(): LrmListRequest = LrmListRequest("Lorem List 2 Name", "Lorem List 2 Description")
@@ -103,15 +103,15 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(6) }
-              jsonPath("$.content.uuid") { isNotEmpty() }
+              jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(itemRequest.name) }
               jsonPath("$.content.description") { value(itemRequest.description) }
               jsonPath("$.content.quantity") { value(itemRequest.quantity) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
             }.andReturn().response.contentAsString
-            val uuid = Json.decodeFromString<ResponseSuccess<LrmItem>>(response).content.uuid
-            itemUuids[index] = uuid
+            val id = Json.decodeFromString<ResponseSuccess<LrmItem>>(response).content.id
+            itemIds[index] = id
           }
         }
       }
@@ -119,8 +119,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       describe("read") {
         it("item is not found") {
           val expectedMessage = ItemNotFoundException.defaultMessage()
-          val uuid = UUID.randomUUID()
-          val instance = "/items/$uuid"
+          val itemId = UUID.randomUUID()
+          val instance = "/items/$itemId"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
@@ -135,13 +135,13 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { value("404") }
             jsonPath("$.content.detail") { value(expectedMessage) }
-            jsonPath("$.content.supplemental.notFound") { value(uuid.toString()) }
+            jsonPath("$.content.supplemental.notFound") { value(itemId.toString()) }
           }
         }
 
         itemCreateRequests.forEachIndexed { index, itemRequest ->
           it("item $index is found") {
-            val instance = "/items/${itemUuids[index]}"
+            val instance = "/items/${itemIds[index]}"
             mockMvc.get(instance) {
               contentType = MediaType.APPLICATION_JSON
             }.andExpect {
@@ -149,11 +149,11 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               content { contentType(MediaType.APPLICATION_JSON) }
               jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
               jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-              jsonPath("$.message") { value("retrieved item id ${itemUuids[index]}") }
+              jsonPath("$.message") { value("retrieved item id ${itemIds[index]}") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(6) }
-              jsonPath("$.content.uuid") { isNotEmpty() }
+              jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(itemRequest.name) }
               jsonPath("$.content.description") { value(itemRequest.description) }
               jsonPath("$.content.quantity") { value(itemRequest.quantity) }
@@ -180,7 +180,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.content") { exists() }
               jsonPath("$.content") { isArray() }
               jsonPath("$.content.length()") { value(itemCreateRequests.size) }
-              jsonPath("$.content.[$index].uuid") { value("${itemUuids[index]}") }
+              jsonPath("$.content.[$index].id") { value("${itemIds[index]}") }
               jsonPath("$.content.[$index].name") { value(itemRequest.name) }
               jsonPath("$.content.[$index].description") { value(itemRequest.description) }
               jsonPath("$.content.[$index].quantity") { value(itemRequest.quantity) }
@@ -195,7 +195,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       describe("update") {
         itemUpdateRequests.forEachIndexed { index, itemRequest ->
           it("item $index is found and updated") {
-            val instance = "/items/${itemUuids[index]}"
+            val instance = "/items/${itemIds[index]}"
             mockMvc.patch(instance) {
               content = Json.encodeToString(itemRequest)
               contentType = MediaType.APPLICATION_JSON
@@ -208,7 +208,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(6) }
-              jsonPath("$.content.uuid") { value("${itemUuids[index]}") }
+              jsonPath("$.content.id") { value("${itemIds[index]}") }
               jsonPath("$.content.description") { value(itemRequest.description) }
               jsonPath("$.content.name") { value(itemRequest.name) }
               jsonPath("$.content.quantity") { value(itemRequest.quantity) }
@@ -298,14 +298,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(5) }
-              jsonPath("$.content.uuid") { isNotEmpty() }
+              jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
             }.andReturn().response.contentAsString
-            val uuid = Json.decodeFromString<ResponseSuccess<LrmList>>(response).content.uuid
-            listUuids[index] = uuid
+            val id = Json.decodeFromString<ResponseSuccess<LrmList>>(response).content.id
+            listIds[index] = id
           }
         }
       }
@@ -313,8 +313,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       describe("read") {
         it("list is not found") {
           val expectedMessage = ListNotFoundException.defaultMessage()
-          val uuid = UUID.randomUUID()
-          val instance = "/lists/$uuid"
+          val listId = UUID.randomUUID()
+          val instance = "/lists/$listId"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
@@ -329,13 +329,13 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { value("404") }
             jsonPath("$.content.detail") { value(expectedMessage) }
-            jsonPath("$.content.supplemental.notFound") { value(uuid.toString()) }
+            jsonPath("$.content.supplemental.notFound") { value(listId.toString()) }
           }
         }
 
         listCreateRequests.forEachIndexed { index, listRequest ->
           it("list $index is found") {
-            val instance = "/lists/${listUuids[index]}"
+            val instance = "/lists/${listIds[index]}"
             mockMvc.get(instance) {
               contentType = MediaType.APPLICATION_JSON
             }.andExpect {
@@ -343,11 +343,11 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               content { contentType(MediaType.APPLICATION_JSON) }
               jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
               jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-              jsonPath("$.message") { value("retrieved list id ${listUuids[index]}") }
+              jsonPath("$.message") { value("retrieved list id ${listIds[index]}") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(5) }
-              jsonPath("$.content.uuid") { isNotEmpty() }
+              jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.created") { isNotEmpty() }
@@ -371,7 +371,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.content") { exists() }
               jsonPath("$.content") { isArray() }
               jsonPath("$.content.length()") { value(listCreateRequests.size) }
-              jsonPath("$.content.[$index].uuid") { value("${listUuids[index]}") }
+              jsonPath("$.content.[$index].id") { value("${listIds[index]}") }
               jsonPath("$.content.[$index].name") { value(listRequest.name) }
               jsonPath("$.content.[$index].description") { value(listRequest.description) }
               jsonPath("$.content.[$index].created") { isNotEmpty() }
@@ -385,7 +385,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       describe("update") {
         listUpdateRequests.forEachIndexed { index, listRequest ->
           it("list $index is updated") {
-            val instance = "/lists/${listUuids[index]}"
+            val instance = "/lists/${listIds[index]}"
             mockMvc.patch(instance) {
               content = Json.encodeToString(listRequest)
               contentType = MediaType.APPLICATION_JSON
@@ -398,7 +398,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(5) }
-              jsonPath("$.content.uuid") { value("${listUuids[index]}") }
+              jsonPath("$.content.id") { value("${listIds[index]}") }
               jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.created") { isNotEmpty() }
@@ -407,7 +407,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           }
 
           it("list $index is up-to-date") {
-            val instance = "/lists/${listUuids[index]}"
+            val instance = "/lists/${listIds[index]}"
             mockMvc.patch(instance) {
               content = Json.encodeToString(listRequest)
               contentType = MediaType.APPLICATION_JSON
@@ -420,7 +420,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(5) }
-              jsonPath("$.content.uuid") { value("${listUuids[index]}") }
+              jsonPath("$.content.id") { value("${listIds[index]}") }
               jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.created") { isNotEmpty() }
@@ -448,9 +448,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
     describe("item: list association: create, read, update, delete") {
       it("item 0 is added to list 0") {
-        val instance = "/items/${itemUuids[0]}/list-associations"
+        val instance = "/items/${itemIds[0]}/list-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(listUuids[0].toString()))
+          content = Json.encodeToString(listOf(listIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -463,12 +463,12 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.componentName") { value(updateLrmItemOneRequest().name) }
           jsonPath("$.content.associatedComponents.length()") { value(1) }
           jsonPath("$.content.associatedComponents[0].type") { value("list") }
-          jsonPath("$.content.associatedComponents[0].uuid") { value(listUuids[0].toString()) }
+          jsonPath("$.content.associatedComponents[0].id") { value(listIds[0].toString()) }
         }
       }
 
       it("list 0 includes item 0") {
-        val instance = "/lists/${listUuids[0]}?includeItems=true"
+        val instance = "/lists/${listIds[0]}?includeItems=true"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -476,10 +476,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved list id ${listUuids[0]}") }
+          jsonPath("$.message") { value("retrieved list id ${listIds[0]}") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.uuid") { value("${listUuids[0]}") }
+          jsonPath("$.content.id") { value("${listIds[0]}") }
           jsonPath("$.content.name") { value(updateLrmListOneRequest().name) }
           jsonPath("$.content.description") { value(updateLrmListOneRequest().description) }
           jsonPath("$.content.created") { isNotEmpty() }
@@ -492,9 +492,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 is added to lists 0 and 1") {
-        val postedComponents = listOf(listUuids[0].toString(), listUuids[1].toString())
+        val postedComponents = listOf(listIds[0].toString(), listIds[1].toString())
         val expectedMessage = "Assigned item '${updateLrmItemTwoRequest().name}' to ${postedComponents.size} lists."
-        val instance = "/items/${itemUuids[1]}/list-associations"
+        val instance = "/items/${itemIds[1]}/list-associations"
         mockMvc.post(instance) {
           content = Json.encodeToString(postedComponents)
           contentType = MediaType.APPLICATION_JSON
@@ -509,14 +509,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.componentName") { value(updateLrmItemTwoRequest().name) }
           jsonPath("$.content.associatedComponents.length()") { value(2) }
           jsonPath("$.content.associatedComponents[0].type") { value("list") }
-          jsonPath("$.content.associatedComponents[0].uuid") { value(listUuids[0].toString()) }
+          jsonPath("$.content.associatedComponents[0].id") { value(listIds[0].toString()) }
           jsonPath("$.content.associatedComponents[1].type") { value("list") }
-          jsonPath("$.content.associatedComponents[1].uuid") { value(listUuids[1].toString()) }
+          jsonPath("$.content.associatedComponents[1].id") { value(listIds[1].toString()) }
         }
       }
 
       it("list 0 includes items 0 and 1") {
-        val instance = "/lists/${listUuids[0]}?includeItems=true"
+        val instance = "/lists/${listIds[0]}?includeItems=true"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -524,10 +524,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved list id ${listUuids[0]}") }
+          jsonPath("$.message") { value("retrieved list id ${listIds[0]}") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.uuid") { value("${listUuids[0]}") }
+          jsonPath("$.content.id") { value("${listIds[0]}") }
           jsonPath("$.content.name") { value(updateLrmListOneRequest().name) }
           jsonPath("$.content.description") { value(updateLrmListOneRequest().description) }
           jsonPath("$.content.created") { isNotEmpty() }
@@ -543,9 +543,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 0 is not added to list 0 when it's already been added") {
-        val instance = "/items/${itemUuids[0]}/list-associations"
+        val instance = "/items/${itemIds[0]}/list-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(listUuids[0].toString()))
+          content = Json.encodeToString(listOf(listIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isUnprocessableEntity() }
@@ -562,10 +562,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("an item is not added to list 0 because the item couldn't be found") {
         val expectedMessage = "Could not create a new association: ${ItemNotFoundException.defaultMessage()}"
-        val uuid = UUID.randomUUID()
-        val instance = "/items/$uuid/list-associations"
+        val itemId = UUID.randomUUID()
+        val instance = "/items/$itemId/list-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(listUuids[0].toString()))
+          content = Json.encodeToString(listOf(listIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
@@ -577,7 +577,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(6) }
           jsonPath("$.content.status") { value(HttpStatus.NOT_FOUND.value()) }
-          jsonPath("$.content.supplemental.notFound[0]") { value(uuid.toString()) }
+          jsonPath("$.content.supplemental.notFound[0]") { value(itemId.toString()) }
           jsonPath("$.content.cause") { isNotEmpty() }
           jsonPath("$.content.cause.name") { value(ItemNotFoundException::class.java.simpleName) }
           jsonPath("$.content.cause.message") { isNotEmpty() }
@@ -586,10 +586,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("item 0 is not added to a list because a list couldn't be found") {
         val expectedMessage = "Could not create a new association: ${ListNotFoundException.defaultMessage()}"
-        val uuid = UUID.randomUUID()
-        val instance = "/items/${itemUuids[0]}/list-associations"
+        val itemId = UUID.randomUUID()
+        val instance = "/items/${itemIds[0]}/list-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(uuid.toString()))
+          content = Json.encodeToString(listOf(itemId.toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
@@ -601,7 +601,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(6) }
           jsonPath("$.content.status") { value(HttpStatus.NOT_FOUND.value()) }
-          jsonPath("$.content.supplemental.notFound[0]") { value(uuid.toString()) }
+          jsonPath("$.content.supplemental.notFound[0]") { value(itemId.toString()) }
           jsonPath("$.content.cause") { isNotEmpty() }
           jsonPath("$.content.cause.name") { value(ListNotFoundException::class.java.simpleName) }
           jsonPath("$.content.cause.message") { isNotEmpty() }
@@ -611,10 +611,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 0 is moved from list 0 to list 1") {
         val expectedMessage = "Moved item '${updateLrmItemOneRequest().name}' " +
           "from list '${updateLrmListOneRequest().name}' to list '${updateLrmListTwoRequest().name}'."
-        val instance = "/items/${itemUuids[0]}/list-associations"
+        val instance = "/items/${itemIds[0]}/list-associations"
         mockMvc.patch(instance) {
           content = Json.encodeToString(
-            ItemToListAssociationUpdateRequest(currentListUuid = listUuids[0]!!, newListUuid = listUuids[1]!!),
+            ItemToListAssociationUpdateRequest(currentListId = listIds[0]!!, newListId = listIds[1]!!),
           )
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -630,7 +630,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 0 includes only item 1") {
-        val instance = "/lists/${listUuids[0]}?includeItems=true"
+        val instance = "/lists/${listIds[0]}?includeItems=true"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -638,17 +638,17 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved list id ${listUuids[0]}") }
+          jsonPath("$.message") { value("retrieved list id ${listIds[0]}") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.uuid") { value("${listUuids[0]}") }
+          jsonPath("$.content.id") { value("${listIds[0]}") }
           jsonPath("$.content.name") { value(updateLrmListOneRequest().name) }
           jsonPath("$.content.description") { value(updateLrmListOneRequest().description) }
           jsonPath("$.content.created") { isNotEmpty() }
           jsonPath("$.content.updated") { isNotEmpty() }
           jsonPath("$.content.items.length()") { value(1) }
           jsonPath("$.content.items.[0].length()") { value(6) }
-          jsonPath("$.content.items.[0].uuid") { value("${itemUuids[1]}") }
+          jsonPath("$.content.items.[0].id") { value("${itemIds[1]}") }
           jsonPath("$.content.items.[0].name") { value(updateLrmItemTwoRequest().name) }
           jsonPath("$.content.items.[0].description") { value(updateLrmItemTwoRequest().description) }
           jsonPath("$.content.items.[0].quantity") { value(updateLrmItemTwoRequest().quantity) }
@@ -658,9 +658,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 0 is not deleted from list 0 because the association couldn't be found") {
-        val instance = "/items/${itemUuids[0]}/list-associations"
+        val instance = "/items/${itemIds[0]}/list-associations"
         mockMvc.delete(instance) {
-          content = "\"${listUuids[0]}\""
+          content = "\"${listIds[0]}\""
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
@@ -670,7 +670,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.instance") { value(instance) }
           jsonPath(
             "$.message",
-          ) { value("Item id ${itemUuids[0]} could not be removed from list id ${listUuids[0]}: Association not found.") }
+          ) { value("Item id ${itemIds[0]} could not be removed from list id ${listIds[0]}: Association not found.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(5) }
           jsonPath("$.content.cause") { isNotEmpty() }
@@ -680,7 +680,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 is associated with lists 0 and 1") {
-        val instance = "/items/${itemUuids[1]}?includeLists=true"
+        val instance = "/items/${itemIds[1]}?includeLists=true"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -688,10 +688,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved item id ${itemUuids[1]} and it's associated lists") }
+          jsonPath("$.message") { value("retrieved item id ${itemIds[1]} and it's associated lists") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.uuid") { value("${itemUuids[1]}") }
+          jsonPath("$.content.id") { value("${itemIds[1]}") }
           jsonPath("$.content.name") { value(updateLrmItemTwoRequest().name) }
           jsonPath("$.content.description") { value(updateLrmItemTwoRequest().description) }
           jsonPath("$.content.quantity") { value(updateLrmItemTwoRequest().quantity) }
@@ -699,15 +699,15 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.updated") { isNotEmpty() }
           jsonPath("$.content.lists.length()") { value(2) }
           jsonPath("$.content.lists.[0].length()") { value(2) }
-          jsonPath("$.content.lists.[0].uuid") { value("${listUuids[0]}") }
+          jsonPath("$.content.lists.[0].id") { value("${listIds[0]}") }
           jsonPath("$.content.lists.[0].name") { value(updateLrmListOneRequest().name) }
-          jsonPath("$.content.lists.[1].uuid") { value("${listUuids[1]}") }
+          jsonPath("$.content.lists.[1].id") { value("${listIds[1]}") }
           jsonPath("$.content.lists.[1].name") { value(updateLrmListTwoRequest().name) }
         }
       }
 
       it("list 1 includes items 0 and 1") {
-        val instance = "/lists/${listUuids[1]}?includeItems=true"
+        val instance = "/lists/${listIds[1]}?includeItems=true"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -715,28 +715,28 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved list id ${listUuids[1]}") }
+          jsonPath("$.message") { value("retrieved list id ${listIds[1]}") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.uuid") { value("${listUuids[1]}") }
+          jsonPath("$.content.id") { value("${listIds[1]}") }
           jsonPath("$.content.name") { value(updateLrmListTwoRequest().name) }
           jsonPath("$.content.description") { value(updateLrmListTwoRequest().description) }
           jsonPath("$.content.created") { isNotEmpty() }
           jsonPath("$.content.updated") { isNotEmpty() }
           jsonPath("$.content.items.length()") { value(2) }
           jsonPath("$.content.items.[0].length()") { value(6) }
-          jsonPath("$.content.items.[0].uuid") { value("${itemUuids[0]}") }
+          jsonPath("$.content.items.[0].id") { value("${itemIds[0]}") }
           jsonPath("$.content.items.[0].name") { value(updateLrmItemOneRequest().name) }
           jsonPath("$.content.items.[0].description") { value(updateLrmItemOneRequest().description) }
           jsonPath("$.content.items.[0].quantity") { value(updateLrmItemOneRequest().quantity) }
           jsonPath("$.content.items.[0].created") { isNotEmpty() }
           jsonPath("$.content.items.[0].updated") { isNotEmpty() }
-          jsonPath("$.content.items.[1].uuid") { value("${itemUuids[1]}") }
+          jsonPath("$.content.items.[1].id") { value("${itemIds[1]}") }
         }
       }
 
       it("item 0 is associated with only list 1") {
-        val instance = "/items/${itemUuids[0]}?includeLists=true"
+        val instance = "/items/${itemIds[0]}?includeLists=true"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -744,10 +744,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved item id ${itemUuids[0]} and it's associated lists") }
+          jsonPath("$.message") { value("retrieved item id ${itemIds[0]} and it's associated lists") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.uuid") { value("${itemUuids[0]}") }
+          jsonPath("$.content.id") { value("${itemIds[0]}") }
           jsonPath("$.content.name") { value(updateLrmItemOneRequest().name) }
           jsonPath("$.content.description") { value(updateLrmItemOneRequest().description) }
           jsonPath("$.content.quantity") { value(updateLrmItemOneRequest().quantity) }
@@ -755,13 +755,13 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.updated") { isNotEmpty() }
           jsonPath("$.content.lists.length()") { value(1) }
           jsonPath("$.content.lists.[0].length()") { value(2) }
-          jsonPath("$.content.lists.[0].uuid") { value("${listUuids[1]}") }
+          jsonPath("$.content.lists.[0].id") { value("${listIds[1]}") }
           jsonPath("$.content.lists.[0].name") { value(updateLrmListTwoRequest().name) }
         }
       }
 
       it("item 0 has one list association") {
-        val instance = "/items/${itemUuids[0]}/list-associations/count"
+        val instance = "/items/${itemIds[0]}/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -778,7 +778,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 has two list associations") {
-        val instance = "/items/${itemUuids[1]}/list-associations/count"
+        val instance = "/items/${itemIds[1]}/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -795,7 +795,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 0 has one item association") {
-        val instance = "/lists/${listUuids[0]}/item-associations/count"
+        val instance = "/lists/${listIds[0]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -812,7 +812,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 1 has two item association") {
-        val instance = "/lists/${listUuids[1]}/item-associations/count"
+        val instance = "/lists/${listIds[1]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -829,7 +829,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("remove item 0 from all lists") {
-        val instance = "/items/${itemUuids[0]}/list-associations/delete-all"
+        val instance = "/items/${itemIds[0]}/list-associations/delete-all"
         mockMvc.delete(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -847,9 +847,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("remove item 1 from list 1") {
         val expectedMessage = "Removed item '${updateLrmItemTwoRequest().name}' from list '${updateLrmListTwoRequest().name}'."
-        val instance = "/items/${itemUuids[1]}/list-associations"
+        val instance = "/items/${itemIds[1]}/list-associations"
         mockMvc.delete(instance) {
-          content = "\"${listUuids[1]}\""
+          content = "\"${listIds[1]}\""
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -865,7 +865,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 0 has zero list associations") {
-        val instance = "/items/${itemUuids[0]}/list-associations/count"
+        val instance = "/items/${itemIds[0]}/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -882,7 +882,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 has one list association") {
-        val instance = "/items/${itemUuids[1]}/list-associations/count"
+        val instance = "/items/${itemIds[1]}/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -901,7 +901,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
     describe("list: item association: create, read, delete") {
       it("list 0 has one item associations") {
-        val instance = "/lists/${listUuids[0]}/item-associations/count"
+        val instance = "/lists/${listIds[0]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -918,7 +918,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 1 has zero item associations") {
-        val instance = "/lists/${listUuids[1]}/item-associations/count"
+        val instance = "/lists/${listIds[1]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -936,9 +936,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("item 0 is added to list 1") {
         val expectedMessage = "Assigned item '${updateLrmItemOneRequest().name}' to list '${updateLrmListTwoRequest().name}'."
-        val instance = "/lists/${listUuids[1]}/item-associations"
+        val instance = "/lists/${listIds[1]}/item-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(itemUuids[0].toString()))
+          content = Json.encodeToString(listOf(itemIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -951,15 +951,15 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.componentName") { value(updateLrmListTwoRequest().name) }
           jsonPath("$.content.associatedComponents.length()") { value(1) }
           jsonPath("$.content.associatedComponents[0].type") { value("item") }
-          jsonPath("$.content.associatedComponents[0].uuid") { value(itemUuids[0].toString()) }
+          jsonPath("$.content.associatedComponents[0].id") { value(itemIds[0].toString()) }
         }
       }
 
       it("item 0 is not added to list 1 when it's already been added") {
         val expectedMessage = "Could not create a new association: It already exists."
-        val instance = "/lists/${listUuids[1]}/item-associations"
+        val instance = "/lists/${listIds[1]}/item-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(itemUuids[0].toString()))
+          content = Json.encodeToString(listOf(itemIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isUnprocessableEntity() }
@@ -975,9 +975,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("items 1 and 2 are added to list 1") {
-        val postedComponents = listOf(itemUuids[1].toString(), itemUuids[2].toString())
+        val postedComponents = listOf(itemIds[1].toString(), itemIds[2].toString())
         val expectedMessage = "Assigned ${postedComponents.size} items to list '${updateLrmListTwoRequest().name}'."
-        val instance = "/lists/${listUuids[1]}/item-associations"
+        val instance = "/lists/${listIds[1]}/item-associations"
         mockMvc.post(instance) {
           content = Json.encodeToString(postedComponents)
           contentType = MediaType.APPLICATION_JSON
@@ -993,14 +993,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.associatedComponents.length()") { value(postedComponents.size) }
           // content.associatedComponents is sorted by name
           jsonPath("$.content.associatedComponents[0].type") { value("item") }
-          jsonPath("$.content.associatedComponents[0].uuid") { value(itemUuids[1].toString()) }
+          jsonPath("$.content.associatedComponents[0].id") { value(itemIds[1].toString()) }
           jsonPath("$.content.associatedComponents[1].type") { value("item") }
-          jsonPath("$.content.associatedComponents[1].uuid") { value(itemUuids[2].toString()) }
+          jsonPath("$.content.associatedComponents[1].id") { value(itemIds[2].toString()) }
         }
       }
 
       it("list 1 includes three items") {
-        val instance = "/lists/${listUuids[1]}?includeItems=true"
+        val instance = "/lists/${listIds[1]}?includeItems=true"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1008,10 +1008,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved list id ${listUuids[1]}") }
+          jsonPath("$.message") { value("retrieved list id ${listIds[1]}") }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
           jsonPath("$.size") { value(1) }
-          jsonPath("$.content.uuid") { value("${listUuids[1]}") }
+          jsonPath("$.content.id") { value("${listIds[1]}") }
           jsonPath("$.content.name") { value(updateLrmListTwoRequest().name) }
           jsonPath("$.content.description") { value(updateLrmListTwoRequest().description) }
           jsonPath("$.content.created") { isNotEmpty() }
@@ -1022,9 +1022,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("item 2 is deleted from list 1") {
         val expected = "Removed item '${updateLrmItemThreeRequest().name}' from list '${updateLrmListTwoRequest().name}'."
-        val instance = "/lists/${listUuids[1]}/item-associations"
+        val instance = "/lists/${listIds[1]}/item-associations"
         mockMvc.delete(instance) {
-          content = "\"${itemUuids[2]}\""
+          content = "\"${itemIds[2]}\""
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1039,9 +1039,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 2 is not deleted from list 1 because the association couldn't be found") {
-        val instance = "/lists/${listUuids[1]}/item-associations"
+        val instance = "/lists/${listIds[1]}/item-associations"
         mockMvc.delete(instance) {
-          content = "\"${itemUuids[2]}\""
+          content = "\"${itemIds[2]}\""
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
@@ -1051,7 +1051,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.instance") { value(instance) }
           jsonPath(
             "$.message",
-          ) { value("Item id ${itemUuids[2]} could not be removed from list id ${listUuids[1]}: Association not found.") }
+          ) { value("Item id ${itemIds[2]} could not be removed from list id ${listIds[1]}: Association not found.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(5) }
           jsonPath("$.content.cause") { isNotEmpty() }
@@ -1061,7 +1061,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 1 has 2 item associations") {
-        val instance = "/lists/${listUuids[1]}/item-associations/count"
+        val instance = "/lists/${listIds[1]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1079,7 +1079,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("items 0 and 1 are deleted from list 1") {
         val expected = "Removed all associated items (2) from list '${updateLrmListTwoRequest().name}'."
-        val instance = "/lists/${listUuids[1]}/item-associations/delete-all"
+        val instance = "/lists/${listIds[1]}/item-associations/delete-all"
         mockMvc.delete(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1096,10 +1096,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("an item is not added to list 0 because the item couldn't be found") {
         val expectedMessage = "Could not create a new association: Item could not be found."
-        val uuid = UUID.randomUUID()
-        val instance = "/lists/${listUuids[1]}/item-associations"
+        val itemId = UUID.randomUUID()
+        val instance = "/lists/${listIds[1]}/item-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(uuid.toString()))
+          content = Json.encodeToString(listOf(itemId.toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
@@ -1111,7 +1111,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(6) }
           jsonPath("$.content.status") { value(HttpStatus.NOT_FOUND.value()) }
-          jsonPath("$.content.supplemental.notFound[0]") { value(uuid.toString()) }
+          jsonPath("$.content.supplemental.notFound[0]") { value(itemId.toString()) }
           jsonPath("$.content.cause") { isNotEmpty() }
           jsonPath("$.content.cause.name") { value(ItemNotFoundException::class.java.simpleName) }
           jsonPath("$.content.cause.message") { isNotEmpty() }
@@ -1120,10 +1120,10 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("item 0 is not added to a list because the list couldn't be found") {
         val expectedMessage = "Could not create a new association: List could not be found."
-        val uuid = UUID.randomUUID()
-        val instance = "/lists/$uuid/item-associations"
+        val listId = UUID.randomUUID()
+        val instance = "/lists/$listId/item-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(itemUuids[0].toString()))
+          content = Json.encodeToString(listOf(itemIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
@@ -1135,7 +1135,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(6) }
           jsonPath("$.content.status") { value(HttpStatus.NOT_FOUND.value()) }
-          jsonPath("$.content.supplemental.notFound[0]") { value(uuid.toString()) }
+          jsonPath("$.content.supplemental.notFound[0]") { value(listId.toString()) }
           jsonPath("$.content.cause") { isNotEmpty() }
           jsonPath("$.content.cause.name") { value(ListNotFoundException::class.java.simpleName) }
           jsonPath("$.content.cause.message") { isNotEmpty() }
@@ -1143,7 +1143,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 0 has one item associations+") {
-        val instance = "/lists/${listUuids[0]}/item-associations/count"
+        val instance = "/lists/${listIds[0]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1160,7 +1160,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 1 has zero item associations+") {
-        val instance = "/lists/${listUuids[1]}/item-associations/count"
+        val instance = "/lists/${listIds[1]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1179,7 +1179,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
     describe("item: delete") {
       it("item 2 has zero list associations") {
-        val instance = "/items/${itemUuids[2]}/list-associations/count"
+        val instance = "/items/${itemIds[2]}/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1196,14 +1196,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("delete item 2") {
-        val instance = "/items/${itemUuids[2]}"
+        val instance = "/items/${itemIds[2]}"
         mockMvc.delete(instance).andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
           jsonPath("$.instance") { value(instance) }
-          jsonPath("$.message") { value("Deleted item id ${itemUuids[2]}.") }
+          jsonPath("$.message") { value("Deleted item id ${itemIds[2]}.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(2) }
           jsonPath("$.content.itemNames.length()") { value(1) }
@@ -1213,9 +1213,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 is added to list 1") {
-        val instance = "/items/${itemUuids[1]}/list-associations"
+        val instance = "/items/${itemIds[1]}/list-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(listUuids[1].toString()))
+          content = Json.encodeToString(listOf(listIds[1].toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1228,12 +1228,12 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.componentName") { value(updateLrmItemTwoRequest().name) }
           jsonPath("$.content.associatedComponents.length()") { value(1) }
           jsonPath("$.content.associatedComponents[0].type") { value("list") }
-          jsonPath("$.content.associatedComponents[0].uuid") { value(listUuids[1].toString()) }
+          jsonPath("$.content.associatedComponents[0].id") { value(listIds[1].toString()) }
         }
       }
 
       it("item 1 has two list associations") {
-        val instance = "/items/${itemUuids[1]}/list-associations/count"
+        val instance = "/items/${itemIds[1]}/list-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1250,9 +1250,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("delete item 1 (removeListAssociations = false)") {
-        val expected = "Item id ${itemUuids[1]} could not be deleted: Item ${itemUuids[1]} is associated with 2 list(s). " +
+        val expected = "Item id ${itemIds[1]} could not be deleted: Item ${itemIds[1]} is associated with 2 list(s). " +
           "First remove the item from each list."
-        val instance = "/items/${itemUuids[1]}"
+        val instance = "/items/${itemIds[1]}"
         mockMvc.delete(instance).andExpect {
           // client should be checking for http 422 error and proceed to confirm removal from X lists
           status { isUnprocessableEntity() }
@@ -1270,14 +1270,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("delete item 1 (removeListAssociations = true)") {
-        val instance = "/items/${itemUuids[1]}?removeListAssociations=true"
+        val instance = "/items/${itemIds[1]}?removeListAssociations=true"
         mockMvc.delete(instance).andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
           jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
-          jsonPath("$.message") { value("Deleted item id ${itemUuids[1]}.") }
+          jsonPath("$.message") { value("Deleted item id ${itemIds[1]}.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(2) }
           jsonPath("$.content.itemNames.length()") { value(1) }
@@ -1306,7 +1306,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
     describe("list: delete") {
       it("list 1 has zero item associations+") {
-        val instance = "/lists/${listUuids[1]}/item-associations/count"
+        val instance = "/lists/${listIds[1]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1323,14 +1323,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("delete list 1") {
-        val instance = "/lists/${listUuids[1]}"
+        val instance = "/lists/${listIds[1]}"
         mockMvc.delete(instance).andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
           jsonPath("$.instance") { value(instance) }
-          jsonPath("$.message") { value("Deleted list id ${listUuids[1]}.") }
+          jsonPath("$.message") { value("Deleted list id ${listIds[1]}.") }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.length()") { value(2) }
           jsonPath("$.content.listNames.length()") { value(1) }
@@ -1354,7 +1354,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       describe("delete list with item associations") {
-        val instance = "/lists/${listUuids[0]}/item-associations/count"
+        val instance = "/lists/${listIds[0]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1372,9 +1372,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("item 0 is added to list 0") {
         val expectedMessage = "Assigned item '${updateLrmItemOneRequest().name}' to list '${updateLrmListOneRequest().name}'."
-        val instance = "/lists/${listUuids[0]}/item-associations"
+        val instance = "/lists/${listIds[0]}/item-associations"
         mockMvc.post(instance) {
-          content = Json.encodeToString(listOf(itemUuids[0].toString()))
+          content = Json.encodeToString(listOf(itemIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1387,15 +1387,15 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.componentName") { value(updateLrmListOneRequest().name) }
           jsonPath("$.content.associatedComponents.length()") { value(1) }
           jsonPath("$.content.associatedComponents[0].type") { value("item") }
-          jsonPath("$.content.associatedComponents[0].uuid") { value(itemUuids[0].toString()) }
+          jsonPath("$.content.associatedComponents[0].id") { value(itemIds[0].toString()) }
         }
       }
 
       it("delete list 0 (removeItemAssociations = false)") {
         val expected =
-          "List id ${listUuids[0]} could not be deleted: List ${listUuids[0]} is associated with 1 item(s). " +
+          "List id ${listIds[0]} could not be deleted: List ${listIds[0]} is associated with 1 item(s). " +
             "First remove each item from the list."
-        val instance = "/lists/${listUuids[0]}"
+        val instance = "/lists/${listIds[0]}"
         mockMvc.delete(instance).andExpect {
           // client should be checking for http 422 error and proceed to confirm removal from X lists
           status { isUnprocessableEntity() }
@@ -1413,7 +1413,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 0 has one item associations") {
-        val instance = "/lists/${listUuids[0]}/item-associations/count"
+        val instance = "/lists/${listIds[0]}/item-associations/count"
         mockMvc.get(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1430,8 +1430,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("delete list 0 (removeItemAssociations = true)") {
-        val expected = "Deleted list id ${listUuids[0]}."
-        val instance = "/lists/${listUuids[0]}?removeItemAssociations=true"
+        val expected = "Deleted list id ${listIds[0]}."
+        val instance = "/lists/${listIds[0]}?removeItemAssociations=true"
         mockMvc.delete(instance).andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }

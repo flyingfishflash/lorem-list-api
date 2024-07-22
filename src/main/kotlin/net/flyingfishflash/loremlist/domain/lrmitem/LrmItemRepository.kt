@@ -22,14 +22,14 @@ class LrmItemRepository {
   private val repositoryTable = LrmListItemTable
 
   fun count(): Long {
-    val uuidCount = repositoryTable.id.count()
-    val count = repositoryTable.select(uuidCount).first()[uuidCount]
+    val idCount = repositoryTable.id.count()
+    val count = repositoryTable.select(idCount).first()[idCount]
     return count
   }
 
   fun deleteAll(): Int = repositoryTable.deleteAll()
 
-  fun deleteById(uuid: UUID): Int = repositoryTable.deleteWhere { repositoryTable.id eq uuid }
+  fun deleteById(id: UUID): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
 
   fun findAll(): List<LrmItem> = repositoryTable.select(
     repositoryTable.id,
@@ -64,7 +64,7 @@ class LrmItemRepository {
         keySelector = { it[repositoryTable.id].value },
         valueTransform = {
           LrmListSuccinct(
-            uuid = it[LrmListTable.id].value,
+            id = it[LrmListTable.id].value,
             name = it[LrmListTable.name],
           )
         },
@@ -73,7 +73,7 @@ class LrmItemRepository {
     val itemsAndLists = resultRows.map {
       it.toLrmItem()
     }.distinct().map {
-      it.copy(lists = listsByItems[it.uuid]?.sortedBy { succinctList -> succinctList.name }?.toSet() ?: setOf())
+      it.copy(lists = listsByItems[it.id]?.sortedBy { succinctList -> succinctList.name }?.toSet() ?: setOf())
     }
 
     return itemsAndLists
@@ -92,12 +92,12 @@ class LrmItemRepository {
     return resultIdCollection
   }
 
-  fun findByIdOrNull(uuid: UUID): LrmItem? = repositoryTable.selectAll()
-    .where { repositoryTable.id eq uuid }
+  fun findByIdOrNull(id: UUID): LrmItem? = repositoryTable.selectAll()
+    .where { repositoryTable.id eq id }
     .map { it.toLrmItem() }
     .firstOrNull()
 
-  fun findByIdOrNullIncludeLists(uuid: UUID): LrmItem? {
+  fun findByIdOrNullIncludeLists(id: UUID): LrmItem? {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
       .select(
         repositoryTable.id,
@@ -108,7 +108,7 @@ class LrmItemRepository {
         repositoryTable.updated,
         LrmListTable.id,
         LrmListTable.name,
-      ).where { repositoryTable.id eq uuid }
+      ).where { repositoryTable.id eq id }
       .toList()
 
     if (resultRows.isEmpty()) return null
@@ -119,7 +119,7 @@ class LrmItemRepository {
         it[LrmListTable.id] != null
       }.map {
         LrmListSuccinct(
-          uuid = it[LrmListTable.id].value,
+          id = it[LrmListTable.id].value,
           name = it[LrmListTable.name],
         )
       }
@@ -146,7 +146,7 @@ class LrmItemRepository {
 
   fun update(lrmItem: LrmItem): Int {
     val updatedCount =
-      repositoryTable.update({ repositoryTable.id eq lrmItem.uuid }) {
+      repositoryTable.update({ repositoryTable.id eq lrmItem.id }) {
         it[repositoryTable.name] = lrmItem.name
         it[repositoryTable.description] = lrmItem.description
         it[repositoryTable.quantity] = lrmItem.quantity
@@ -158,7 +158,7 @@ class LrmItemRepository {
 
   fun ResultRow.toLrmItem(): LrmItem {
     return LrmItem(
-      uuid = this[repositoryTable.id].value,
+      id = this[repositoryTable.id].value,
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
       quantity = this[repositoryTable.quantity],

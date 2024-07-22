@@ -26,25 +26,25 @@ class AssociationRepository {
   private val repositoryTable = LrmListsItemsTable
 
   fun count(): Long {
-    val uuidCount = repositoryTable.id.count()
-    val count = repositoryTable.select(uuidCount).first()[uuidCount]
+    val idCount = repositoryTable.id.count()
+    val count = repositoryTable.select(idCount).first()[idCount]
     return count
   }
 
-  fun countItemToList(itemUuid: UUID): Long {
+  fun countItemToList(itemId: UUID): Long {
     val itemCount = item.count()
-    return repositoryTable.select(itemCount).where { item eq itemUuid }.map { it[itemCount] }.first()
+    return repositoryTable.select(itemCount).where { item eq itemId }.map { it[itemCount] }.first()
   }
 
-  fun countListToItem(listUuid: UUID): Long {
+  fun countListToItem(listId: UUID): Long {
     val listCount = list.count()
-    return repositoryTable.select(listCount).where { list eq listUuid }.map { it[listCount] }.first()
+    return repositoryTable.select(listCount).where { list eq listId }.map { it[listCount] }.first()
   }
 
   fun create(associationCollection: Set<Pair<UUID, UUID>>): List<SuccinctLrmComponentPair> {
-    val associationIdSet = repositoryTable.batchInsert(associationCollection) { (listUuid, itemUuid) ->
-      this[repositoryTable.list] = listUuid
-      this[repositoryTable.item] = itemUuid
+    val associationIdSet = repositoryTable.batchInsert(associationCollection) { (listId, itemId) ->
+      this[repositoryTable.list] = listId
+      this[repositoryTable.item] = itemId
     }.map { it[repositoryTable.id].value }.toSet()
 
     val succinctLrmComponentPairs = (repositoryTable innerJoin LrmListTable innerJoin LrmListItemTable)
@@ -60,22 +60,22 @@ class AssociationRepository {
     return succinctLrmComponentPairs
   }
 
-  fun create(listUuid: UUID, itemUuid: UUID) {
+  fun create(listId: UUID, itemId: UUID) {
     repositoryTable.insert {
-      it[list] = listUuid
-      it[item] = itemUuid
+      it[list] = listId
+      it[item] = itemId
     }
   }
 
-  fun delete(uuid: UUID): Int {
+  fun delete(id: UUID): Int {
     return repositoryTable.deleteWhere {
-      (id eq uuid)
+      (this.id eq id)
     }
   }
 
-  fun delete(itemUuid: UUID, listUuid: UUID): Int {
+  fun delete(itemId: UUID, listId: UUID): Int {
     return repositoryTable.deleteWhere {
-      (item eq itemUuid).and(list eq itemUuid)
+      (item eq itemId).and(list eq itemId)
     }
   }
 
@@ -83,28 +83,28 @@ class AssociationRepository {
     return repositoryTable.deleteAll()
   }
 
-  fun deleteAllOfItem(itemUuid: UUID): Int {
-    return repositoryTable.deleteWhere { repositoryTable.item eq itemUuid }
+  fun deleteAllOfItem(itemId: UUID): Int {
+    return repositoryTable.deleteWhere { repositoryTable.item eq itemId }
   }
 
-  fun deleteAllOfList(listUuid: UUID): Int {
-    return repositoryTable.deleteWhere { repositoryTable.list eq listUuid }
+  fun deleteAllOfList(listId: UUID): Int {
+    return repositoryTable.deleteWhere { repositoryTable.list eq listId }
   }
 
-  fun findByItemIdAndListIdOrNull(itemUuid: UUID, listUuid: UUID): Association? {
-    return repositoryTable.selectAll().where { item eq itemUuid and (list eq listUuid) }.firstOrNull()?.let {
+  fun findByItemIdAndListIdOrNull(itemId: UUID, listId: UUID): Association? {
+    return repositoryTable.selectAll().where { item eq itemId and (list eq listId) }.firstOrNull()?.let {
       Association(
-        uuid = it[repositoryTable.id].value,
-        listUuid = it[repositoryTable.list].value,
-        itemUuid = it[repositoryTable.item].value,
+        id = it[repositoryTable.id].value,
+        listId = it[repositoryTable.list].value,
+        itemId = it[repositoryTable.item].value,
       )
     }
   }
 
   fun update(association: Association): Int {
-    return repositoryTable.update({ repositoryTable.id eq association.uuid }) {
-      it[repositoryTable.item] = association.itemUuid
-      it[repositoryTable.list] = association.listUuid
+    return repositoryTable.update({ repositoryTable.id eq association.id }) {
+      it[repositoryTable.item] = association.itemId
+      it[repositoryTable.list] = association.listId
     }
   }
 }

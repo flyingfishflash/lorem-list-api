@@ -246,7 +246,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       >,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<AssociationCreatedResponse>> {
-    val serviceResponse = associationService.create(uuid = id, uuidCollection = listUuidCollection.toList(), type = LrmComponentType.Item)
+    val serviceResponse = associationService.create(id = id, idCollection = listUuidCollection.toList(), type = LrmComponentType.Item)
     val responseStatus = HttpStatus.OK
     val responseMessage = if (serviceResponse.associatedComponents.size <= 1) {
       "Assigned item '${serviceResponse.componentName}' to list '${serviceResponse.associatedComponents.first().name}'."
@@ -278,7 +278,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @RequestBody listId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.deleteByItemIdAndListId(itemUuid = id, listUuid = listId)
+    val serviceResponse = associationService.deleteByItemIdAndListId(itemId = id, listId = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -306,7 +306,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @PathVariable("id") @ValidUuid id: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.deleteAllOfItem(itemUuid = id)
+    val serviceResponse = associationService.deleteAllOfItem(itemId = id)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from all associated lists (${serviceResponse.second})."
     val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
@@ -342,9 +342,9 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
     val serviceResponse = associationService.updateList(
-      itemUuid = id,
-      currentListUuid = moveToListRequest.currentListUuid,
-      newListUuid = moveToListRequest.newListUuid,
+      itemId = id,
+      currentListId = moveToListRequest.currentListId,
+      newListId = moveToListRequest.newListId,
     )
     val responseMessage = "Moved item '${serviceResponse.first}'" +
       " from list '${serviceResponse.second}'" +

@@ -13,7 +13,7 @@ import java.util.UUID
 @OptIn(ExperimentalSerializationApi::class)
 data class LrmItem(
   @Serializable(with = UUIDSerializer::class)
-  var uuid: UUID,
+  var id: UUID,
   var name: String,
   var description: String? = null,
   @EncodeDefault var quantity: Int = 0,
@@ -22,4 +22,4 @@ data class LrmItem(
   val lists: Set<LrmListSuccinct>? = null,
 )
 
-fun LrmItem.succinct() = LrmItemSuccinct(uuid = this.uuid, name = this.name)
+fun LrmItem.succinct() = LrmItemSuccinct(id = this.id, name = this.name)

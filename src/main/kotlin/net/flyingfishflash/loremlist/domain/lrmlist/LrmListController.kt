@@ -244,7 +244,7 @@ class LrmListController(private val associationService: AssociationService, priv
       >,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<AssociationCreatedResponse>> {
-    val serviceResponse = associationService.create(uuid = id, uuidCollection = itemUuidCollection.toList(), type = LrmComponentType.List)
+    val serviceResponse = associationService.create(id = id, idCollection = itemUuidCollection.toList(), type = LrmComponentType.List)
     val responseStatus = HttpStatus.OK
     val responseMessage = if (serviceResponse.associatedComponents.size <= 1) {
       "Assigned item '${serviceResponse.associatedComponents.first().name}' to list '${serviceResponse.componentName}'."
@@ -276,7 +276,7 @@ class LrmListController(private val associationService: AssociationService, priv
     @RequestBody itemId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.deleteByItemIdAndListId(itemUuid = itemId, listUuid = id)
+    val serviceResponse = associationService.deleteByItemIdAndListId(itemId = itemId, listId = id)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -303,7 +303,7 @@ class LrmListController(private val associationService: AssociationService, priv
     @PathVariable("id") @ValidUuid id: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.deleteAllOfList(listUuid = id)
+    val serviceResponse = associationService.deleteAllOfList(listId = id)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed all associated items (${serviceResponse.second}) from list '${serviceResponse.first}'."
     val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())

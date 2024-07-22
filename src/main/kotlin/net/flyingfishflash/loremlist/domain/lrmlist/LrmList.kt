@@ -10,7 +10,7 @@ import java.util.UUID
 @Serializable
 data class LrmList(
   @Serializable(with = UUIDSerializer::class)
-  var uuid: UUID,
+  var id: UUID,
   var name: String,
   var description: String? = null,
   var created: Instant? = null,
@@ -18,4 +18,4 @@ data class LrmList(
   val items: Set<LrmItem>? = null,
 )
 
-fun LrmList.succinct() = LrmListSuccinct(uuid = this.uuid, name = this.name)
+fun LrmList.succinct() = LrmListSuccinct(id = this.id, name = this.name)

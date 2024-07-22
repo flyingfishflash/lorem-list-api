@@ -6,19 +6,19 @@ import org.springframework.http.HttpStatus
 import java.util.UUID
 
 class ItemNotFoundException : ApiException {
-  constructor(uuid: UUID, message: String? = null) : this(setOf(uuid), message = message)
+  constructor(id: UUID, message: String? = null) : this(setOf(id), message = message)
 
-  constructor(uuidCollection: Set<UUID>, message: String? = null) : super(
+  constructor(idCollection: Set<UUID>, message: String? = null) : super(
     httpStatus = HTTP_STATUS,
     title = "ItemNotFoundException",
-    message = message ?: defaultMessage(uuidCollection),
-    supplemental = mapOf("notFound" to uuidCollection.map { it.toString() }.toJsonElement()),
+    message = message ?: defaultMessage(idCollection),
+    supplemental = mapOf("notFound" to idCollection.map { it.toString() }.toJsonElement()),
   )
 
   companion object {
     val HTTP_STATUS = HttpStatus.NOT_FOUND
     fun defaultMessage() = "Item could not be found."
-    fun defaultMessage(uuidCollection: Set<UUID>) =
-      if (uuidCollection.size > 1) "Items (${uuidCollection.size}) could not be found." else defaultMessage()
+    fun defaultMessage(idCollection: Set<UUID>) =
+      if (idCollection.size > 1) "Items (${idCollection.size}) could not be found." else defaultMessage()
   }
 }

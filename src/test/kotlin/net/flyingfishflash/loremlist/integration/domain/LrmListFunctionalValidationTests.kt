@@ -185,8 +185,8 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
           content = Json.encodeToString(createLrmItemOneRequest())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect { status { isOk() } }.andReturn().response.contentAsString
-        val uuid = Json.decodeFromString<ResponseSuccess<LrmItem>>(response).content.uuid
-        itemUuids[0] = uuid
+        val id = Json.decodeFromString<ResponseSuccess<LrmItem>>(response).content.id
+        itemUuids[0] = id
       }
 
       val conditions: Map<String, ValidationTest> = mapOf(

@@ -14,9 +14,9 @@ class AssociationNotFoundTests : DescribeSpec({
     }
 
     it("id is not null") {
-      val uuid = UUID.randomUUID()
-      val exception = AssociationNotFoundException(id = uuid)
-      exception.responseMessage.shouldBe("Association id $uuid not found.")
+      val id = UUID.randomUUID()
+      val exception = AssociationNotFoundException(id = id)
+      exception.responseMessage.shouldBe("Association id $id not found.")
     }
 
     it("custom message") {
