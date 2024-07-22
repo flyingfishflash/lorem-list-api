@@ -53,7 +53,6 @@ dependencies {
   implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
 //  https://github.com/JetBrains/Exposed/releases
   implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
-  implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
   implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
