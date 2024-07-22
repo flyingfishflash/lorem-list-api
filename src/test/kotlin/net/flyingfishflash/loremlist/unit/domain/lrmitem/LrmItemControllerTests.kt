@@ -17,7 +17,6 @@ import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSucces
 import net.flyingfishflash.loremlist.domain.LrmComponentType
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.association.data.AssociationCreatedResponse
-import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemController
@@ -59,7 +58,6 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     val id1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
     val id2 = UUID.fromString("00000000-0000-4000-a000-000000000002")
     val id3 = UUID.fromString("00000000-0000-4000-a000-000000000003")
-    val itemToListAssociationUpdateRequest = ItemToListAssociationUpdateRequest(id2, id3)
     val lrmItemRequest = LrmItemRequest("Lorem Item Name", "Lorem Item Description")
 
     fun lrmItem(): LrmItem = LrmItem(id = id0, name = lrmItemRequest.name, description = lrmItemRequest.description)
@@ -275,7 +273,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/items/{id}") {
+    describe("/items/{item-id}") {
       describe("delete") {
         it("item is deleted") {
           // nonsensical conditioning of the delete response:
@@ -465,16 +463,15 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/items/{id}/list-associations") {
+    describe("/items/{item-id}/list-associations/{list-id}") {
       describe("delete") {
         it("item is removed from list") {
           val lrmListName = "Lorem List Name"
           every {
             mockAssociationService.deleteByItemIdAndListId(itemId = id1, listId = id2)
           } returns Pair(lrmItem().name, lrmListName)
-          val instance = "/items/$id1/list-associations"
+          val instance = "/items/$id1/list-associations/$id2"
           mockMvc.delete(instance) {
-            content = Json.encodeToString(id2.toString())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isOk() }
@@ -492,9 +489,8 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("item is not found") {
           every { mockAssociationService.deleteByItemIdAndListId(itemId = id1, listId = id2) } throws ItemNotFoundException(id1)
           val expectedMessage = ItemNotFoundException.defaultMessage()
-          val instance = "/items/$id1/list-associations"
+          val instance = "/items/$id1/list-associations/$id2"
           mockMvc.delete(instance) {
-            content = Json.encodeToString(id2.toString())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isNotFound() }
@@ -514,9 +510,8 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list is not found") {
           every { mockAssociationService.deleteByItemIdAndListId(itemId = id1, listId = id2) } throws ListNotFoundException(id2)
           val expectedMessage = ListNotFoundException.defaultMessage()
-          val instance = "/items/$id1/list-associations"
+          val instance = "/items/$id1/list-associations/$id2"
           mockMvc.delete(instance) {
-            content = Json.encodeToString(id2.toString())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isNotFound() }
@@ -539,11 +534,10 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val fromListName = "List A"
           val toListName = "List B"
           every {
-            mockAssociationService.updateList(itemId = id1, currentListId = id2, newListId = id3)
+            mockAssociationService.updateList(itemId = id1, currentListId = id2, destinationListId = id3)
           } returns Triple(lrmItem().name, fromListName, toListName)
-          val instance = "/items/$id1/list-associations"
+          val instance = "/items/$id1/list-associations/$id2/$id3"
           mockMvc.patch(instance) {
-            content = Json.encodeToString(itemToListAssociationUpdateRequest)
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isOk() }
@@ -560,11 +554,10 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
         it("item is not moved") {
           every {
-            mockAssociationService.updateList(itemId = id1, currentListId = id2, newListId = id3)
+            mockAssociationService.updateList(itemId = id1, currentListId = id2, destinationListId = id3)
           } throws ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, responseMessage = "Api Exception Detail")
-          val instance = "/items/$id1/list-associations"
+          val instance = "/items/$id1/list-associations/$id2/$id3"
           mockMvc.patch(instance) {
-            content = Json.encodeToString(itemToListAssociationUpdateRequest)
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isIAmATeapot() }
@@ -704,7 +697,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/items/{id}/list-associations/count") {
+    describe("/items/{item-id}/list-associations/count") {
       describe("get") {
         it("count of list associations is returned") {
           every { mockAssociationService.countForItemId(id1) } returns 999
@@ -739,10 +732,10 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/items/{id}/list-associations/delete-all") {
+    describe("/items/{item-id}/list-associations") {
       it("item is removed from all lists") {
         every { mockAssociationService.deleteAllOfItem(id1) } returns Pair(lrmItem().name, 999)
-        val instance = "/items/$id1/list-associations/delete-all"
+        val instance = "/items/$id1/list-associations"
         mockMvc.delete(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {

@@ -22,7 +22,6 @@ import net.flyingfishflash.loremlist.core.validation.ValidUuid
 import net.flyingfishflash.loremlist.domain.LrmComponentType
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.association.data.AssociationCreatedResponse
-import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.springframework.http.HttpStatus
@@ -124,15 +123,15 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @DeleteMapping("/{id}")
+  @DeleteMapping("/{item-id}")
   fun deleteById(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("item-id") @ValidUuid itemId: UUID,
     @RequestParam(defaultValue = false.toString()) removeListAssociations: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmItemDeleteResponse>> {
-    val serviceResponse = lrmItemService.deleteById(id, removeListAssociations)
+    val serviceResponse = lrmItemService.deleteById(itemId, removeListAssociations)
     val responseStatus = HttpStatus.OK
-    val responseMessage = "Deleted item id $id."
+    val responseMessage = "Deleted item id $itemId."
     val response = ResponseSuccess(serviceResponse, responseMessage, request)
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
@@ -179,15 +178,15 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @GetMapping("/{id}")
+  @GetMapping("/{item-id}")
   fun findById(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("item-id") @ValidUuid itemId: UUID,
     @RequestParam(defaultValue = false.toString()) includeLists: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmItem>> {
     val responseStatus = HttpStatus.OK
-    val responseMessage = if (includeLists) "retrieved item id $id and it's associated lists" else "retrieved item id $id"
-    val responseContent = if (includeLists) lrmItemService.findByIdIncludeLists(id) else lrmItemService.findById(id)
+    val responseMessage = if (includeLists) "retrieved item id $itemId and it's associated lists" else "retrieved item id $itemId"
+    val responseContent = if (includeLists) lrmItemService.findByIdIncludeLists(itemId) else lrmItemService.findById(itemId)
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
@@ -207,12 +206,12 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @GetMapping("/{id}/list-associations/count")
+  @GetMapping("/{item-id}/list-associations/count")
   fun listAssociationsCount(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("item-id") @ValidUuid itemId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.countForItemId(id)
+    val serviceResponse = associationService.countForItemId(itemId)
     val responseMessage = "Item is associated with $serviceResponse lists."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)
@@ -235,18 +234,18 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @PostMapping("/{id}/list-associations")
+  @PostMapping("/{item-id}/list-associations")
   fun listAssociationsCreate(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("item-id") @ValidUuid itemId: UUID,
     @RequestBody
     @Size(min = 1, message = "List of UUID's must contain at least one element")
-    listUuidCollection: Set<
+    listIdCollection: Set<
       @Serializable(UUIDSerializer::class)
       UUID,
       >,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<AssociationCreatedResponse>> {
-    val serviceResponse = associationService.create(id = id, idCollection = listUuidCollection.toList(), type = LrmComponentType.Item)
+    val serviceResponse = associationService.create(id = itemId, idCollection = listIdCollection.toList(), type = LrmComponentType.Item)
     val responseStatus = HttpStatus.OK
     val responseMessage = if (serviceResponse.associatedComponents.size <= 1) {
       "Assigned item '${serviceResponse.componentName}' to list '${serviceResponse.associatedComponents.first().name}'."
@@ -272,13 +271,13 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @DeleteMapping("/{id}/list-associations")
+  @DeleteMapping("/{item-id}/list-associations/{list-id}")
   fun listAssociationsDelete(
-    @PathVariable("id") @ValidUuid id: UUID,
-    @RequestBody listId: UUID,
+    @PathVariable("item-id") @ValidUuid itemId: UUID,
+    @PathVariable("list-id") @ValidUuid listId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.deleteByItemIdAndListId(itemId = id, listId = listId)
+    val serviceResponse = associationService.deleteByItemIdAndListId(itemId = itemId, listId = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -301,12 +300,12 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @DeleteMapping("/{id}/list-associations/delete-all")
+  @DeleteMapping("/{item-id}/list-associations")
   fun listAssociationsDeleteAll(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("item-id") @ValidUuid itemId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.deleteAllOfItem(itemId = id)
+    val serviceResponse = associationService.deleteAllOfItem(itemId = itemId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from all associated lists (${serviceResponse.second})."
     val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
@@ -335,16 +334,17 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @PatchMapping("/{id}/list-associations")
+  @PatchMapping("/{item-id}/list-associations/{current-list-id}/{destination-list-id}")
   fun listAssociationsUpdate(
-    @PathVariable("id") @ValidUuid id: UUID,
-    @RequestBody @Valid moveToListRequest: ItemToListAssociationUpdateRequest,
+    @PathVariable("item-id") @ValidUuid itemId: UUID,
+    @PathVariable("current-list-id") @ValidUuid currentListId: UUID,
+    @PathVariable("destination-list-id") @ValidUuid destinationListId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
     val serviceResponse = associationService.updateList(
-      itemId = id,
-      currentListId = moveToListRequest.currentListId,
-      newListId = moveToListRequest.newListId,
+      itemId = itemId,
+      currentListId = currentListId,
+      destinationListId = destinationListId,
     )
     val responseMessage = "Moved item '${serviceResponse.first}'" +
       " from list '${serviceResponse.second}'" +
@@ -376,13 +376,13 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @PatchMapping("/{id}")
+  @PatchMapping("/{item-id}")
   fun patch(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("item-id") @ValidUuid itemId: UUID,
     @RequestBody patchRequest: Map<String, Any>,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmItem>> {
-    val (responseContent, patched) = lrmItemService.patch(id, patchRequest)
+    val (responseContent, patched) = lrmItemService.patch(itemId, patchRequest)
     val response: ResponseSuccess<*>
     val responseEntity: ResponseEntity<ResponseSuccess<LrmItem>>
     if (patched) {

@@ -9,7 +9,6 @@ import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProble
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.domain.association.AssociationNotFoundException
-import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
@@ -611,11 +610,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 0 is moved from list 0 to list 1") {
         val expectedMessage = "Moved item '${updateLrmItemOneRequest().name}' " +
           "from list '${updateLrmListOneRequest().name}' to list '${updateLrmListTwoRequest().name}'."
-        val instance = "/items/${itemIds[0]}/list-associations"
+        val instance = "/items/${itemIds[0]}/list-associations/${listIds[0]}/${listIds[1]}"
         mockMvc.patch(instance) {
-          content = Json.encodeToString(
-            ItemToListAssociationUpdateRequest(currentListId = listIds[0]!!, newListId = listIds[1]!!),
-          )
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -658,9 +654,9 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 0 is not deleted from list 0 because the association couldn't be found") {
-        val instance = "/items/${itemIds[0]}/list-associations"
+        val instance = "/items/${itemIds[0]}/list-associations/${listIds[0]}"
         mockMvc.delete(instance) {
-          content = "\"${listIds[0]}\""
+//          content = "\"${listIds[0]}\""
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
@@ -829,7 +825,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("remove item 0 from all lists") {
-        val instance = "/items/${itemIds[0]}/list-associations/delete-all"
+        val instance = "/items/${itemIds[0]}/list-associations"
         mockMvc.delete(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -847,9 +843,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("remove item 1 from list 1") {
         val expectedMessage = "Removed item '${updateLrmItemTwoRequest().name}' from list '${updateLrmListTwoRequest().name}'."
-        val instance = "/items/${itemIds[1]}/list-associations"
+        val instance = "/items/${itemIds[1]}/list-associations/${listIds[1]}"
         mockMvc.delete(instance) {
-          content = "\"${listIds[1]}\""
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1022,9 +1017,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("item 2 is deleted from list 1") {
         val expected = "Removed item '${updateLrmItemThreeRequest().name}' from list '${updateLrmListTwoRequest().name}'."
-        val instance = "/lists/${listIds[1]}/item-associations"
+        val instance = "/lists/${listIds[1]}/item-associations/${itemIds[2]}"
         mockMvc.delete(instance) {
-          content = "\"${itemIds[2]}\""
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1039,9 +1033,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 2 is not deleted from list 1 because the association couldn't be found") {
-        val instance = "/lists/${listIds[1]}/item-associations"
+        val instance = "/lists/${listIds[1]}/item-associations/${itemIds[2]}"
         mockMvc.delete(instance) {
-          content = "\"${itemIds[2]}\""
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isNotFound() }
@@ -1079,7 +1072,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("items 0 and 1 are deleted from list 1") {
         val expected = "Removed all associated items (2) from list '${updateLrmListTwoRequest().name}'."
-        val instance = "/lists/${listIds[1]}/item-associations/delete-all"
+        val instance = "/lists/${listIds[1]}/item-associations"
         mockMvc.delete(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {

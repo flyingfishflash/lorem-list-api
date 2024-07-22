@@ -124,15 +124,15 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @DeleteMapping("/{id}")
+  @DeleteMapping("/{list-id}")
   fun deleteById(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("list-id") @ValidUuid listId: UUID,
     @RequestParam(defaultValue = false.toString()) removeItemAssociations: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmListDeleteResponse>> {
-    val serviceResponse = lrmListService.deleteById(id, removeItemAssociations)
+    val serviceResponse = lrmListService.deleteById(listId, removeItemAssociations)
     val responseStatus = HttpStatus.OK
-    val responseMessage = "Deleted list id $id."
+    val responseMessage = "Deleted list id $listId."
     val response = ResponseSuccess(serviceResponse, responseMessage, request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
@@ -174,24 +174,23 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @GetMapping("/{id}")
+  @GetMapping("/{list-id}")
   fun findById(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("list-id") @ValidUuid listId: UUID,
     @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmList>> {
     val responseContent =
       if (includeItems) {
-        lrmListService.findByIdIncludeItems(id)
+        lrmListService.findByIdIncludeItems(listId)
       } else {
-        lrmListService.findById(id)
+        lrmListService.findById(listId)
       }
-    val response = ResponseSuccess(responseContent, "retrieved list id $id", request)
+    val response = ResponseSuccess(responseContent, "retrieved list id $listId", request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
   }
 
-  @GetMapping("/{id}/item-associations/count")
   @Operation(summary = "Count of items associated with a list")
   @ApiResponses(
     value = [
@@ -206,11 +205,12 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
+  @GetMapping("/{list-id}/item-associations/count")
   fun itemAssociationsCount(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("list-id") @ValidUuid listId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.countForListId(id)
+    val serviceResponse = associationService.countForListId(listId)
     val responseMessage = "List is associated with $serviceResponse items."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)
@@ -233,18 +233,18 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @PostMapping("/{id}/item-associations")
+  @PostMapping("/{list-id}/item-associations")
   fun itemAssociationsCreate(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("list-id") @ValidUuid listId: UUID,
     @RequestBody
     @Size(min = 1, message = "List of UUID's must contain at least one element")
-    itemUuidCollection: Set<
+    itemIdCollection: Set<
       @Serializable(UUIDSerializer::class)
       UUID,
       >,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<AssociationCreatedResponse>> {
-    val serviceResponse = associationService.create(id = id, idCollection = itemUuidCollection.toList(), type = LrmComponentType.List)
+    val serviceResponse = associationService.create(id = listId, idCollection = itemIdCollection.toList(), type = LrmComponentType.List)
     val responseStatus = HttpStatus.OK
     val responseMessage = if (serviceResponse.associatedComponents.size <= 1) {
       "Assigned item '${serviceResponse.associatedComponents.first().name}' to list '${serviceResponse.componentName}'."
@@ -270,13 +270,13 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @DeleteMapping("/{id}/item-associations")
+  @DeleteMapping("/{list-id}/item-associations/{item-id}")
   fun itemAssociationsDelete(
-    @PathVariable("id") @ValidUuid id: UUID,
-    @RequestBody itemId: UUID,
+    @PathVariable("list-id") @ValidUuid listId: UUID,
+    @PathVariable("item-id") @ValidUuid itemId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.deleteByItemIdAndListId(itemId = itemId, listId = id)
+    val serviceResponse = associationService.deleteByItemIdAndListId(itemId = itemId, listId = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -298,12 +298,12 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @DeleteMapping("/{id}/item-associations/delete-all")
+  @DeleteMapping("/{list-id}/item-associations")
   fun itemAssociationsDeleteAll(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("list-id") @ValidUuid listId: UUID,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.deleteAllOfList(listId = id)
+    val serviceResponse = associationService.deleteAllOfList(listId = listId)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed all associated items (${serviceResponse.second}) from list '${serviceResponse.first}'."
     val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
@@ -331,13 +331,13 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @PatchMapping("/{id}")
+  @PatchMapping("/{list-id}")
   fun patch(
-    @PathVariable("id") @ValidUuid id: UUID,
+    @PathVariable("list-id") @ValidUuid listId: UUID,
     @RequestBody patchRequest: Map<String, Any>,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<LrmList>> {
-    val (responseContent, patched) = lrmListService.patch(id, patchRequest)
+    val (responseContent, patched) = lrmListService.patch(listId, patchRequest)
     val response: ResponseSuccess<*>
     val responseEntity: ResponseEntity<ResponseSuccess<LrmList>>
     if (patched) {

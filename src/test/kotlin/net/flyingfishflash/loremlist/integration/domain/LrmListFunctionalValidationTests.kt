@@ -7,7 +7,6 @@ import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler.Co
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
-import net.flyingfishflash.loremlist.domain.association.data.ItemToListAssociationUpdateRequest
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -41,6 +40,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
   val invalidUuids = listOf(
     UUID.fromString("00000000-0000-a000-9000-000000000000"),
     UUID.fromString("00000000-0000-a000-9000-000000000001"),
+    UUID.fromString("00000000-0000-a000-9000-000000000002"),
   )
 
   // version 4 uuids
@@ -48,8 +48,6 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
     UUID.fromString("00000000-0000-4000-a000-000000000000"),
     UUID.fromString("00000000-0000-4000-a000-000000000001"),
   )
-
-  val itemToListAssociationUpdateRequest = ItemToListAssociationUpdateRequest(validUuids[0], validUuids[1])
 
   fun createLrmItemOneRequest(): LrmItemRequest = LrmItemRequest("Lorem Item One Name", "Lorem Item One Description", 0)
 
@@ -135,39 +133,45 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
     }
   }
 
-  describe("/items/{uuid}") {
+  describe("/items/{item-id}") {
     describe("invoke path variable validation failures") {
       val conditions: Map<String, ValidationTest> = mapOf(
-        "uuid is invalid /items/{uuid} (delete)" to ValidationTest(
+        "uuid is invalid /items/{item-id} (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
           instance = "/items/${invalidUuids[0]}",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
         ),
-        "uuid is invalid /items/{uuid} (get)" to ValidationTest(
+        "uuid is invalid /items/{item-id} (get)" to ValidationTest(
           httpMethod = HttpMethod.GET,
           instance = "/items/${invalidUuids[0]}",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
         ),
-        "uuid is invalid /items/{uuid} (patch)" to ValidationTest(
+        "uuid is invalid /items/{item-id} (patch)" to ValidationTest(
           httpMethod = HttpMethod.PATCH,
           instance = "/items/${invalidUuids[0]}",
           requestContent = "{ \"name\": \" \" }",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
         ),
-        "uuid is invalid /items/{uuid}/list-associations (delete)" to ValidationTest(
+        "uuid is invalid /items/{item-id}/list-associations (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
           instance = "/items/${invalidUuids[0]}/list-associations",
           requestContent = Json.encodeToString(UUIDSerializer, validUuids[0]),
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
         ),
-        "uuid is invalid /items/{uuid}/list-associations/delete-all (delete)" to ValidationTest(
+        "uuid is invalid /items/{item-id}/list-associations/{list-id} (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
-          instance = "/items/${invalidUuids[0]}/list-associations/delete-all",
+          instance = "/items/${invalidUuids[0]}/list-associations/${invalidUuids[1]}",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId, listId.",
         ),
-        "uuid is invalid /items/{uuid}/list-associations/count (get)" to ValidationTest(
+        "uuid is invalid /items/{item-id}/list-associations/count (get)" to ValidationTest(
           httpMethod = HttpMethod.GET,
           instance = "/items/${invalidUuids[0]}/list-associations/count",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
         ),
-        "uuid is invalid /items/{uuid}/list-associations (patch)" to ValidationTest(
+        "uuid is invalid /items/{id}/list-associations/{current-list-id}/{destination-list-id} (patch)" to ValidationTest(
           httpMethod = HttpMethod.PATCH,
-          instance = "/items/${invalidUuids[0]}/list-associations",
-          requestContent = Json.encodeToString(itemToListAssociationUpdateRequest),
+          instance = "/items/${invalidUuids[0]}/list-associations/${invalidUuids[1]}/${invalidUuids[2]}",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE currentListId, destinationListId, itemId.",
         ),
       )
 
@@ -276,34 +280,39 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
     }
   }
 
-  describe("/lists/{uuid}") {
+  describe("/lists/{list-id}") {
     describe("invoke path variable validation failures") {
       val conditions: Map<String, ValidationTest> = mapOf(
-        "uuid is invalid /lists/{uuid} (delete)" to ValidationTest(
+        "uuid is invalid /lists/{list-id} (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
           instance = "/lists/${invalidUuids[0]}",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE listId.",
         ),
-        "uuid is invalid /lists/{uuid} (get)" to ValidationTest(
+        "uuid is invalid /lists/{list-id} (get)" to ValidationTest(
           httpMethod = HttpMethod.GET,
           instance = "/lists/${invalidUuids[0]}",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE listId.",
         ),
-        "uuid is invalid /lists/{uuid} (patch)" to ValidationTest(
+        "uuid is invalid /lists/{list-id} (patch)" to ValidationTest(
           httpMethod = HttpMethod.PATCH,
           instance = "/lists/${invalidUuids[0]}",
           requestContent = "{ \"name\": \" \" }",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE listId.",
         ),
-        "uuid is invalid /lists/{uuid}/item-associations (delete)" to ValidationTest(
+        "uuid is invalid /lists/{list-id}/item-associations (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
           instance = "/lists/${invalidUuids[0]}/item-associations",
-          requestContent = Json.encodeToString(UUIDSerializer, validUuids[0]),
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE listId.",
         ),
-        "uuid is invalid /lists/{uuid}/item-associations/delete-all (delete)" to ValidationTest(
+        "uuid is invalid /lists/{list-id}/item-associations/{item-id} (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
-          instance = "/lists/${invalidUuids[0]}/item-associations/delete-all",
+          instance = "/lists/${invalidUuids[0]}/item-associations/${invalidUuids[1]}",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId, listId.",
         ),
-        "uuid is invalid /lists/{uuid}/item-associations/count (get)" to ValidationTest(
+        "uuid is invalid /lists/{list-id}/item-associations/count (get)" to ValidationTest(
           httpMethod = HttpMethod.GET,
           instance = "/lists/${invalidUuids[0]}/item-associations/count",
+          responseMessage = "$VALIDATION_FAILURE_MESSAGE listId.",
         ),
       )
 

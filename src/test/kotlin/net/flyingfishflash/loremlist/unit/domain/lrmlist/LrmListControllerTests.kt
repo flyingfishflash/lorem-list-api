@@ -249,7 +249,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists/{id}") {
+    describe("/lists/{list-id}") {
       describe("delete") {
         it("list is deleted") {
           // nonsensical conditioning of the delete response:
@@ -438,7 +438,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists/{id}/item-associations") {
+    describe("/lists/{list-id}/item-associations/{item-id}") {
       describe("delete") {
         it("item is removed from list") {
           val lrmItemName = "Lorem Item Name"
@@ -449,9 +449,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               listId = id1,
             )
           } returns Pair(lrmItemName, lrmListName)
-          val instance = "/lists/$id1/item-associations"
+          val instance = "/lists/$id1/item-associations/$id2"
           mockMvc.delete(instance) {
-            content = Json.encodeToString(id2.toString())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isOk() }
@@ -469,9 +468,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("item is not found") {
           every { mockAssociationService.deleteByItemIdAndListId(itemId = id2, listId = id1) } throws ItemNotFoundException(id2)
           val expectedMessage = ItemNotFoundException.defaultMessage()
-          val instance = "/lists/$id1/item-associations"
+          val instance = "/lists/$id1/item-associations/$id2"
           mockMvc.delete(instance) {
-            content = Json.encodeToString(id2.toString())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isNotFound() }
@@ -491,9 +489,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list is not found") {
           every { mockAssociationService.deleteByItemIdAndListId(itemId = id2, listId = id1) } throws ListNotFoundException(id1)
           val expectedMessage = ListNotFoundException.defaultMessage()
-          val instance = "/lists/$id1/item-associations"
+          val instance = "/lists/$id1/item-associations/$id2"
           mockMvc.delete(instance) {
-            content = Json.encodeToString(id2.toString())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isNotFound() }
@@ -636,7 +633,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists/{id}/item-associations/count") {
+    describe("/lists/{list-id}/item-associations/count") {
       describe("get") {
         it("count of item associations is returned") {
           every { mockAssociationService.countForListId(id1) } returns 999
@@ -671,11 +668,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/lists/{id}/item-associations/delete-all") {
+    describe("/lists/{list-id}/item-associations") {
       it("all items are removed from a list") {
         val lrmListName = "Lorem List Name"
         every { mockAssociationService.deleteAllOfList(id1) } returns Pair(lrmListName, 999)
-        val instance = "/lists/$id1/item-associations/delete-all"
+        val instance = "/lists/$id1/item-associations"
         mockMvc.delete(instance) {
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {

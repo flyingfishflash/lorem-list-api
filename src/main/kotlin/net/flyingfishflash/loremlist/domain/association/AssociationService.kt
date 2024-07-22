@@ -328,22 +328,22 @@ class AssociationService(
    *
    * @param itemId item id
    * @param currentListId current list id
-   * @param newListId new list id
+   * @param destinationListId new list id
    * @return item name, current list name, new list name
    */
-  fun updateList(itemId: UUID, currentListId: UUID, newListId: UUID): Triple<String, String, String> {
+  fun updateList(itemId: UUID, currentListId: UUID, destinationListId: UUID): Triple<String, String, String> {
     val item: LrmItem
     val currentList: LrmList
-    val newList: LrmList
+    val destinationList: LrmList
     val association: Association
-    val exceptionMessage = "Item id $itemId was not moved from list id $currentListId to list id $newListId"
+    val exceptionMessage = "Item id $itemId was not moved from list id $currentListId to list id $destinationListId"
 
     try {
       item = lrmItemRepository.findByIdOrNull(itemId) ?: throw ItemNotFoundException(itemId)
       currentList = lrmListRepository.findByIdOrNull(currentListId) ?: throw ListNotFoundException(currentListId)
-      newList = lrmListRepository.findByIdOrNull(newListId) ?: throw ListNotFoundException(newListId)
+      destinationList = lrmListRepository.findByIdOrNull(destinationListId) ?: throw ListNotFoundException(destinationListId)
       association = associationRepository.findByItemIdAndListIdOrNull(itemId, currentListId) ?: throw AssociationNotFoundException()
-      val updatedAssociation = association.copy(listId = newListId)
+      val updatedAssociation = association.copy(listId = destinationListId)
       associationRepository.update(updatedAssociation)
     } catch (apiException: ApiException) {
       throw ApiException(
@@ -360,7 +360,7 @@ class AssociationService(
     return Triple(
       item.name,
       currentList.name,
-      newList.name,
+      destinationList.name,
     )
   }
 }
