@@ -192,6 +192,25 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     return ResponseEntity(response, responseStatus)
   }
 
+  @Operation(summary = "Retrieve items that are not part of a list")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Retrieved items that are not part of a list",
+      ),
+    ],
+  )
+  @GetMapping("/with-no-list")
+  fun findWithNoListAssociation(request: HttpServletRequest): ResponseEntity<ResponseSuccess<List<LrmItem>>> {
+    val serviceResponse = lrmItemService.findWithNoList()
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Retrieved ${serviceResponse.size} items that are not a part of a list."
+    val response = ResponseSuccess(serviceResponse, responseMessage, request)
+    logger.info { json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
   @Operation(summary = "Count of lists associated with an item")
   @ApiResponses(
     value = [

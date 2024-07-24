@@ -31,6 +31,22 @@ class LrmItemRepository {
 
   fun deleteById(id: UUID): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
 
+  fun findWithNoListAssociation(): List<LrmItem> {
+    val result = (repositoryTable leftJoin LrmListsItemsTable)
+      .select(
+        repositoryTable.id,
+        repositoryTable.name,
+        repositoryTable.description,
+        repositoryTable.quantity,
+        repositoryTable.created,
+        repositoryTable.updated,
+        LrmListsItemsTable.item,
+      )
+      .where { LrmListsItemsTable.item.isNull() }
+      .map { it.toLrmItem() }
+    return result
+  }
+
   fun findAll(): List<LrmItem> = repositoryTable.select(
     repositoryTable.id,
     repositoryTable.name,

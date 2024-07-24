@@ -232,6 +232,21 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.value") { value(3) }
         }
       }
+
+      it("three items are not a part of any list") {
+        val expectedMessage = "Retrieved 3 items that are not a part of a list."
+        val instance = "/items/with-no-list"
+        mockMvc.get(instance).andExpect {
+          status { isOk() }
+          content { contentType(MediaType.APPLICATION_JSON) }
+          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+          jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+          jsonPath("$.message") { value(expectedMessage) }
+          jsonPath("$.instance") { value(instance) }
+          jsonPath("$.size") { value(3) }
+          jsonPath("$.content.length()") { value(3) }
+        }
+      }
     }
 
     describe("list: create, read, update") {

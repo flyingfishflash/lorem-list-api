@@ -30,7 +30,6 @@ class LrmItemService(
       throw ApiException(
         cause = cause,
         message = "Total item count couldn't be generated.",
-        responseMessage = "Total item count couldn't be generated.",
       )
     }
   }
@@ -43,7 +42,6 @@ class LrmItemService(
       throw ApiException(
         cause = cause,
         message = "Item could not be inserted.",
-        responseMessage = "Item could not be inserted.",
       )
     }
   }
@@ -64,7 +62,6 @@ class LrmItemService(
       throw ApiException(
         cause = apiException,
         httpStatus = apiException.httpStatus,
-        responseMessage = message,
         message = message,
         supplemental = apiException.supplemental,
       )
@@ -72,7 +69,6 @@ class LrmItemService(
       val message = "No items were deleted."
       throw ApiException(
         cause = exception,
-        responseMessage = message,
         message = message,
       )
     }
@@ -92,7 +88,6 @@ class LrmItemService(
           if (deletedCount > 1) {
             throw ApiException(
               message = "More than one item with id $id were found.",
-              responseMessage = "More than one item with id $id were found.",
             )
           }
         } else {
@@ -106,7 +101,6 @@ class LrmItemService(
               "associatedListNames" to lrmItemDeleteResponse.associatedListNames.toJsonElement(),
             ),
             message = message,
-            responseMessage = message,
           )
         }
       } else {
@@ -115,7 +109,6 @@ class LrmItemService(
         if (deletedCount > 1) {
           throw ApiException(
             message = "More than one item with id $id were found.",
-            responseMessage = "More than one item with id $id were found.",
           )
         }
       }
@@ -125,7 +118,6 @@ class LrmItemService(
       throw ApiException(
         cause = apiException,
         httpStatus = apiException.httpStatus,
-        responseMessage = message,
         message = message,
         supplemental = apiException.supplemental,
       )
@@ -146,7 +138,6 @@ class LrmItemService(
       throw ApiException(
         cause = cause,
         message = "Items could not be retrieved.",
-        responseMessage = "Items could not be retrieved.",
       )
     }
   }
@@ -158,7 +149,6 @@ class LrmItemService(
       throw ApiException(
         cause = cause,
         message = "Items (including associated lists) could not be retrieved.",
-        responseMessage = "Items (including associated lists) could not be retrieved.",
       )
     }
   }
@@ -171,7 +161,6 @@ class LrmItemService(
       throw ApiException(
         cause = cause,
         message = "Item id $id could not be retrieved.",
-        responseMessage = "Item id $id could not be retrieved.",
       )
     }
     return item ?: throw ItemNotFoundException(id)
@@ -184,10 +173,22 @@ class LrmItemService(
       throw ApiException(
         cause = cause,
         message = "Item id $id (including associated lists) could not be retrieved.",
-        responseMessage = "Item id $id (including associated lists) could not be retrieved.",
       )
     }
     return item ?: throw ItemNotFoundException(id)
+  }
+
+  fun findWithNoList(): List<LrmItem> {
+    val exceptionMessage = "Items without list associations could not be retrieved."
+    val lrmItemList = try {
+      lrmItemRepository.findWithNoListAssociation()
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = exceptionMessage,
+      )
+    }
+    return lrmItemList
   }
 
   @Suppress("kotlin:S3776")
@@ -246,7 +247,6 @@ class LrmItemService(
       if (updatedCount != 1) {
         throw ApiException(
           message = "Item id ${lrmItem.id} could not be updated. $updatedCount records would have been updated rather than 1.",
-          responseMessage = "Item id ${lrmItem.id} could not be updated. $updatedCount records would have been updated rather than 1.",
         )
       } else {
         lrmItem = findById(id)
