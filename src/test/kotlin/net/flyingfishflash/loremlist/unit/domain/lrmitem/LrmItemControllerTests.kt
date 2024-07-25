@@ -752,33 +752,6 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
-    describe("/items/with-no-list") {
-      describe("get") {
-        it("items with no list association are found") {
-          val mockReturn = listOf(lrmItem())
-          val expectedMessage = "Retrieved ${mockReturn.size} items that are not a part of a list."
-          every { mockLrmItemService.findWithNoList() } returns mockReturn
-          val instance = "/items/with-no-list"
-          mockMvc.get(instance) {
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(expectedMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(mockReturn.size) }
-            jsonPath("$.content") { exists() }
-            jsonPath("$.content") { isArray() }
-            jsonPath("$.content.[0].name") { value(mockReturn[0].name) }
-            jsonPath("$.content.[0].description") { value(mockReturn[0].description) }
-          }
-          verify(exactly = 1) { mockLrmItemService.findWithNoList() }
-        }
-      }
-    }
-
     describe("/items/count") {
       describe("get") {
         it("count of items is returned") {
@@ -795,6 +768,33 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.length()") { value(1) }
             jsonPath("$.content.value") { value(999) }
           }
+        }
+      }
+    }
+
+    describe("/items/with-no-lists") {
+      describe("get") {
+        it("items with no list association are found") {
+          val mockReturn = listOf(lrmItem())
+          val expectedMessage = "Retrieved ${mockReturn.size} items that are not a part of a list."
+          every { mockLrmItemService.findWithNoLists() } returns mockReturn
+          val instance = "/items/with-no-lists"
+          mockMvc.get(instance) {
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+            jsonPath("$.message") { value(expectedMessage) }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(mockReturn.size) }
+            jsonPath("$.content") { exists() }
+            jsonPath("$.content") { isArray() }
+            jsonPath("$.content.[0].name") { value(mockReturn[0].name) }
+            jsonPath("$.content.[0].description") { value(mockReturn[0].description) }
+          }
+          verify(exactly = 1) { mockLrmItemService.findWithNoLists() }
         }
       }
     }

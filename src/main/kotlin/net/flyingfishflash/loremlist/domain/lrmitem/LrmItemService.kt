@@ -178,17 +178,17 @@ class LrmItemService(
     return item ?: throw ItemNotFoundException(id)
   }
 
-  fun findWithNoList(): List<LrmItem> {
+  fun findWithNoLists(): List<LrmItem> {
     val exceptionMessage = "Items without list associations could not be retrieved."
-    val lrmItemList = try {
-      lrmItemRepository.findWithNoListAssociation()
+    val lrmItems = try {
+      lrmItemRepository.findWithNoListAssociations()
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
         message = exceptionMessage,
       )
     }
-    return lrmItemList
+    return lrmItems
   }
 
   @Suppress("kotlin:S3776")

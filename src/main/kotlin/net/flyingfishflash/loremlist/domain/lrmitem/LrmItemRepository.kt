@@ -31,7 +31,7 @@ class LrmItemRepository {
 
   fun deleteById(id: UUID): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
 
-  fun findWithNoListAssociation(): List<LrmItem> {
+  fun findWithNoListAssociations(): List<LrmItem> {
     val result = (repositoryTable leftJoin LrmListsItemsTable)
       .select(
         repositoryTable.id,

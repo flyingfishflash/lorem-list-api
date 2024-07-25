@@ -41,7 +41,7 @@ class LrmListRepository {
     repositoryTable.created,
     repositoryTable.updated,
   )
-    .map { it.toLrmlist() }
+    .map { it.toLrmList() }
     .toList()
 
   fun findAllIncludeItems(): List<LrmList> {
@@ -80,7 +80,7 @@ class LrmListRepository {
       )
 
     val listsAndItems = resultRows
-      .map { it.toLrmlist() }
+      .map { it.toLrmList() }
       .distinct()
       .map { it.copy(items = listItemsByList[it.id]?.sortedBy { item -> item.name }?.toSet() ?: setOf()) }
 
@@ -138,7 +138,7 @@ class LrmListRepository {
       }.sortedBy { item -> item.name }.toSet()
 
     val listWithItems = resultRows
-      .map { it.toLrmlist() }
+      .map { it.toLrmList() }
       .distinct()
       .map { it.copy(items = listItems) }
       .firstOrNull()
@@ -156,6 +156,21 @@ class LrmListRepository {
       repositoryTable.id inList (listIdCollection)
     }.map { row -> row[repositoryTable.id].value }.toList()
     return resultIdCollection
+  }
+
+  fun findWithNoItemAssociations(): List<LrmList> {
+    val result = (repositoryTable leftJoin LrmListsItemsTable)
+      .select(
+        repositoryTable.id,
+        repositoryTable.name,
+        repositoryTable.description,
+        repositoryTable.created,
+        repositoryTable.updated,
+        LrmListsItemsTable.list,
+      )
+      .where { LrmListsItemsTable.list.isNull() }
+      .map { it.toLrmList() }
+    return result
   }
 
   fun insert(lrmListRequest: LrmListRequest): UUID {
@@ -184,7 +199,7 @@ class LrmListRepository {
     return updatedCount
   }
 
-  private fun ResultRow.toLrmlist(): LrmList {
+  private fun ResultRow.toLrmList(): LrmList {
     return LrmList(
       id = this[repositoryTable.id].value,
       name = this[repositoryTable.name],

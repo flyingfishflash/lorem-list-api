@@ -308,16 +308,16 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("findWithNoListAssociations()") {
+  describe("findWithNoLists()") {
     it("items are returned") {
-      every { mockLrmItemRepository.findWithNoListAssociation() } returns listOf(lrmItem())
-      lrmItemService.findWithNoList()
-      verify(exactly = 1) { mockLrmItemRepository.findWithNoListAssociation() }
+      every { mockLrmItemRepository.findWithNoListAssociations() } returns listOf(lrmItem())
+      lrmItemService.findWithNoLists()
+      verify(exactly = 1) { mockLrmItemRepository.findWithNoListAssociations() }
     }
 
     it("item repository throws exception") {
-      every { mockLrmItemRepository.findWithNoListAssociation() } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.findWithNoList() }
+      every { mockLrmItemRepository.findWithNoListAssociations() } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findWithNoLists() }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldContainIgnoringCase("could not be retrieved")
     }

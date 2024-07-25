@@ -229,6 +229,33 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       }
     }
 
+    describe("/lists/with-no-items") {
+      describe("get") {
+        it("lists with no item association are found") {
+          val mockReturn = listOf(lrmList())
+          val expectedMessage = "Retrieved ${mockReturn.size} lists containing no items."
+          every { mockLrmListService.findWithNoItems() } returns mockReturn
+          val instance = "/lists/with-no-items"
+          mockMvc.get(instance) {
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+            jsonPath("$.message") { value(expectedMessage) }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(mockReturn.size) }
+            jsonPath("$.content") { exists() }
+            jsonPath("$.content") { isArray() }
+            jsonPath("$.content.[0].name") { value(mockReturn[0].name) }
+            jsonPath("$.content.[0].description") { value(mockReturn[0].description) }
+          }
+          verify(exactly = 1) { mockLrmListService.findWithNoItems() }
+        }
+      }
+    }
+
     describe("/lists/count") {
       describe("get") {
         it("count of lists is returned") {

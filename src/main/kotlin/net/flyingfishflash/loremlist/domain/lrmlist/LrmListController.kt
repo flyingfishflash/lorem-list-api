@@ -191,6 +191,25 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, HttpStatus.OK)
   }
 
+  @Operation(summary = "Retrieve lists that contain no items")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Retrieved lists that contain no items",
+      ),
+    ],
+  )
+  @GetMapping("/with-no-items")
+  fun findWithNoItemAssociations(request: HttpServletRequest): ResponseEntity<ResponseSuccess<List<LrmList>>> {
+    val serviceResponse = lrmListService.findWithNoItems()
+    val responseStatus = HttpStatus.OK
+    val responseMessage = "Retrieved ${serviceResponse.size} lists containing no items."
+    val response = ResponseSuccess(serviceResponse, responseMessage, request)
+    logger.info { json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
   @Operation(summary = "Count of items associated with a list")
   @ApiResponses(
     value = [

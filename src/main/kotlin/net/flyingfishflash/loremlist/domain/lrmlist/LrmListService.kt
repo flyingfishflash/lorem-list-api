@@ -246,4 +246,17 @@ class LrmListService(
     }
     return list ?: throw ListNotFoundException(id)
   }
+
+  fun findWithNoItems(): List<LrmList> {
+    val exceptionMessage = "Lists without item associations could not be retrieved."
+    val lrmLists = try {
+      lrmListRepository.findWithNoItemAssociations()
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = exceptionMessage,
+      )
+    }
+    return lrmLists
+  }
 }

@@ -201,9 +201,9 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @GetMapping("/with-no-list")
-  fun findWithNoListAssociation(request: HttpServletRequest): ResponseEntity<ResponseSuccess<List<LrmItem>>> {
-    val serviceResponse = lrmItemService.findWithNoList()
+  @GetMapping("/with-no-lists")
+  fun findWithNoListAssociations(request: HttpServletRequest): ResponseEntity<ResponseSuccess<List<LrmItem>>> {
+    val serviceResponse = lrmItemService.findWithNoLists()
     val responseStatus = HttpStatus.OK
     val responseMessage = "Retrieved ${serviceResponse.size} items that are not a part of a list."
     val response = ResponseSuccess(serviceResponse, responseMessage, request)
