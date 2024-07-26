@@ -6,4 +6,4 @@ RUN mkdir /app
 COPY ./build/boot_jar_exploded/ /app/
 ENV JDK_JAVA_OPTIONS=""
 WORKDIR /app/BOOT-INF/classes
-ENTRYPOINT exec java -cp .:../../org/springframework/boot/loader/:../lib/* net.flyingfishflash.loremlist.LoremListApplication
+ENTRYPOINT exec java -cp .:../../org/springframework/boot/loader/:../lib/* net.flyingfishflash.loremlist.LoremListApplicationKt
