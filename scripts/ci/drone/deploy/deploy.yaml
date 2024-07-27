@@ -74,12 +74,13 @@
       when:
         - (published_ports_api is not defined) or (published_ports_api | length == 0)
 
-# TODO: Check if services exist and only attempt to stop them if that's true
     - name: Stop Lorem-List-Api container services
       ansible.builtin.systemd:
         name: "{{ item }}"
         state: stopped
         scope: user
+      register: result_systemd_stop
+      failed_when: "result_systemd_stop is failed and 'Could not find the requested service' not in result_systemd_stop.msg"
       loop:
         - lorem-list-api-{{ region }}
         - lorem-list-api-postgresql-{{ region }}

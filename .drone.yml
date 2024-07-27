@@ -231,7 +231,7 @@ steps:
 
 ---
 kind: pipeline
-name: "deploy - development"
+name: "deploy [dev]"
 type: docker
 
 trigger:
@@ -303,100 +303,133 @@ steps:
 
 ---
 kind: pipeline
+name: "deploy [prd]"
+type: docker
+
+trigger:
+  event:
+    - push
+    - tag
+  ref:
+    - refs/tags/*
+
+depends_on:
+  - "publish - image"
+
+environment:
+  VERSION: .version
+
+steps:
+  - name: infer version
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
+    commands:
+      # nyx requires git tags to infer the current version
+      - git fetch --tags -q
+      - rm -fv $VERSION
+      - echo "export NYX_CURRENT_VERSION=$(nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n')" > $VERSION
+      - cat $VERSION
+
+  - name: create inventory file
+    image: alpine:latest
+    environment:
+      DEPLOY_TO_HOST:
+        from_secret: deploy_to_host
+    commands:
+      - echo "$DEPLOY_TO_HOST" > scripts/ci/drone/deploy/inventory
+
+  - name: create variables file
+    image: alpine
+    depends_on:
+      - infer version
+    environment:
+      REGISTRY_URL:
+        from_secret: REGISTRY_HOSTNAME
+    commands:
+      - source $VERSION
+      - ls -la
+      - echo "---" > scripts/ci/drone/deploy/variables.yaml
+      - 'echo "tag: $NYX_CURRENT_VERSION" >> scripts/ci/drone/deploy/variables.yaml'
+      - 'echo "registry_url: $REGISTRY_URL/lorem-list" >> scripts/ci/drone/deploy/variables.yaml'
+      - 'echo "deploy_to_host: $DEPLOY_TO_HOST" >> scripts/ci/drone/deploy/variables.yaml'
+      - cat scripts/ci/drone/deploy/variables.yaml
+
+  # the secret containing the ssh private key must be created via the CLI
+  # drone secret add --repository lorem-list/lorem-list-api --name secret_name --data @/home/xxx/.ssh/id_xxx
+  - name: execute deployment
+    image: plugins/ansible
+    depends_on:
+      - create inventory file
+      - create variables file
+    settings:
+      extra_vars: 'region=prd'
+      galaxy: scripts/ci/drone/deploy/requirements.yaml
+      inventory: scripts/ci/drone/deploy/inventory
+      playbook: scripts/ci/drone/deploy/deploy.yaml
+      private_key:
+        from_secret: drone_deployer_ssh_key_private
+      user:
+        from_secret: drone_deployer_ssh_username
+
+---
+kind: pipeline
 name: "validate"
 type: docker
 
 trigger:
   event:
     - push
+    - tag
   ref:
     - refs/heads/ci-*
     - refs/heads/feature-*
     - refs/heads/fix-*
     - refs/heads/perf-*
     - refs/heads/refactor-*
+    - refs/tags/*
 
 depends_on:
-  - "deploy - development"
+  - "deploy [dev]"
+  - "deploy [prd]"
 
 steps:
-  - name: verify api is up
+  - name: verify api is up [dev]
     image: docker.io/alpine/httpie
     environment:
       TERM: xterm-256color
       OPTIONS: --verify=no --style=gruvbox-dark --pretty=all --print=mhb
-      URL_DEV:
+      URL:
         from_secret: url_dev
     commands:
-      - https --sorted $OPTIONS get $URL_DEV/api/v1/management/health
-      - https --sorted $OPTIONS get $URL_DEV/api/v1/management/info
-      - https $OPTIONS get $URL_DEV/api/v1/items
-      - https $OPTIONS get $URL_DEV/api/v1/lists
-      - https $OPTIONS get $URL_DEV/api/v1/lists/00000000-0000-4000-a000-000000000000
+      - https --sorted $OPTIONS get $URL/api/v1/management/health
+      - https --sorted $OPTIONS get $URL/api/v1/management/info
+      - https $OPTIONS get $URL/api/v1/items
+      - https $OPTIONS get $URL/api/v1/lists
+      - https $OPTIONS get $URL/api/v1/lists/00000000-0000-4000-a000-000000000000
+    when:
+      event:
+        exclude:
+          - tag
+      ref:
+        exclude:
+          - refs/tags/*
 
-#---
-#kind: pipeline
-#name: "deploy - production"
-#type: docker
-#
-#trigger:
-#  event:
-#    - push
-#    - tag
-#  ref:
-#    - refs/tags/*
-#
-#depends_on:
-#  - "publish - image"
-#
-#environment:
-#  VERSION: .version
-#
-#steps:
-#  - name: infer version
-#    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
-#    commands:
-#      # nyx requires git tags to infer the current version
-#      - git fetch --tags -q
-#      - rm -fv $VERSION
-#      - echo "export NYX_CURRENT_VERSION=$(nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n')" > $VERSION
-#      - cat $VERSION
-#
-#  - name: create inventory file
-#    image: alpine:latest
-#    environment:
-#      DEPLOY_TO_HOST:
-#        from_secret: deploy_to_host
-#    commands:
-#      - echo "$DEPLOY_TO_HOST" > scripts/ci/drone/deploy/inventory
-#
-#  - name: create variables file
-#    image: alpine
-#    depends_on:
-#      - infer version
-#    environment:
-#      REGISTRY_URL:
-#        from_secret: REGISTRY_HOSTNAME
-#    commands:
-#      - source $VERSION
-#      - ls -la
-#      - echo "---" > scripts/ci/drone/deploy/variables.yaml
-#      - 'echo "tag: $NYX_CURRENT_VERSION" >> scripts/ci/drone/deploy/variables.yaml'
-#      - 'echo "registry_url: $REGISTRY_URL/lorem-list" >> scripts/ci/drone/deploy/variables.yaml'
-#      - cat scripts/ci/drone/deploy/variables.yaml
-#
-#  # the secret containing the ssh private key must be created via the CLI
-#  # drone secret add --repository flyingfishflash/lorem-list --name secret_name --data @/home/xxx/.ssh/id_xxx
-#  - name: execute playbook
-#    image: plugins/ansible
-#    depends_on:
-#      - create inventory file
-#      - create variables file
-#    settings:
-#      extra_vars: 'region=prd'
-#      galaxy: scripts/ci/drone/deploy/requirements.yaml
-#      inventory: scripts/ci/drone/deploy/inventory
-#      playbook: scripts/ci/drone/deploy/deploy.yaml
-#      private_key:
-#        from_secret: drone_deployer_ssh_key_private
-#      user: drone_deployer_ssh_username
+  - name: verify api is up [prd]
+    image: docker.io/alpine/httpie
+    environment:
+      TERM: xterm-256color
+      OPTIONS: --verify=no --style=gruvbox-dark --pretty=all --print=mhb
+      URL:
+        from_secret: url_prd
+    commands:
+      - https --sorted $OPTIONS get $URL/api/v1/management/health
+      - https --sorted $OPTIONS get $URL/api/v1/management/info
+      - https $OPTIONS get $URL/api/v1/items
+      - https $OPTIONS get $URL/api/v1/lists
+      - https $OPTIONS get $URL/api/v1/lists/00000000-0000-4000-a000-000000000000
+    when:
+      event:
+        include:
+          - tag
+      ref:
+        include:
+          - refs/tags/*
