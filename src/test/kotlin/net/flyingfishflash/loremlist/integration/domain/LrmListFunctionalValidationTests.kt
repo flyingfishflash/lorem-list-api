@@ -152,25 +152,25 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
           requestContent = "{ \"name\": \" \" }",
           responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
         ),
-        "uuid is invalid /items/{item-id}/list-associations (delete)" to ValidationTest(
+        "uuid is invalid /items/{item-id}/lists (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
-          instance = "/items/${invalidUuids[0]}/list-associations",
+          instance = "/items/${invalidUuids[0]}/lists",
           requestContent = Json.encodeToString(UUIDSerializer, validUuids[0]),
           responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
         ),
-        "uuid is invalid /items/{item-id}/list-associations/{list-id} (delete)" to ValidationTest(
+        "uuid is invalid /items/{item-id}/lists/{list-id} (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
-          instance = "/items/${invalidUuids[0]}/list-associations/${invalidUuids[1]}",
+          instance = "/items/${invalidUuids[0]}/lists/${invalidUuids[1]}",
           responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId, listId.",
         ),
-        "uuid is invalid /items/{item-id}/list-associations/count (get)" to ValidationTest(
+        "uuid is invalid /items/{item-id}/lists/count (get)" to ValidationTest(
           httpMethod = HttpMethod.GET,
-          instance = "/items/${invalidUuids[0]}/list-associations/count",
+          instance = "/items/${invalidUuids[0]}/lists/count",
           responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
         ),
-        "uuid is invalid /items/{id}/list-associations/{current-list-id}/{destination-list-id} (patch)" to ValidationTest(
+        "uuid is invalid /items/{id}/lists/{current-list-id}/{destination-list-id} (patch)" to ValidationTest(
           httpMethod = HttpMethod.PATCH,
-          instance = "/items/${invalidUuids[0]}/list-associations/${invalidUuids[1]}/${invalidUuids[2]}",
+          instance = "/items/${invalidUuids[0]}/lists/${invalidUuids[1]}/${invalidUuids[2]}",
           responseMessage = "$VALIDATION_FAILURE_MESSAGE currentListId, destinationListId, itemId.",
         ),
       )
@@ -299,19 +299,19 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
           requestContent = "{ \"name\": \" \" }",
           responseMessage = "$VALIDATION_FAILURE_MESSAGE listId.",
         ),
-        "uuid is invalid /lists/{list-id}/item-associations (delete)" to ValidationTest(
+        "uuid is invalid /lists/{list-id}/items (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
-          instance = "/lists/${invalidUuids[0]}/item-associations",
+          instance = "/lists/${invalidUuids[0]}/items",
           responseMessage = "$VALIDATION_FAILURE_MESSAGE listId.",
         ),
-        "uuid is invalid /lists/{list-id}/item-associations/{item-id} (delete)" to ValidationTest(
+        "uuid is invalid /lists/{list-id}/items/{item-id} (delete)" to ValidationTest(
           httpMethod = HttpMethod.DELETE,
-          instance = "/lists/${invalidUuids[0]}/item-associations/${invalidUuids[1]}",
+          instance = "/lists/${invalidUuids[0]}/items/${invalidUuids[1]}",
           responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId, listId.",
         ),
-        "uuid is invalid /lists/{list-id}/item-associations/count (get)" to ValidationTest(
+        "uuid is invalid /lists/{list-id}/items/count (get)" to ValidationTest(
           httpMethod = HttpMethod.GET,
-          instance = "/lists/${invalidUuids[0]}/item-associations/count",
+          instance = "/lists/${invalidUuids[0]}/items/count",
           responseMessage = "$VALIDATION_FAILURE_MESSAGE listId.",
         ),
       )

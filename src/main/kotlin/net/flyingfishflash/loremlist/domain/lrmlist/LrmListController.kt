@@ -224,7 +224,7 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @GetMapping("/{list-id}/item-associations/count")
+  @GetMapping("/{list-id}/items/count")
   fun itemAssociationsCount(
     @PathVariable("list-id") @ValidUuid listId: UUID,
     request: HttpServletRequest,
@@ -252,7 +252,7 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @PostMapping("/{list-id}/item-associations")
+  @PostMapping("/{list-id}/items")
   fun itemAssociationsCreate(
     @PathVariable("list-id") @ValidUuid listId: UUID,
     @RequestBody
@@ -289,7 +289,7 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @DeleteMapping("/{list-id}/item-associations/{item-id}")
+  @DeleteMapping("/{list-id}/items/{item-id}")
   fun itemAssociationsDelete(
     @PathVariable("list-id") @ValidUuid listId: UUID,
     @PathVariable("item-id") @ValidUuid itemId: UUID,
@@ -317,7 +317,7 @@ class LrmListController(private val associationService: AssociationService, priv
       ),
     ],
   )
-  @DeleteMapping("/{list-id}/item-associations")
+  @DeleteMapping("/{list-id}/items")
   fun itemAssociationsDeleteAll(
     @PathVariable("list-id") @ValidUuid listId: UUID,
     request: HttpServletRequest,

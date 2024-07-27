@@ -225,7 +225,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @GetMapping("/{item-id}/list-associations/count")
+  @GetMapping("/{item-id}/lists/count")
   fun listAssociationsCount(
     @PathVariable("item-id") @ValidUuid itemId: UUID,
     request: HttpServletRequest,
@@ -253,7 +253,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @PostMapping("/{item-id}/list-associations")
+  @PostMapping("/{item-id}/lists")
   fun listAssociationsCreate(
     @PathVariable("item-id") @ValidUuid itemId: UUID,
     @RequestBody
@@ -290,7 +290,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @DeleteMapping("/{item-id}/list-associations/{list-id}")
+  @DeleteMapping("/{item-id}/lists/{list-id}")
   fun listAssociationsDelete(
     @PathVariable("item-id") @ValidUuid itemId: UUID,
     @PathVariable("list-id") @ValidUuid listId: UUID,
@@ -319,7 +319,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @DeleteMapping("/{item-id}/list-associations")
+  @DeleteMapping("/{item-id}/lists")
   fun listAssociationsDeleteAll(
     @PathVariable("item-id") @ValidUuid itemId: UUID,
     request: HttpServletRequest,
@@ -353,7 +353,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       ),
     ],
   )
-  @PatchMapping("/{item-id}/list-associations/{current-list-id}/{destination-list-id}")
+  @PatchMapping("/{item-id}/lists/{current-list-id}/{destination-list-id}")
   fun listAssociationsUpdate(
     @PathVariable("item-id") @ValidUuid itemId: UUID,
     @PathVariable("current-list-id") @ValidUuid currentListId: UUID,
