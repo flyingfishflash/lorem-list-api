@@ -309,9 +309,8 @@ type: docker
 trigger:
   event:
     - push
-    - tag
   ref:
-    - refs/tags/*
+    - refs/heads/release
 
 depends_on:
   - "publish - image"
@@ -378,14 +377,13 @@ type: docker
 trigger:
   event:
     - push
-    - tag
   ref:
     - refs/heads/ci-*
     - refs/heads/feature-*
     - refs/heads/fix-*
     - refs/heads/perf-*
     - refs/heads/refactor-*
-    - refs/tags/*
+    - refs/heads/release
 
 depends_on:
   - "deploy [dev]"
@@ -406,12 +404,9 @@ steps:
       - https $OPTIONS get $URL/api/v1/lists
       - https $OPTIONS get $URL/api/v1/lists/00000000-0000-4000-a000-000000000000
     when:
-      event:
-        exclude:
-          - tag
       ref:
         exclude:
-          - refs/tags/*
+          - refs/heads/release
 
   - name: verify api is up [prd]
     image: docker.io/alpine/httpie
@@ -427,9 +422,6 @@ steps:
       - https $OPTIONS get $URL/api/v1/lists
       - https $OPTIONS get $URL/api/v1/lists/00000000-0000-4000-a000-000000000000
     when:
-      event:
-        include:
-          - tag
       ref:
         include:
-          - refs/tags/*
+          - refs/heads/release
