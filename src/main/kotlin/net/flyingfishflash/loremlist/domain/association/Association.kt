@@ -9,7 +9,7 @@ data class Association(
   @Serializable(with = UUIDSerializer::class)
   val id: UUID,
   @Serializable(with = UUIDSerializer::class)
-  val listId: UUID,
-  @Serializable(with = UUIDSerializer::class)
   val itemId: UUID,
+  @Serializable(with = UUIDSerializer::class)
+  val listId: UUID,
 )
