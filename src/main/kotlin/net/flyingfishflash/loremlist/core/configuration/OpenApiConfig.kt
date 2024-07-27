@@ -4,6 +4,8 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Contact
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.servers.Server
+import jakarta.servlet.ServletContext
 import kotlinx.datetime.Clock.System.now
 import org.springdoc.core.customizers.OpenApiCustomizer
 import org.springframework.boot.info.BuildProperties
@@ -14,18 +16,20 @@ import org.springframework.context.annotation.Configuration
 class OpenApiConfig(private val buildProperties: BuildProperties) {
 
   @Bean
-  fun customOpenAPI(): OpenAPI {
-    return OpenAPI().info(
-      Info()
-        .contact(
-          Contact()
-            .name("flyingfishflash")
-            .url("https://codeberg.org/lorem-list/"),
-        )
-        .description("Simple List Management API")
-        .title("Lorem List Api")
-        .version(buildProperties.version),
-    )
+  fun customOpenAPI(servletContext: ServletContext): OpenAPI {
+    return OpenAPI()
+      .servers(listOf(Server().url(servletContext.contextPath)))
+      .info(
+        Info()
+          .contact(
+            Contact()
+              .name("flyingfishflash")
+              .url("https://codeberg.org/lorem-list/"),
+          )
+          .description("List Management API")
+          .title("Lorem List Api")
+          .version(buildProperties.version),
+      )
   }
 
   @Bean
