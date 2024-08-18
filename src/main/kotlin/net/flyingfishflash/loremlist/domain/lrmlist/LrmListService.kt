@@ -145,6 +145,7 @@ class LrmListService(
     var lrmList = findById(id)
     var newName = lrmList.name
     var newDescription = lrmList.description
+    var newIsPublic = lrmList.public
 
     if (patchRequest.isNotEmpty()) {
       for ((change, value) in patchRequest.entries) {
@@ -161,13 +162,19 @@ class LrmListService(
               patched = true
             }
           }
+          "public" -> {
+            if (value != lrmList.public) {
+              newIsPublic = value as Boolean
+              patched = true
+            }
+          }
           else -> throw IllegalArgumentException("Unexpected value: $change")
         }
       }
     }
 
     if (patched) {
-      val lrmListRequest = LrmListRequest(name = newName, description = newDescription)
+      val lrmListRequest = LrmListRequest(name = newName, description = newDescription, public = newIsPublic)
       val violations: Set<ConstraintViolation<LrmListRequest>> =
         Validation.buildDefaultValidatorFactory().validator.validate(lrmListRequest)
       if (violations.isNotEmpty()) {

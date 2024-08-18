@@ -58,11 +58,17 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     val id1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
     val id2 = UUID.fromString("00000000-0000-4000-a000-000000000002")
     val id3 = UUID.fromString("00000000-0000-4000-a000-000000000003")
-    val lrmListRequest = LrmListRequest("Lorem List Name", "Lorem List Description")
+    val lrmListRequest = LrmListRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
 
-    fun lrmList(): LrmList = LrmList(id = id0, name = lrmListRequest.name, description = lrmListRequest.description)
+    fun lrmList(): LrmList = LrmList(
+      id = id0,
+      name = lrmListRequest.name,
+      description = lrmListRequest.description,
+      public = lrmListRequest.public,
+    )
+
     fun lrmListWithEmptyItems(): LrmList = lrmList().copy(items = setOf())
-    fun lrmList1(): LrmList = LrmList(id = id1, name = "Lorem List Name (id1)", description = "Lorem List Description")
+    fun lrmList1(): LrmList = LrmList(id = id1, name = "Lorem List Name (id1)", description = "Lorem List Description", public = true)
     fun lrmItem2(): LrmItem = LrmItem(id = id2, name = "Lorem Item Name (id2)", description = "Lorem Item Description")
     fun lrmItem3(): LrmItem = LrmItem(id = id3, name = "Lorem Item Name (id3)", description = "Lorem Item Description")
 
@@ -192,7 +198,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("requested list name is an empty string") {
           val instance = "/lists"
           mockMvc.post(instance) {
-            content = Json.encodeToString(LrmListRequest("", lrmList().description))
+            content = Json.encodeToString(LrmListRequest("", lrmList().description, lrmList().public))
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isBadRequest() }
@@ -211,7 +217,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("requested list description is an empty string") {
           val instance = "/lists"
           mockMvc.post(instance) {
-            content = Json.encodeToString(LrmListRequest(lrmList().name, ""))
+            content = Json.encodeToString(LrmListRequest(lrmList().name, "", lrmList().public))
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isBadRequest() }

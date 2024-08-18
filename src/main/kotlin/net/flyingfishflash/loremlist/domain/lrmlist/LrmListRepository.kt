@@ -6,6 +6,7 @@ import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListTable.created
 import net.flyingfishflash.loremlist.domain.LrmListTable.description
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
+import net.flyingfishflash.loremlist.domain.LrmListTable.public
 import net.flyingfishflash.loremlist.domain.LrmListTable.updated
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
@@ -38,6 +39,7 @@ class LrmListRepository {
     repositoryTable.id,
     repositoryTable.name,
     repositoryTable.description,
+    repositoryTable.public,
     repositoryTable.created,
     repositoryTable.updated,
   )
@@ -50,6 +52,7 @@ class LrmListRepository {
         repositoryTable.id,
         repositoryTable.name,
         repositoryTable.description,
+        repositoryTable.public,
         repositoryTable.created,
         repositoryTable.updated,
         LrmListItemTable.id,
@@ -91,6 +94,7 @@ class LrmListRepository {
     repositoryTable.id,
     repositoryTable.name,
     repositoryTable.description,
+    repositoryTable.public,
     repositoryTable.created,
     repositoryTable.updated,
   )
@@ -100,6 +104,7 @@ class LrmListRepository {
         id = it[repositoryTable.id].value,
         name = it[name],
         description = it[description],
+        public = it[public],
         created = it[created],
         updated = it[updated],
       )
@@ -111,6 +116,7 @@ class LrmListRepository {
         repositoryTable.id,
         repositoryTable.name,
         repositoryTable.description,
+        repositoryTable.public,
         repositoryTable.created,
         repositoryTable.updated,
         LrmListItemTable.id,
@@ -164,6 +170,7 @@ class LrmListRepository {
         repositoryTable.id,
         repositoryTable.name,
         repositoryTable.description,
+        repositoryTable.public,
         repositoryTable.created,
         repositoryTable.updated,
         LrmListsItemsTable.list,
@@ -181,6 +188,7 @@ class LrmListRepository {
           it[id] = UUID.randomUUID()
           it[name] = lrmListRequest.name
           it[description] = lrmListRequest.description
+          it[public] = lrmListRequest.public
           it[created] = now
           it[updated] = now
         }
@@ -193,6 +201,7 @@ class LrmListRepository {
       repositoryTable.update({ repositoryTable.id eq lrmList.id }) {
         it[name] = lrmList.name
         it[description] = lrmList.description
+        it[public] = lrmList.public
         it[updated] = now()
       }
 
@@ -204,6 +213,7 @@ class LrmListRepository {
       id = this[repositoryTable.id].value,
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
+      public = this[repositoryTable.public],
       created = this[repositoryTable.created],
       updated = this[repositoryTable.updated],
     )

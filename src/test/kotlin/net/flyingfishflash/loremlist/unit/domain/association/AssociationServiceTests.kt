@@ -44,9 +44,9 @@ class AssociationServiceTests : DescribeSpec({
   fun lrmItem1(): LrmItem = LrmItem(id = id1, name = lrmItemRequest.name, description = lrmItemRequest.description)
   fun lrmItem2(): LrmItem = LrmItem(id = id2, name = "Lorem Item Name (id2)", description = "Lorem Item Description")
   fun lrmItem3(): LrmItem = LrmItem(id = id3, name = "Lorem Item Name (id3)", description = "Lorem Item Description")
-  fun lrmList1(): LrmList = LrmList(id = id1, name = "Lorem List Name (id1)", description = "Lorem List Description")
-  fun lrmList2(): LrmList = LrmList(id = id2, name = "Lorem List Name (id2)", description = "Lorem List Description")
-  fun lrmList3(): LrmList = LrmList(id = id3, name = "Lorem List Name (id3)", description = "Lorem List Description")
+  fun lrmList1(): LrmList = LrmList(id = id1, name = "Lorem List Name (id1)", description = "Lorem List Description", public = true)
+  fun lrmList2(): LrmList = LrmList(id = id2, name = "Lorem List Name (id2)", description = "Lorem List Description", public = true)
+  fun lrmList3(): LrmList = LrmList(id = id3, name = "Lorem List Name (id3)", description = "Lorem List Description", public = true)
   fun associationItem1ListId2(): Association = Association(id = UUID.randomUUID(), itemId = lrmItem1().id, listId = id2)
 
   afterEach { clearAllMocks() }

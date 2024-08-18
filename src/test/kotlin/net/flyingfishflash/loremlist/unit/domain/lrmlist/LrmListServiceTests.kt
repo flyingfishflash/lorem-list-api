@@ -39,15 +39,22 @@ class LrmListServiceTests : DescribeSpec({
   val mockLrmListRepository = mockk<LrmListRepository>()
   val lrmListService = LrmListService(mockAssociationService, mockLrmListRepository)
 
-  val lrmListRequest = LrmListRequest("Lorem List Name", "Lorem List Description")
+  val lrmListRequest = LrmListRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
 
   val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
   val id1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
 
-  fun lrmList(): LrmList = LrmList(id = id0, name = lrmListRequest.name, description = lrmListRequest.description)
+  fun lrmList(): LrmList = LrmList(
+    id = id0,
+    name = lrmListRequest.name,
+    description = lrmListRequest.description,
+    public = lrmListRequest.public,
+  )
+
   fun lrmListWithItems() = lrmList().copy(
     items = setOf(LrmItem(id = id0, name = "Lorem Item Name")),
   )
+
   fun exposedSQLExceptionGeneric(): ExposedSQLException = ExposedSQLException(
     cause = SQLException("Cause of ExposedSQLException"),
     transaction = mockk<Transaction>(relaxed = true),
@@ -380,6 +387,16 @@ class LrmListServiceTests : DescribeSpec({
     it("update description to '  '") {
       every { mockLrmListRepository.findByIdOrNull(id1) } returns lrmList()
       shouldThrow<ConstraintViolationException> { lrmListService.patch(id1, mapOf("description" to "  ")) }
+    }
+
+    it("update public") {
+      val expectedPublic = false
+      every { mockLrmListRepository.findByIdOrNull(id1) } returns lrmList()
+      every { mockLrmListRepository.update(ofType(LrmList::class)) } returns 1
+      val patchedLrmList = lrmListService.patch(id1, mapOf("public" to expectedPublic)).first
+      patchedLrmList.public.shouldBe(expectedPublic)
+      verify(exactly = 2) { mockLrmListRepository.findByIdOrNull(id1) }
+      verify(exactly = 1) { mockLrmListRepository.update(ofType(LrmList::class)) }
     }
 
     it("update an undefined list property") {

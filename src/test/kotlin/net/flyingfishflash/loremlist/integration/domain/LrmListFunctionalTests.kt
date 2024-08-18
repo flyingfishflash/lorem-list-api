@@ -52,12 +52,30 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
   val itemIds: MutableMap<Int, UUID> = HashMap()
   val listIds: MutableMap<Int, UUID> = HashMap()
 
-  fun createLrmListOneRequest(): LrmListRequest = LrmListRequest("Lorem List 1 Name", "Lorem List 1 Description")
-  fun createLrmListTwoRequest(): LrmListRequest = LrmListRequest("Lorem List 2 Name", "Lorem List 2 Description")
+  fun createLrmListOneRequest(): LrmListRequest = LrmListRequest(
+    name = "Lorem List 1 Name",
+    description = "Lorem List 1 Description",
+    public = true,
+  )
+
+  fun createLrmListTwoRequest(): LrmListRequest = LrmListRequest(
+    name = "Lorem List 2 Name",
+    description = "Lorem List 2 Description",
+    public = true,
+  )
   val listCreateRequests = listOf(createLrmListOneRequest(), createLrmListTwoRequest())
 
-  fun updateLrmListOneRequest(): LrmListRequest = LrmListRequest("Updated Lorem List 1 Name", "Updated Lorem List 1 Description")
-  fun updateLrmListTwoRequest(): LrmListRequest = LrmListRequest("Updated Lorem List 2 Name", "Updated Lorem List 2 Description")
+  fun updateLrmListOneRequest(): LrmListRequest = LrmListRequest(
+    name = "Updated Lorem List 1 Name",
+    description = "Updated Lorem List 1 Description",
+    public = true,
+  )
+
+  fun updateLrmListTwoRequest(): LrmListRequest = LrmListRequest(
+    name = "Updated Lorem List 2 Name",
+    description = "Updated Lorem List 2 Description",
+    public = true,
+  )
   val listUpdateRequests = listOf(updateLrmListOneRequest(), updateLrmListTwoRequest())
 
   describe("comprehensive functional test") {
@@ -261,13 +279,13 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               ),
             "name is only whitespace" to
               ValidationTest(
-                postContent = "{ \"name\": \" \", \"description\": \"bLLh|Rvz.x0@W2d9G:a\" }",
+                postContent = "{ \"name\": \" \", \"description\": \"bLLh|Rvz.x0@W2d9G:a\", \"public\": \"true\" }",
                 responseMessage = "$VALIDATION_FAILURE_MESSAGE name.",
                 expectedErrorCount = 1,
               ),
             "name is empty, description is only whitespace" to
               ValidationTest(
-                postContent = "{ \"name\": \"\", \"description\": \" \" }",
+                postContent = "{ \"name\": \"\", \"description\": \" \", \"public\": \"true\" }",
                 responseMessage = "$VALIDATION_FAILURE_MESSAGE description, name.",
                 expectedErrorCount = 3,
               ),
@@ -311,10 +329,11 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("created new list") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(5) }
+              jsonPath("$.content.length()") { value(6) }
               jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
+              jsonPath("$.content.public") { value(listRequest.public) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
             }.andReturn().response.contentAsString
@@ -360,10 +379,11 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("retrieved list id ${listIds[index]}") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(5) }
+              jsonPath("$.content.length()") { value(6) }
               jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
+              jsonPath("$.content.public") { value(listRequest.public) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
               jsonPath("$.content.lists") { doesNotExist() }
@@ -411,10 +431,11 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("patched") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(5) }
+              jsonPath("$.content.length()") { value(6) }
               jsonPath("$.content.id") { value("${listIds[index]}") }
-              jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.name") { value(listRequest.name) }
+              jsonPath("$.content.description") { value(listRequest.description) }
+              jsonPath("$.content.public") { value(listRequest.public) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
             }
@@ -433,10 +454,11 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("not patched") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(5) }
+              jsonPath("$.content.length()") { value(6) }
               jsonPath("$.content.id") { value("${listIds[index]}") }
-              jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.name") { value(listRequest.name) }
+              jsonPath("$.content.description") { value(listRequest.description) }
+              jsonPath("$.content.public") { value(listRequest.public) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
             }

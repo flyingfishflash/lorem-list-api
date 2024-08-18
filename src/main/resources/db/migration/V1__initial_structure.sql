@@ -14,6 +14,7 @@ create table list (
   id uuid not null,
   name varchar(64) not null,
   description varchar(2048),
+  public boolean not null,
   created timestamp with time zone not null,
   updated timestamp with time zone not null,
   primary key (id)

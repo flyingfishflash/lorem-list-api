@@ -251,7 +251,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
             httpMethod = HttpMethod.POST,
             instance = "/lists",
             expectedErrorCount = 0,
-            requestContent = "{ \"name\": null, \"description\": null }",
+            requestContent = "{ \"name\": null, \"description\": null, \"public\": true }",
             responseMessage = "Failed to read request.",
           ),
         "(post) name is only whitespace" to
@@ -259,7 +259,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
             httpMethod = HttpMethod.POST,
             instance = "/lists",
             expectedErrorCount = 1,
-            requestContent = "{ \"name\": \" \", \"description\": \"bLLh|Rvz.x0@W2d9G:a\" }",
+            requestContent = "{ \"name\": \" \", \"description\": \"bLLh|Rvz.x0@W2d9G:a\", \"public\": true }",
             responseMessage = "$VALIDATION_FAILURE_MESSAGE name.",
           ),
         "(post) name is empty, description is only whitespace" to
@@ -267,7 +267,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
             httpMethod = HttpMethod.POST,
             instance = "/lists",
             expectedErrorCount = 3,
-            requestContent = "{ \"name\": \"\", \"description\": \" \" }",
+            requestContent = "{ \"name\": \"\", \"description\": \" \", \"public\": true }",
             responseMessage = "$VALIDATION_FAILURE_MESSAGE description, name.",
           ),
       )

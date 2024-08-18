@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 object LrmListTable : UUIDTable("list", "id") {
   val name: Column<String> = varchar(name = "name", length = 64)
   val description: Column<String?> = varchar(name = "description", length = 2048).nullable()
+  val public: Column<Boolean> = bool("public")
   val created: Column<Instant> = timestamp(name = "created")
   val updated: Column<Instant> = timestamp(name = "updated")
 }

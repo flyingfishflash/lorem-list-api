@@ -63,8 +63,8 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     fun lrmItem(): LrmItem = LrmItem(id = id0, name = lrmItemRequest.name, description = lrmItemRequest.description)
     fun lrmItemWithEmptyLists() = lrmItem().copy(lists = setOf())
     fun lrmItem1(): LrmItem = LrmItem(id = id1, name = lrmItemRequest.name, description = lrmItemRequest.description)
-    fun lrmList2(): LrmList = LrmList(id = id2, name = "Lorem List Name (id2)", description = "Lorem List Description")
-    fun lrmList3(): LrmList = LrmList(id = id3, name = "Lorem List Name (id3)", description = "Lorem List Description")
+    fun lrmList2(): LrmList = LrmList(id = id2, name = "Lorem List Name (id2)", description = "Lorem List Description", public = true)
+    fun lrmList3(): LrmList = LrmList(id = id3, name = "Lorem List Name (id3)", description = "Lorem List Description", public = true)
 
     afterEach { clearAllMocks() }
     afterSpec { unmockkAll() }
