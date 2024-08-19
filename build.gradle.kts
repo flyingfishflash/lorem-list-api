@@ -68,7 +68,7 @@ dependencies {
   )
 //  https://github.com/spring-projects/spring-boot/releases
   implementation("org.springframework.boot:spring-boot-starter-actuator")
-  //  implementation("org.springframework.boot:spring-boot-starter-security")
+  implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter-web") {
     exclude(group = "org.springframework.boot", module = "spring-boot-starter-json")
@@ -81,7 +81,7 @@ dependencies {
   testImplementation("io.kotest:kotest-assertions-json:$kotestVersion")
   testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
   testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestExtensionsSpringVersion")
-  //  testImplementation("org.springframework.security:spring-security-test")
+  testImplementation("org.springframework.security:spring-security-test")
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
     exclude(group = "org.assertj", module = "assertj-core")
     exclude(group = "org.hamcrest", module = "hamcrest")

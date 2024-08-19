@@ -13,6 +13,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockHttpServletRequestDsl
 import org.springframework.test.web.servlet.MockMvc
@@ -63,7 +65,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
 
     return when (httpMethod) {
       HttpMethod.DELETE -> mockMvc.delete(instance, dsl = dsl)
-      HttpMethod.GET -> mockMvc.get(instance)
+      HttpMethod.GET -> mockMvc.get(instance, dsl = dsl)
       HttpMethod.PATCH -> mockMvc.patch(instance, dsl = dsl)
       HttpMethod.POST -> mockMvc.post(instance, dsl = dsl)
       HttpMethod.PUT -> mockMvc.put(instance, dsl = dsl)
@@ -75,8 +77,12 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
 
   fun doValidationTest(condition: Map.Entry<String, ValidationTest>) {
     buildMvc(httpMethod = condition.value.httpMethod, instance = condition.value.instance) {
+      with(user("mock"))
       contentType = MediaType.APPLICATION_JSON
-      content = condition.value.requestContent
+      if (condition.value.httpMethod != HttpMethod.GET) {
+        with(csrf())
+        content = condition.value.requestContent
+      }
     }.andExpect {
       status { isBadRequest() }
       jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
@@ -186,6 +192,8 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
       it("item is created") {
         val instance = "/items"
         val response = mockMvc.post(instance) {
+          with(user("mock"))
+          with(csrf())
           content = Json.encodeToString(createLrmItemOneRequest())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect { status { isOk() } }.andReturn().response.contentAsString
@@ -236,7 +244,11 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
 
       it("item is deleted") {
         val instance = "/items/${itemUuids[0]}"
-        mockMvc.delete(instance) { contentType = MediaType.APPLICATION_JSON }.andExpect {
+        mockMvc.delete(instance) {
+          with(user("mock"))
+          with(csrf())
+          contentType = MediaType.APPLICATION_JSON
+        }.andExpect {
           status { isOk() }
         }
       }

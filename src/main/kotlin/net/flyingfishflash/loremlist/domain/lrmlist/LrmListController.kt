@@ -152,7 +152,10 @@ class LrmListController(private val associationService: AssociationService, priv
   fun findAll(
     @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
+//    @CurrentSecurityContext(expression = "authentication.principal") jwt: Jwt,
   ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
+//    logger.error { jwt.subject }
+//    logger.error { jwt.claims }
     val responseContent = if (includeItems) lrmListService.findAllIncludeItems() else lrmListService.findAll()
     val response = ResponseSuccess(responseContent, "retrieved all lists", request)
     logger.info { Json.encodeToString(response) }
