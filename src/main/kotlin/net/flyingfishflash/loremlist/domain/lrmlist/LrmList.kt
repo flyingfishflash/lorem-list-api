@@ -10,8 +10,8 @@ import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import java.util.UUID
 
 @Serializable
-data class LrmList
 @OptIn(ExperimentalSerializationApi::class)
+data class LrmList
 constructor(
   @Serializable(with = UUIDSerializer::class)
   var id: UUID,
