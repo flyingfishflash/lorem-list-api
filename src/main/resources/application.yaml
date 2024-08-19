@@ -91,3 +91,7 @@ springdoc:
     defaultModelsExpandDepth: 3
     operationsSorter: alpha
     tagsSorter: alpha
+    oauth:
+      use-pkce-with-authorization-code-grant: true
+      scopes: 'openid email profile offline_access'
+      client-secret: justFillerBecausePKCEisUsed
