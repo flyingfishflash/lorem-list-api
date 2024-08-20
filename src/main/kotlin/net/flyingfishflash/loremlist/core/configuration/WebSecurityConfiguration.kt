@@ -59,8 +59,7 @@ class WebSecurityConfiguration {
         authorize(AntPathRequestMatcher("/webjars/**", HttpMethod.GET.name()), permitAll)
         authorize(AntPathRequestMatcher("/management/health", HttpMethod.GET.name()), permitAll)
         authorize(AntPathRequestMatcher("/management/info", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/lists", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/lists/**", HttpMethod.GET.name()), permitAll)
+        authorize(AntPathRequestMatcher("/lists/public", HttpMethod.GET.name()), permitAll)
         authorize(anyRequest, authenticated)
 //        hasAuthority("SCOPE_administrator")
       }

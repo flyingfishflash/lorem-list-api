@@ -267,6 +267,40 @@ class LrmListServiceTests : DescribeSpec({
     }
   }
 
+  describe("findAllPublic()") {
+    it("lists are returned") {
+      every { mockLrmListRepository.findAllPublic() } returns listOf(lrmList())
+      lrmListService.findAllPublic()
+      verify(exactly = 1) { mockLrmListRepository.findAllPublic() }
+    }
+
+    it("list repository throws exception") {
+      every { mockLrmListRepository.findAllPublic() } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmListService.findAllPublic() }
+      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.message.shouldBe("Public lists could not be retrieved.")
+      exception.responseMessage.shouldBe("Public lists could not be retrieved.")
+    }
+  }
+
+  describe("findAllPublicIncludeItems()") {
+    it("lists are returned") {
+      every { mockLrmListRepository.findAllPublicIncludeItems() } returns listOf(lrmList())
+      lrmListService.findAllPublicIncludeItems()
+      verify(exactly = 1) { mockLrmListRepository.findAllPublicIncludeItems() }
+    }
+
+    it("list repository throws exception") {
+      every { mockLrmListRepository.findAllPublicIncludeItems() } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmListService.findAllPublicIncludeItems() }
+      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
+      exception.cause.shouldBeInstanceOf<Exception>()
+      exception.message.shouldBe("Public lists (including associated items) could not be retrieved.")
+      exception.responseMessage.shouldBe("Public lists (including associated items) could not be retrieved.")
+    }
+  }
+
   describe("findById()") {
     it("list is found and returned") {
       every { mockLrmListRepository.findByIdOrNull(id1) } returns lrmList()

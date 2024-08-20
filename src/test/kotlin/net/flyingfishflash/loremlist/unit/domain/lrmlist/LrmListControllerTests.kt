@@ -10,6 +10,7 @@ import io.mockk.verify
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.configuration.SerializationConfig
+import net.flyingfishflash.loremlist.core.configuration.WebSecurityConfiguration
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
@@ -45,7 +46,7 @@ import java.util.UUID
  * LrmListController Unit Tests
  */
 @WebMvcTest(controllers = [LrmListController::class])
-@Import(SerializationConfig::class)
+@Import(SerializationConfig::class, WebSecurityConfiguration::class)
 class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
   override fun extensions() = listOf(SpringExtension)
 
@@ -244,6 +245,84 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
           }
           verify(exactly = 0) { mockLrmListService.create(ofType(LrmListRequest::class)) }
+        }
+      }
+    }
+
+    describe("/lists/public") {
+      describe("get") {
+        it("lists are found") {
+          val mockReturn = listOf(lrmList())
+          every { mockLrmListService.findAllPublic() } returns mockReturn
+          val instance = "/lists/public"
+          mockMvc.get(instance) {
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+            jsonPath("$.message") { value("retrieved all public lists") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(mockReturn.size) }
+            jsonPath("$.content") { exists() }
+            jsonPath("$.content") { isArray() }
+            jsonPath("$.content.[0].name") { value(lrmList().name) }
+            jsonPath("$.content.[0].description") { value(lrmList().description) }
+            jsonPath("$.content.[0].items") {
+              doesNotExist()
+            }
+          }
+          verify(exactly = 1) { mockLrmListService.findAllPublic() }
+        }
+
+        it("lists are found ?includeItems=false") {
+          val mockReturn = listOf(lrmList())
+          every { mockLrmListService.findAllPublic() } returns mockReturn
+          val instance = "/lists/public?includeItems=false"
+          mockMvc.get(instance) {
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+            jsonPath("$.message") { value("retrieved all public lists") }
+            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
+            jsonPath("$.size") { value(mockReturn.size) }
+            jsonPath("$.content") { isArray() }
+            jsonPath("$.content.[0].name") { value(lrmList().name) }
+            jsonPath("$.content.[0].description") { value(lrmList().description) }
+            jsonPath("$.content.[0].items") {
+              doesNotExist()
+            }
+          }
+          verify(exactly = 1) { mockLrmListService.findAllPublic() }
+        }
+
+        it("lists are found ?includeItems=true") {
+          val mockReturn = listOf(lrmListWithEmptyItems())
+          every { mockLrmListService.findAllPublicIncludeItems() } returns mockReturn
+          val instance = "/lists/public?includeItems=true"
+          mockMvc.get(instance) {
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+            jsonPath("$.message") { value("retrieved all public lists") }
+            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
+            jsonPath("$.size") { value(mockReturn.size) }
+            jsonPath("$.content") { isArray() }
+            jsonPath("$.content.[0].name") { value(lrmList().name) }
+            jsonPath("$.content.[0].description") { value(lrmList().description) }
+            jsonPath("$.content.[0].items") {
+              isArray()
+              isEmpty()
+            }
+          }
+          verify(exactly = 1) { mockLrmListService.findAllPublicIncludeItems() }
         }
       }
     }

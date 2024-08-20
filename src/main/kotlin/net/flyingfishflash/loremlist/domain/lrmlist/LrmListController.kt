@@ -26,6 +26,8 @@ import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -138,6 +140,27 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
+  @Operation(summary = "Retrieve all public lists, optionally including the details of each associated item")
+  @ApiResponses(
+    value = [
+      ApiResponse(
+        responseCode = "200",
+        description = "all public lists",
+//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
+      ),
+    ],
+  )
+  @GetMapping("/public")
+  fun findAllPublic(
+    @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
+    request: HttpServletRequest,
+  ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
+    val responseContent = if (includeItems) lrmListService.findAllPublicIncludeItems() else lrmListService.findAllPublic()
+    val response = ResponseSuccess(responseContent, "retrieved all public lists", request)
+    logger.info { Json.encodeToString(response) }
+    return ResponseEntity(response, HttpStatus.OK)
+  }
+
   @Operation(summary = "Retrieve all lists, optionally including the details of each associated item")
   @ApiResponses(
     value = [
@@ -152,10 +175,10 @@ class LrmListController(private val associationService: AssociationService, priv
   fun findAll(
     @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
-//    @CurrentSecurityContext(expression = "authentication.principal") jwt: Jwt,
+    @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
-//    logger.error { jwt.subject }
-//    logger.error { jwt.claims }
+    logger.error { principal.subject }
+    logger.error { principal.claims }
     val responseContent = if (includeItems) lrmListService.findAllIncludeItems() else lrmListService.findAll()
     val response = ResponseSuccess(responseContent, "retrieved all lists", request)
     logger.info { Json.encodeToString(response) }

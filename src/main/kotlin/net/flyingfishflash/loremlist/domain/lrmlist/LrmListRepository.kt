@@ -17,6 +17,7 @@ import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -35,33 +36,10 @@ class LrmListRepository {
 
   fun deleteById(id: UUID): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
 
-  fun findAll(): List<LrmList> = repositoryTable.select(
-    repositoryTable.id,
-    repositoryTable.name,
-    repositoryTable.description,
-    repositoryTable.public,
-    repositoryTable.created,
-    repositoryTable.updated,
-  )
-    .map { it.toLrmList() }
-    .toList()
+  fun findAll(): List<LrmList> = repositoryTable.selectAll().map { it.toLrmList() }.toList()
 
   fun findAllIncludeItems(): List<LrmList> {
-    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
-      .select(
-        repositoryTable.id,
-        repositoryTable.name,
-        repositoryTable.description,
-        repositoryTable.public,
-        repositoryTable.created,
-        repositoryTable.updated,
-        LrmListItemTable.id,
-        LrmListItemTable.name,
-        LrmListItemTable.description,
-        LrmListItemTable.quantity,
-        LrmListItemTable.created,
-        LrmListItemTable.updated,
-      ).toList()
+    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable).selectAll().toList()
 
     val listItemsByList = resultRows
       .filter {
@@ -90,15 +68,42 @@ class LrmListRepository {
     return listsAndItems
   }
 
-  fun findByIdOrNull(id: UUID): LrmList? = repositoryTable.select(
-    repositoryTable.id,
-    repositoryTable.name,
-    repositoryTable.description,
-    repositoryTable.public,
-    repositoryTable.created,
-    repositoryTable.updated,
-  )
-    .where { repositoryTable.id eq id }
+  fun findAllPublic(): List<LrmList> = repositoryTable.selectAll().where { repositoryTable.public.eq(true) }.map { it.toLrmList() }.toList()
+
+  fun findAllPublicIncludeItems(): List<LrmList> {
+    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
+      .selectAll()
+      .where { repositoryTable.public.eq(true) }
+      .toList()
+
+    val listItemsByList = resultRows
+      .filter {
+        @Suppress("SENSELESS_COMPARISON")
+        it[LrmListItemTable.id] != null
+      }
+      .groupBy(
+        keySelector = { it[repositoryTable.id].value },
+        valueTransform = {
+          LrmItem(
+            id = it[LrmListItemTable.id].value,
+            name = it[LrmListItemTable.name],
+            description = it[LrmListItemTable.description],
+            quantity = it[LrmListItemTable.quantity],
+            created = it[LrmListItemTable.created],
+            updated = it[LrmListItemTable.updated],
+          )
+        },
+      )
+
+    val listsAndItems = resultRows
+      .map { it.toLrmList() }
+      .distinct()
+      .map { it.copy(items = listItemsByList[it.id]?.sortedBy { item -> item.name }?.toSet() ?: setOf()) }
+
+    return listsAndItems
+  }
+
+  fun findByIdOrNull(id: UUID): LrmList? = repositoryTable.selectAll().where { repositoryTable.id eq id }
     .firstOrNull()?.let {
       LrmList(
         id = it[repositoryTable.id].value,
@@ -112,20 +117,9 @@ class LrmListRepository {
 
   fun findByIdOrNullIncludeItems(id: UUID): LrmList? {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
-      .select(
-        repositoryTable.id,
-        repositoryTable.name,
-        repositoryTable.description,
-        repositoryTable.public,
-        repositoryTable.created,
-        repositoryTable.updated,
-        LrmListItemTable.id,
-        LrmListItemTable.name,
-        LrmListItemTable.description,
-        LrmListItemTable.quantity,
-        LrmListItemTable.created,
-        LrmListItemTable.updated,
-      ).where { repositoryTable.id eq id }.toList()
+      .selectAll()
+      .where { repositoryTable.id eq id }
+      .toList()
 
     val listItems = resultRows
       .asSequence()

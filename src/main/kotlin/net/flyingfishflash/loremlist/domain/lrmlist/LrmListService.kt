@@ -228,6 +228,30 @@ class LrmListService(
     }
   }
 
+  fun findAllPublic(): List<LrmList> {
+    try {
+      return lrmListRepository.findAllPublic()
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Public lists could not be retrieved.",
+        responseMessage = "Public lists could not be retrieved.",
+      )
+    }
+  }
+
+  fun findAllPublicIncludeItems(): List<LrmList> {
+    try {
+      return lrmListRepository.findAllPublicIncludeItems()
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Public lists (including associated items) could not be retrieved.",
+        responseMessage = "Public lists (including associated items) could not be retrieved.",
+      )
+    }
+  }
+
   fun findById(id: UUID): LrmList {
     val list = try {
       lrmListRepository.findByIdOrNull(id)
