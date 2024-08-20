@@ -14,7 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 
@@ -36,7 +36,7 @@ class MaintenanceControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockMaintenanceService.purge() } returns mockReturn
           val instance = "/maintenance/purge"
           mockMvc.delete(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {

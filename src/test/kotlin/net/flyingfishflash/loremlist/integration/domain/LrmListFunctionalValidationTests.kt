@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockHttpServletRequestDsl
 import org.springframework.test.web.servlet.MockMvc
@@ -77,7 +77,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
 
   fun doValidationTest(condition: Map.Entry<String, ValidationTest>) {
     buildMvc(httpMethod = condition.value.httpMethod, instance = condition.value.instance) {
-      with(user("mock"))
+      with(jwt())
       contentType = MediaType.APPLICATION_JSON
       if (condition.value.httpMethod != HttpMethod.GET) {
         with(csrf())
@@ -192,7 +192,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
       it("item is created") {
         val instance = "/items"
         val response = mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(createLrmItemOneRequest())
           contentType = MediaType.APPLICATION_JSON
@@ -245,7 +245,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) : DescribeSpec({
       it("item is deleted") {
         val instance = "/items/${itemUuids[0]}"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {

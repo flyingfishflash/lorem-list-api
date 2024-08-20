@@ -32,7 +32,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
@@ -84,7 +84,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.deleteAll() } returns mockReturn
           val instance = "/lists"
           mockMvc.delete(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
@@ -107,7 +107,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.findAll() } returns mockReturn
           val instance = "/lists"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isOk() }
@@ -133,7 +133,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.findAll() } returns mockReturn
           val instance = "/lists?includeItems=false"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isOk() }
@@ -158,7 +158,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.findAllIncludeItems() } returns mockReturn
           val instance = "/lists?includeItems=true"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isOk() }
@@ -186,7 +186,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.create(lrmListRequest) } returns lrmList()
           val instance = "/lists"
           mockMvc.post(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             content = Json.encodeToString(lrmListRequest)
             contentType = MediaType.APPLICATION_JSON
@@ -207,7 +207,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("requested list name is an empty string") {
           val instance = "/lists"
           mockMvc.post(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             content = Json.encodeToString(LrmListRequest("", lrmList().description, lrmList().public))
             contentType = MediaType.APPLICATION_JSON
@@ -228,7 +228,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("requested list description is an empty string") {
           val instance = "/lists"
           mockMvc.post(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             content = Json.encodeToString(LrmListRequest(lrmList().name, "", lrmList().public))
             contentType = MediaType.APPLICATION_JSON
@@ -256,7 +256,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.findWithNoItems() } returns mockReturn
           val instance = "/lists/with-no-items"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isOk() }
@@ -282,7 +282,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.count() } returns 999
           val instance = "/lists/count"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
           }.andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
@@ -308,7 +308,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           } returns LrmListDeleteResponse(listNames = listOf("dolor sit amet"), associatedItemNames = listOf("Lorem Ipsum"))
           val instance = "/lists/$id1"
           mockMvc.delete(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
           }.andExpect {
             status { isOk() }
@@ -331,7 +331,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val expectedMessage = ListNotFoundException.defaultMessage()
           val instance = "/lists/$id1"
           mockMvc.delete(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
           }.andExpect {
             status { isNotFound() }
@@ -354,7 +354,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.findById(id1) } returns lrmList()
           val instance = "/lists/$id1"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
           }.andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
@@ -373,7 +373,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.findByIdIncludeItems(id1) } returns lrmListWithEmptyItems()
           val instance = "/lists/$id1?includeItems=true"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
           }.andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
@@ -396,7 +396,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.findById(id1) } returns lrmList()
           val instance = "/lists/$id1?includeItems=false"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
           }.andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
@@ -418,7 +418,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.findById(id1) } throws ListNotFoundException(id1)
           val instance = "/lists/$id1"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
           }.andExpect {
             status { isNotFound() }
             content { contentType(MediaType.APPLICATION_JSON) }
@@ -438,7 +438,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.patch(id1, any()) } returns Pair(lrmList(), true)
           val instance = "/lists/$id1"
           mockMvc.patch(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             content = Json.encodeToString(mapOf("name" to lrmList().name))
             contentType = MediaType.APPLICATION_JSON
@@ -463,7 +463,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.patch(id1, any()) } returns Pair(lrmList(), false)
           val instance = "/lists/$id1"
           mockMvc.patch(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             content = Json.encodeToString(mapOf("name" to lrmList().name))
             contentType = MediaType.APPLICATION_JSON
@@ -488,7 +488,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockLrmListService.patch(id1, any()) } throws ListNotFoundException(id1)
           val instance = "/lists/$id1"
           mockMvc.patch(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             content = Json.encodeToString(mapOf("name" to lrmList().name))
             contentType = MediaType.APPLICATION_JSON
@@ -520,7 +520,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           } returns Pair(lrmItemName, lrmListName)
           val instance = "/lists/$id1/items/$id2"
           mockMvc.delete(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
@@ -541,7 +541,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val expectedMessage = ItemNotFoundException.defaultMessage()
           val instance = "/lists/$id1/items/$id2"
           mockMvc.delete(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
@@ -564,7 +564,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val expectedMessage = ListNotFoundException.defaultMessage()
           val instance = "/lists/$id1/items/$id2"
           mockMvc.delete(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
@@ -598,7 +598,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           } returns mockResponse
           val instance = "/lists/$id1/items"
           mockMvc.post(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             // posted content is irrelevant for this test
             content = Json.encodeToString(setOf(UUID.randomUUID().toString()))
@@ -633,7 +633,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           } returns mockResponse
           val instance = "/lists/$id1/items"
           mockMvc.post(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             // posted content is irrelevant for this test
             content = Json.encodeToString(setOf(UUID.randomUUID().toString()))
@@ -665,7 +665,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val expectedMessage = ListNotFoundException.defaultMessage()
           val instance = "/lists/$id1/items"
           mockMvc.post(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             // posted content is irrelevant for this test
             content = Json.encodeToString(setOf(UUID.randomUUID().toString()))
@@ -695,7 +695,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val expectedMessage = ItemNotFoundException.defaultMessage()
           val instance = "/lists/$id1/items"
           mockMvc.post(instance) {
-            with(user("mock"))
+            with(jwt())
             with(csrf())
             // posted content is irrelevant for this test
             content = Json.encodeToString(setOf(UUID.randomUUID().toString()))
@@ -722,7 +722,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockAssociationService.countForListId(id1) } returns 999
           val instance = "/lists/$id1/items/count"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
           }.andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
@@ -741,7 +741,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           every { mockAssociationService.countForListId(id1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
           val instance = "/lists/$id1/items/count"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
           }.andExpect {
             status { isNotFound() }
             jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
@@ -761,7 +761,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         every { mockAssociationService.deleteAllOfList(id1) } returns Pair(lrmListName, 999)
         val instance = "/lists/$id1/items"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {

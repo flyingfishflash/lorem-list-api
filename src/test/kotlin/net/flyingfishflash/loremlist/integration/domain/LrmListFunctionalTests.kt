@@ -21,7 +21,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
@@ -111,7 +111,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           it("item $index is created") {
             val instance = "/items"
             val response = mockMvc.post(instance) {
-              with(user("mock"))
+              with(jwt())
               with(csrf())
               content = Json.encodeToString(itemRequest)
               contentType = MediaType.APPLICATION_JSON
@@ -143,7 +143,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           val itemId = UUID.randomUUID()
           val instance = "/items/$itemId"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isNotFound() }
@@ -165,7 +165,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           it("item $index is found") {
             val instance = "/items/${itemIds[index]}"
             mockMvc.get(instance) {
-              with(user("mock"))
+              with(jwt())
               contentType = MediaType.APPLICATION_JSON
             }.andExpect {
               status { isOk() }
@@ -191,7 +191,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           it("item $index is found with all items") {
             val instance = "/items"
             mockMvc.get(instance) {
-              with(user("mock"))
+              with(jwt())
               contentType = MediaType.APPLICATION_JSON
             }.andExpect {
               status { isOk() }
@@ -221,7 +221,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           it("item $index is found and updated") {
             val instance = "/items/${itemIds[index]}"
             mockMvc.patch(instance) {
-              with(user("mock"))
+              with(jwt())
               with(csrf())
               content = Json.encodeToString(itemRequest)
               contentType = MediaType.APPLICATION_JSON
@@ -248,7 +248,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item count is three") {
         val instance = "/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
         }.andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
@@ -266,7 +266,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expectedMessage = "Retrieved 3 items that are not a part of a list."
         val instance = "/items/with-no-lists"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
         }.andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
@@ -308,7 +308,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             it("condition: ${condition.key}") {
               val instance = "/lists"
               mockMvc.post(instance) {
-                with(user("mock"))
+                with(jwt())
                 with(csrf())
                 content = condition.value.postContent
                 contentType = MediaType.APPLICATION_JSON
@@ -334,7 +334,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           it("list $index is created") {
             val instance = "/lists"
             val response = mockMvc.post(instance) {
-              with(user("mock"))
+              with(jwt())
               with(csrf())
               content = Json.encodeToString(listRequest)
               contentType = MediaType.APPLICATION_JSON
@@ -366,7 +366,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           val listId = UUID.randomUUID()
           val instance = "/lists/$listId"
           mockMvc.get(instance) {
-            with(user("mock"))
+            with(jwt())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isNotFound() }
@@ -388,7 +388,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           it("list $index is found") {
             val instance = "/lists/${listIds[index]}"
             mockMvc.get(instance) {
-              with(user("mock"))
+              with(jwt())
               contentType = MediaType.APPLICATION_JSON
             }.andExpect {
               status { isOk() }
@@ -412,7 +412,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           it("list $index is found with all lists") {
             val instance = "/lists"
             mockMvc.get(instance) {
-              with(user("mock"))
+              with(jwt())
               contentType = MediaType.APPLICATION_JSON
             }.andExpect {
               status { isOk() }
@@ -441,7 +441,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           it("list $index is updated") {
             val instance = "/lists/${listIds[index]}"
             mockMvc.patch(instance) {
-              with(user("mock"))
+              with(jwt())
               with(csrf())
               content = Json.encodeToString(listRequest)
               contentType = MediaType.APPLICATION_JSON
@@ -466,7 +466,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           it("list $index is up-to-date") {
             val instance = "/lists/${listIds[index]}"
             mockMvc.patch(instance) {
-              with(user("mock"))
+              with(jwt())
               with(csrf())
               content = Json.encodeToString(listRequest)
               contentType = MediaType.APPLICATION_JSON
@@ -493,7 +493,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list count is two") {
         val instance = "/lists/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
         }.andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
@@ -511,7 +511,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expectedMessage = "Retrieved 2 lists containing no items."
         val instance = "/lists/with-no-items"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
         }.andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
@@ -529,7 +529,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 0 is added to list 0") {
         val instance = "/items/${itemIds[0]}/lists"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(listIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -551,7 +551,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 0 includes item 0") {
         val instance = "/lists/${listIds[0]}?includeItems=true"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -578,7 +578,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expectedMessage = "Assigned item '${updateLrmItemTwoRequest().name}' to ${postedComponents.size} lists."
         val instance = "/items/${itemIds[1]}/lists"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(postedComponents)
           contentType = MediaType.APPLICATION_JSON
@@ -602,7 +602,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 0 includes items 0 and 1") {
         val instance = "/lists/${listIds[0]}?includeItems=true"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -630,7 +630,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 0 is not added to list 0 when it's already been added") {
         val instance = "/items/${itemIds[0]}/lists"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(listIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -652,7 +652,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val itemId = UUID.randomUUID()
         val instance = "/items/$itemId/lists"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(listIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -678,7 +678,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val itemId = UUID.randomUUID()
         val instance = "/items/${itemIds[0]}/lists"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(itemId.toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -704,7 +704,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           "from list '${updateLrmListOneRequest().name}' to list '${updateLrmListTwoRequest().name}'."
         val instance = "/items/${itemIds[0]}/lists/${listIds[0]}/${listIds[1]}"
         mockMvc.patch(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -722,7 +722,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 0 includes only item 1") {
         val instance = "/lists/${listIds[0]}?includeItems=true"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -751,7 +751,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 0 is not deleted from list 0 because the association couldn't be found") {
         val instance = "/items/${itemIds[0]}/lists/${listIds[0]}"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
 //          content = "\"${listIds[0]}\""
           contentType = MediaType.APPLICATION_JSON
@@ -775,7 +775,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 1 is associated with lists 0 and 1") {
         val instance = "/items/${itemIds[1]}?includeLists=true"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -803,7 +803,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 1 includes items 0 and 1") {
         val instance = "/lists/${listIds[1]}?includeItems=true"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -833,7 +833,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 0 is associated with only list 1") {
         val instance = "/items/${itemIds[0]}?includeLists=true"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -859,7 +859,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 0 has one list association") {
         val instance = "/items/${itemIds[0]}/lists/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -877,7 +877,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 1 has two list associations") {
         val instance = "/items/${itemIds[1]}/lists/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -895,7 +895,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 0 has one item association") {
         val instance = "/lists/${listIds[0]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -913,7 +913,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 1 has two item association") {
         val instance = "/lists/${listIds[1]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -931,7 +931,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("remove item 0 from all lists") {
         val instance = "/items/${itemIds[0]}/lists"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -951,7 +951,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expectedMessage = "Removed item '${updateLrmItemTwoRequest().name}' from list '${updateLrmListTwoRequest().name}'."
         val instance = "/items/${itemIds[1]}/lists/${listIds[1]}"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -970,7 +970,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 0 has zero list associations") {
         val instance = "/items/${itemIds[0]}/lists/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -988,7 +988,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 1 has one list association") {
         val instance = "/items/${itemIds[1]}/lists/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1008,7 +1008,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 0 has one item associations") {
         val instance = "/lists/${listIds[0]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1026,7 +1026,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 1 has zero item associations") {
         val instance = "/lists/${listIds[1]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1045,7 +1045,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expectedMessage = "Assigned item '${updateLrmItemOneRequest().name}' to list '${updateLrmListTwoRequest().name}'."
         val instance = "/lists/${listIds[1]}/items"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(itemIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -1068,7 +1068,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expectedMessage = "Could not create a new association: It already exists."
         val instance = "/lists/${listIds[1]}/items"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(itemIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -1090,7 +1090,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expectedMessage = "Assigned ${postedComponents.size} items to list '${updateLrmListTwoRequest().name}'."
         val instance = "/lists/${listIds[1]}/items"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(postedComponents)
           contentType = MediaType.APPLICATION_JSON
@@ -1115,7 +1115,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 1 includes three items") {
         val instance = "/lists/${listIds[1]}?includeItems=true"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1138,7 +1138,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expected = "Removed item '${updateLrmItemThreeRequest().name}' from list '${updateLrmListTwoRequest().name}'."
         val instance = "/lists/${listIds[1]}/items/${itemIds[2]}"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1156,7 +1156,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 2 is not deleted from list 1 because the association couldn't be found") {
         val instance = "/lists/${listIds[1]}/items/${itemIds[2]}"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1179,7 +1179,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 1 has 2 item associations") {
         val instance = "/lists/${listIds[1]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1198,7 +1198,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expected = "Removed all associated items (2) from list '${updateLrmListTwoRequest().name}'."
         val instance = "/lists/${listIds[1]}/items"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
@@ -1218,7 +1218,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val itemId = UUID.randomUUID()
         val instance = "/lists/${listIds[1]}/items"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(itemId.toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -1244,7 +1244,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val listId = UUID.randomUUID()
         val instance = "/lists/$listId/items"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(itemIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -1268,7 +1268,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 0 has one item associations+") {
         val instance = "/lists/${listIds[0]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1286,7 +1286,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 1 has zero item associations+") {
         val instance = "/lists/${listIds[1]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1306,7 +1306,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 2 has zero list associations") {
         val instance = "/items/${itemIds[2]}/lists/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1324,7 +1324,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("delete item 2") {
         val instance = "/items/${itemIds[2]}"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
         }.andExpect {
           status { isOk() }
@@ -1344,7 +1344,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 1 is added to list 1") {
         val instance = "/items/${itemIds[1]}/lists"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(listIds[1].toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -1366,7 +1366,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("item 1 has two list associations") {
         val instance = "/items/${itemIds[1]}/lists/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1386,7 +1386,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           "First remove the item from each list."
         val instance = "/items/${itemIds[1]}"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
         }.andExpect {
           // client should be checking for http 422 error and proceed to confirm removal from X lists
@@ -1407,7 +1407,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("delete item 1 (removeListAssociations = true)") {
         val instance = "/items/${itemIds[1]}?removeListAssociations=true"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
         }.andExpect {
           status { isOk() }
@@ -1429,7 +1429,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("total item count is one") {
         val instance = "/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
         }.andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
@@ -1448,7 +1448,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 1 has zero item associations+") {
         val instance = "/lists/${listIds[1]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1466,7 +1466,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("delete list 1") {
         val instance = "/lists/${listIds[1]}"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
         }.andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
@@ -1484,7 +1484,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("total list count is one") {
         val instance = "/lists/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
         }.andExpect {
           status { isOk() }
           content { contentType(MediaType.APPLICATION_JSON) }
@@ -1501,7 +1501,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       describe("delete list with item associations") {
         val instance = "/lists/${listIds[0]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1520,7 +1520,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expectedMessage = "Assigned item '${updateLrmItemOneRequest().name}' to list '${updateLrmListOneRequest().name}'."
         val instance = "/lists/${listIds[0]}/items"
         mockMvc.post(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
           content = Json.encodeToString(listOf(itemIds[0].toString()))
           contentType = MediaType.APPLICATION_JSON
@@ -1545,7 +1545,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
             "First remove each item from the list."
         val instance = "/lists/${listIds[0]}"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
         }.andExpect {
           // client should be checking for http 422 error and proceed to confirm removal from X lists
@@ -1566,7 +1566,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       it("list 0 has one item associations") {
         val instance = "/lists/${listIds[0]}/items/count"
         mockMvc.get(instance) {
-          with(user("mock"))
+          with(jwt())
           contentType = MediaType.APPLICATION_JSON
         }.andExpect {
           status { isOk() }
@@ -1585,7 +1585,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
         val expected = "Deleted list id ${listIds[0]}."
         val instance = "/lists/${listIds[0]}?removeItemAssociations=true"
         mockMvc.delete(instance) {
-          with(user("mock"))
+          with(jwt())
           with(csrf())
         }.andExpect {
           status { isOk() }
@@ -1607,7 +1607,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
     it("total list count is zero") {
       val instance = "/lists/count"
       mockMvc.get(instance) {
-        with(user("mock"))
+        with(jwt())
       }.andExpect {
         status { isOk() }
         content { contentType(MediaType.APPLICATION_JSON) }
