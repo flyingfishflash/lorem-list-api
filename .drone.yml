@@ -71,7 +71,7 @@ steps:
           -c "select count(*) from pg_catalog.pg_tables;"
 
   - name: build
-    image: gradle:8-jdk17
+    image: gradle:8-jdk22
     depends_on:
       - fetch git tags
       - verify postgres

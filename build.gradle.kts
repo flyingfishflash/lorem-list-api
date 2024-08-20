@@ -92,7 +92,7 @@ dependencies {
 
 jacoco { toolVersion = "0.8.11" }
 
-java { sourceCompatibility = JavaVersion.VERSION_17 }
+java { sourceCompatibility = JavaVersion.VERSION_22 }
 
 sonarqube {
   properties {
@@ -166,7 +166,7 @@ spotless {
 tasks {
   compileKotlin {
     compilerOptions {
-      jvmTarget.set(JvmTarget.JVM_17)
+      jvmTarget.set(JvmTarget.JVM_22)
       freeCompilerArgs.add("-Xjsr305=strict")
     }
   }
