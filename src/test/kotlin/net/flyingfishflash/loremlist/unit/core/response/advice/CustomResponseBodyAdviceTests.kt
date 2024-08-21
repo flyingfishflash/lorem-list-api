@@ -215,7 +215,7 @@ class CustomResponseBodyAdviceTests : DescribeSpec({
 
       it("is null") {
         val customResponseBodyAdvice = CustomResponseBodyAdvice()
-        val method = ClassUtils.getMethod(LrmItemService::class.java, "create", LrmItemRequest::class.java)
+        val method = ClassUtils.getMethod(LrmItemService::class.java, "create", LrmItemRequest::class.java, String::class.java)
         val returnType = MethodParameter(method, -1)
         val body =
           customResponseBodyAdvice.beforeBodyWrite(

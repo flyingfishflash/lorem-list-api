@@ -6,7 +6,9 @@ create table item (
   description varchar(2048),
   quantity bigint,
   created timestamp with time zone not null,
+  created_by varchar(64) not null,
   updated timestamp with time zone not null,
+  updated_by varchar(64) not null,
   primary key (id)
 );
 
@@ -16,7 +18,9 @@ create table list (
   description varchar(2048),
   public boolean not null,
   created timestamp with time zone not null,
+  created_by varchar(64) not null,
   updated timestamp with time zone not null,
+  updated_by varchar(64) not null,
   primary key (id)
 );
 

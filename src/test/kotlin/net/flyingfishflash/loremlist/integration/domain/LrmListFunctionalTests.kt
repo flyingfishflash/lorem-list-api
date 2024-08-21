@@ -123,7 +123,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("created new item") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(6) }
+              jsonPath("$.content.length()") { value(8) }
               jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(itemRequest.name) }
               jsonPath("$.content.description") { value(itemRequest.description) }
@@ -175,7 +175,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("retrieved item id ${itemIds[index]}") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(6) }
+              jsonPath("$.content.length()") { value(8) }
               jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(itemRequest.name) }
               jsonPath("$.content.description") { value(itemRequest.description) }
@@ -233,7 +233,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("patched") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(6) }
+              jsonPath("$.content.length()") { value(8) }
               jsonPath("$.content.id") { value("${itemIds[index]}") }
               jsonPath("$.content.description") { value(itemRequest.description) }
               jsonPath("$.content.name") { value(itemRequest.name) }
@@ -346,7 +346,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("created new list") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(6) }
+              jsonPath("$.content.length()") { value(8) }
               jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
@@ -398,7 +398,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("retrieved list id ${listIds[index]}") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(6) }
+              jsonPath("$.content.length()") { value(8) }
               jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
@@ -453,7 +453,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("patched") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(6) }
+              jsonPath("$.content.length()") { value(8) }
               jsonPath("$.content.id") { value("${listIds[index]}") }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
@@ -478,7 +478,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("not patched") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(6) }
+              jsonPath("$.content.length()") { value(8) }
               jsonPath("$.content.id") { value("${listIds[index]}") }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }

@@ -19,50 +19,49 @@ class LrmListService(
   private val associationService: AssociationService,
   private val lrmListRepository: LrmListRepository,
 ) {
-
-  fun count(): Long {
+  fun countByOwner(owner: String): Long {
     try {
-      val count = lrmListRepository.count()
+      val count = lrmListRepository.countByOwner(owner = owner)
       return count
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
         message = "Total list count couldn't be generated.",
-        responseMessage = "Total list count couldn't be generated.",
       )
     }
   }
 
-  fun create(lrmListRequest: LrmListRequest): LrmList {
+  fun create(lrmListRequest: LrmListRequest, owner: String): LrmList {
     try {
-      val id = lrmListRepository.insert(lrmListRequest)
-      return findById(id)
+      val id = lrmListRepository.insert(lrmListRequest, owner)
+      return findByOwnerAndId(id = id, owner = owner)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
         message = "List could not be created.",
-        responseMessage = "List could not be created.",
       )
     }
   }
 
-  fun deleteAll(): LrmListDeleteResponse {
+  fun deleteByOwner(owner: String): LrmListDeleteResponse {
     try {
-      val lrmListDeleteResponse = LrmListDeleteResponse(
-        listNames = findAll().map { it.name }.sorted(),
-        associatedItemNames = findAllIncludeItems().flatMap { it.items.orEmpty() }.map { it.name }.sorted(),
-      )
-      if (lrmListDeleteResponse.listNames.isNotEmpty()) {
-        associationService.deleteAll()
-        lrmListRepository.deleteAll()
+      val lists = findByOwnerIncludeItems(owner = owner)
+      if (lists.isNotEmpty()) {
+        lists.filter { it.items.orEmpty().isNotEmpty() }.forEach {
+          associationService.deleteByListOwnerAndListId(listId = it.id, listOwner = owner)
+        }
+        lrmListRepository.deleteById(ids = lists.map { it.id }.toSet())
       }
+      val lrmListDeleteResponse = LrmListDeleteResponse(
+        listNames = lists.map { it.name }.sorted(),
+        associatedItemNames = lists.flatMap { it.items.orEmpty() }.map { it.name }.sorted(),
+      )
       return lrmListDeleteResponse
     } catch (apiException: ApiException) {
       val message = "No lists were deleted: ${apiException.responseMessage}"
       throw ApiException(
         cause = apiException,
         httpStatus = apiException.httpStatus,
-        responseMessage = message,
         message = message,
         supplemental = apiException.supplemental,
       )
@@ -70,28 +69,25 @@ class LrmListService(
       val message = "No lists were deleted."
       throw ApiException(
         cause = exception,
-        responseMessage = message,
         message = message,
       )
     }
   }
 
-  fun deleteById(id: UUID, removeItemAssociations: Boolean): LrmListDeleteResponse {
+  fun deleteByOwnerAndId(id: UUID, owner: String, removeItemAssociations: Boolean): LrmListDeleteResponse {
     try {
-      val listName = findById(id).name
+      val list = findByOwnerAndIdIncludeItems(id = id, owner = owner)
       val lrmListDeleteResponse = LrmListDeleteResponse(
-        listNames = listOf(listName),
-        associatedItemNames = (findByIdIncludeItems(id).items.orEmpty().map { it.name }).sorted(),
+        listNames = listOf(list.name),
+        associatedItemNames = list.items.orEmpty().map { it.name }.sorted(),
       )
-
       if (lrmListDeleteResponse.associatedItemNames.isNotEmpty()) {
         if (removeItemAssociations) {
-          associationService.deleteAllOfList(id)
-          val deletedCount = lrmListRepository.deleteById(id)
+          associationService.deleteByListOwnerAndListId(listId = id, listOwner = owner)
+          val deletedCount = lrmListRepository.deleteByOwnerAndId(id = id, owner = owner)
           if (deletedCount > 1) {
             throw ApiException(
               message = "More than one list with id $id were found.",
-              responseMessage = "More than one list with id $id were found.",
             )
           }
         } else {
@@ -105,16 +101,14 @@ class LrmListService(
               "associatedItemNames" to lrmListDeleteResponse.associatedItemNames.toJsonElement(),
             ),
             message = message,
-            responseMessage = message,
           )
         }
       } else {
         // list is not associated with any items
-        val deletedCount = lrmListRepository.deleteById(id)
+        val deletedCount = lrmListRepository.deleteByOwnerAndId(id = id, owner = owner)
         if (deletedCount > 1) {
           throw ApiException(
             message = "More than one list with id $id were found.",
-            responseMessage = "More than one list with id $id were found.",
           )
         }
       }
@@ -133,16 +127,74 @@ class LrmListService(
       val message = "List id $id could not be deleted."
       throw ApiException(
         cause = exception,
-        responseMessage = message,
         message = message,
       )
     }
   }
 
+  fun findByOwner(owner: String): List<LrmList> {
+    try {
+      return lrmListRepository.findByOwner(owner = owner)
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Lists could not be retrieved.",
+      )
+    }
+  }
+
+  fun findByOwnerIncludeItems(owner: String): List<LrmList> {
+    try {
+      return lrmListRepository.findByOwnerIncludeItems(owner = owner)
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Lists (including associated items) could not be retrieved.",
+      )
+    }
+  }
+
+  fun findByOwnerAndId(id: UUID, owner: String): LrmList {
+    val list = try {
+      lrmListRepository.findByOwnerAndIdOrNull(id = id, owner = owner)
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "List id $id could not be retrieved.",
+      )
+    }
+    return list ?: throw ListNotFoundException(id)
+  }
+
+  fun findByOwnerAndIdIncludeItems(id: UUID, owner: String): LrmList {
+    val list = try {
+      lrmListRepository.findByOwnerAndIdOrNullIncludeItems(id = id, owner = owner)
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "List id $id (including associated items) could not be retrieved.",
+      )
+    }
+    return list ?: throw ListNotFoundException(id)
+  }
+
+  fun findByOwnerAndHavingNoItemAssociations(owner: String): List<LrmList> {
+    val exceptionMessage = "Lists without item associations could not be retrieved."
+    val lrmLists = try {
+      lrmListRepository.findByOwnerAndHavingNoItemAssociations(owner = owner)
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = exceptionMessage,
+      )
+    }
+    return lrmLists
+  }
+
   @Suppress("kotlin:S3776")
-  fun patch(id: UUID, patchRequest: Map<String, Any>): Pair<LrmList, Boolean> {
+  fun patchByOwnerAndId(id: UUID, owner: String, patchRequest: Map<String, Any>): Pair<LrmList, Boolean> {
     var patched = false
-    var lrmList = findById(id)
+    var lrmList = findByOwnerAndId(id = id, owner = owner)
     var newName = lrmList.name
     var newDescription = lrmList.description
     var newIsPublic = lrmList.public
@@ -198,96 +250,31 @@ class LrmListService(
           responseMessage = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
         )
       } else {
-        lrmList = findById(id)
+        lrmList = findByOwnerAndId(id = id, owner = owner)
       }
     }
     return Pair(lrmList, patched)
   }
 
-  fun findAll(): List<LrmList> {
+  fun findByPublic(): List<LrmList> {
     try {
-      return lrmListRepository.findAll()
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "Lists could not be retrieved.",
-        responseMessage = "Lists could not be retrieved.",
-      )
-    }
-  }
-
-  fun findAllIncludeItems(): List<LrmList> {
-    try {
-      return lrmListRepository.findAllIncludeItems()
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "Lists (including associated items) could not be retrieved.",
-        responseMessage = "Lists (including associated items) could not be retrieved.",
-      )
-    }
-  }
-
-  fun findAllPublic(): List<LrmList> {
-    try {
-      return lrmListRepository.findAllPublic()
+      return lrmListRepository.findByPublic()
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
         message = "Public lists could not be retrieved.",
-        responseMessage = "Public lists could not be retrieved.",
       )
     }
   }
 
-  fun findAllPublicIncludeItems(): List<LrmList> {
+  fun findByPublicIncludeItems(): List<LrmList> {
     try {
-      return lrmListRepository.findAllPublicIncludeItems()
+      return lrmListRepository.findByPublicIncludeItems()
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
         message = "Public lists (including associated items) could not be retrieved.",
-        responseMessage = "Public lists (including associated items) could not be retrieved.",
       )
     }
-  }
-
-  fun findById(id: UUID): LrmList {
-    val list = try {
-      lrmListRepository.findByIdOrNull(id)
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "List id $id could not be retrieved.",
-        responseMessage = "List id $id could not be retrieved.",
-      )
-    }
-    return list ?: throw ListNotFoundException(id)
-  }
-
-  fun findByIdIncludeItems(id: UUID): LrmList {
-    val list = try {
-      lrmListRepository.findByIdOrNullIncludeItems(id)
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "List id $id (including associated items) could not be retrieved.",
-        responseMessage = "List id $id (including associated items) could not be retrieved.",
-      )
-    }
-    return list ?: throw ListNotFoundException(id)
-  }
-
-  fun findWithNoItems(): List<LrmList> {
-    val exceptionMessage = "Lists without item associations could not be retrieved."
-    val lrmLists = try {
-      lrmListRepository.findWithNoItemAssociations()
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = exceptionMessage,
-      )
-    }
-    return lrmLists
   }
 }

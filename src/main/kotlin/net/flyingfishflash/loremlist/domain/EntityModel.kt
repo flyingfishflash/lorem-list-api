@@ -11,7 +11,9 @@ object LrmListTable : UUIDTable("list", "id") {
   val description: Column<String?> = varchar(name = "description", length = 2048).nullable()
   val public: Column<Boolean> = bool("public")
   val created: Column<Instant> = timestamp(name = "created")
+  val createdBy: Column<String> = varchar(name = "created_by", length = 64)
   val updated: Column<Instant> = timestamp(name = "updated")
+  val updatedBy: Column<String> = varchar(name = "updated_by", length = 64)
 }
 
 object LrmListItemTable : UUIDTable("item", "id") {
@@ -19,7 +21,9 @@ object LrmListItemTable : UUIDTable("item", "id") {
   val description: Column<String?> = varchar("description", length = 2048).nullable()
   val quantity: Column<Int> = integer("quantity")
   val created: Column<Instant> = timestamp(name = "created")
+  val createdBy: Column<String> = varchar(name = "created_by", length = 64)
   val updated: Column<Instant> = timestamp(name = "updated")
+  val updatedBy: Column<String> = varchar(name = "updated_by", length = 64)
 }
 
 object LrmListsItemsTable : UUIDTable("lists_items", "id") {

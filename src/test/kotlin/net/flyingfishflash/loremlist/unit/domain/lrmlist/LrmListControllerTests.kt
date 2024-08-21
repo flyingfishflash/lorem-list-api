@@ -82,7 +82,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("delete") {
         it("lists are deleted") {
           val mockReturn = LrmListDeleteResponse(listNames = listOf("Lorem List Name"), associatedItemNames = listOf("Lorem Item Name"))
-          every { mockLrmListService.deleteAll() } returns mockReturn
+          every { mockLrmListService.deleteByOwner(ofType(String::class)) } returns mockReturn
           val instance = "/lists"
           mockMvc.delete(instance) {
             with(jwt())
@@ -105,7 +105,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("get") {
         it("lists are found") {
           val mockReturn = listOf(lrmList())
-          every { mockLrmListService.findAll() } returns mockReturn
+          every { mockLrmListService.findByOwner(ofType(String::class)) } returns mockReturn
           val instance = "/lists"
           mockMvc.get(instance) {
             with(jwt())
@@ -126,12 +126,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findAll() }
+          verify(exactly = 1) { mockLrmListService.findByOwner(ofType(String::class)) }
         }
 
         it("lists are found ?includeItems=false") {
           val mockReturn = listOf(lrmList())
-          every { mockLrmListService.findAll() } returns mockReturn
+          every { mockLrmListService.findByOwner(ofType(String::class)) } returns mockReturn
           val instance = "/lists?includeItems=false"
           mockMvc.get(instance) {
             with(jwt())
@@ -151,12 +151,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findAll() }
+          verify(exactly = 1) { mockLrmListService.findByOwner(ofType(String::class)) }
         }
 
         it("lists are found ?includeItems=true") {
           val mockReturn = listOf(lrmListWithEmptyItems())
-          every { mockLrmListService.findAllIncludeItems() } returns mockReturn
+          every { mockLrmListService.findByOwnerIncludeItems(ofType(String::class)) } returns mockReturn
           val instance = "/lists?includeItems=true"
           mockMvc.get(instance) {
             with(jwt())
@@ -177,14 +177,14 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               isEmpty()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findAllIncludeItems() }
+          verify(exactly = 1) { mockLrmListService.findByOwnerIncludeItems(ofType(String::class)) }
         }
       }
 
       describe("post") {
         it("list is created") {
           println(Json.encodeToString(lrmListRequest))
-          every { mockLrmListService.create(lrmListRequest) } returns lrmList()
+          every { mockLrmListService.create(lrmListRequest, ofType(String::class)) } returns lrmList()
           val instance = "/lists"
           mockMvc.post(instance) {
             with(jwt())
@@ -202,7 +202,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.description") { value(lrmList().description) }
             jsonPath("$.content.name") { value(lrmList().name) }
           }
-          verify(exactly = 1) { mockLrmListService.create(lrmListRequest) }
+          verify(exactly = 1) { mockLrmListService.create(lrmListRequest, ofType(String::class)) }
         }
 
         it("requested list name is an empty string") {
@@ -223,7 +223,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
           }
-          verify(exactly = 0) { mockLrmListService.create(ofType(LrmListRequest::class)) }
+          verify(exactly = 0) { mockLrmListService.create(ofType(LrmListRequest::class), ofType(String::class)) }
         }
 
         it("requested list description is an empty string") {
@@ -244,7 +244,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
           }
-          verify(exactly = 0) { mockLrmListService.create(ofType(LrmListRequest::class)) }
+          verify(exactly = 0) { mockLrmListService.create(ofType(LrmListRequest::class), ofType(String::class)) }
         }
       }
     }
@@ -253,7 +253,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("get") {
         it("lists are found") {
           val mockReturn = listOf(lrmList())
-          every { mockLrmListService.findAllPublic() } returns mockReturn
+          every { mockLrmListService.findByPublic() } returns mockReturn
           val instance = "/lists/public"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
@@ -273,12 +273,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findAllPublic() }
+          verify(exactly = 1) { mockLrmListService.findByPublic() }
         }
 
         it("lists are found ?includeItems=false") {
           val mockReturn = listOf(lrmList())
-          every { mockLrmListService.findAllPublic() } returns mockReturn
+          every { mockLrmListService.findByPublic() } returns mockReturn
           val instance = "/lists/public?includeItems=false"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
@@ -297,12 +297,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findAllPublic() }
+          verify(exactly = 1) { mockLrmListService.findByPublic() }
         }
 
         it("lists are found ?includeItems=true") {
           val mockReturn = listOf(lrmListWithEmptyItems())
-          every { mockLrmListService.findAllPublicIncludeItems() } returns mockReturn
+          every { mockLrmListService.findByPublicIncludeItems() } returns mockReturn
           val instance = "/lists/public?includeItems=true"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
@@ -322,7 +322,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               isEmpty()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findAllPublicIncludeItems() }
+          verify(exactly = 1) { mockLrmListService.findByPublicIncludeItems() }
         }
       }
     }
@@ -332,7 +332,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("lists with no item association are found") {
           val mockReturn = listOf(lrmList())
           val expectedMessage = "Retrieved ${mockReturn.size} lists containing no items."
-          every { mockLrmListService.findWithNoItems() } returns mockReturn
+          every { mockLrmListService.findByOwnerAndHavingNoItemAssociations(owner = ofType(String::class)) } returns mockReturn
           val instance = "/lists/with-no-items"
           mockMvc.get(instance) {
             with(jwt())
@@ -350,7 +350,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.[0].name") { value(mockReturn[0].name) }
             jsonPath("$.content.[0].description") { value(mockReturn[0].description) }
           }
-          verify(exactly = 1) { mockLrmListService.findWithNoItems() }
+          verify(exactly = 1) { mockLrmListService.findByOwnerAndHavingNoItemAssociations(owner = ofType(String::class)) }
         }
       }
     }
@@ -358,7 +358,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/lists/count") {
       describe("get") {
         it("count of lists is returned") {
-          every { mockLrmListService.count() } returns 999
+          every { mockLrmListService.countByOwner(owner = ofType(String::class)) } returns 999
           val instance = "/lists/count"
           mockMvc.get(instance) {
             with(jwt())
@@ -383,7 +383,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           // nonsensical conditioning of the delete response:
           // if the count of item to list associations is 0, then associatedListNames should be an empty list
           every {
-            mockLrmListService.deleteById(id1, removeItemAssociations = false)
+            mockLrmListService.deleteByOwnerAndId(id = id1, owner = ofType(String::class), removeItemAssociations = false)
           } returns LrmListDeleteResponse(listNames = listOf("dolor sit amet"), associatedItemNames = listOf("Lorem Ipsum"))
           val instance = "/lists/$id1"
           mockMvc.delete(instance) {
@@ -402,11 +402,19 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.associatedItemNames.length()") { value(1) }
             jsonPath("$.content.associatedItemNames.[0]") { value("Lorem Ipsum") }
           }
-          verify(exactly = 1) { mockLrmListService.deleteById(any(), any()) }
+          verify(exactly = 1) {
+            mockLrmListService.deleteByOwnerAndId(
+              id = ofType(UUID::class),
+              owner = ofType(String::class),
+              removeItemAssociations = ofType(Boolean::class),
+            )
+          }
         }
 
         it("list is not found") {
-          every { mockLrmListService.deleteById(id1, removeItemAssociations = false) } throws ListNotFoundException(id1)
+          every {
+            mockLrmListService.deleteByOwnerAndId(id = id1, owner = ofType(String::class), removeItemAssociations = false)
+          } throws ListNotFoundException(id1)
           val expectedMessage = ListNotFoundException.defaultMessage()
           val instance = "/lists/$id1"
           mockMvc.delete(instance) {
@@ -424,13 +432,19 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value(expectedMessage) }
           }
-          verify(exactly = 1) { mockLrmListService.deleteById(any(), any()) }
+          verify(exactly = 1) {
+            mockLrmListService.deleteByOwnerAndId(
+              id = ofType(UUID::class),
+              owner = ofType(String::class),
+              removeItemAssociations = ofType(Boolean::class),
+            )
+          }
         }
       }
 
       describe("get") {
         it("list is found") {
-          every { mockLrmListService.findById(id1) } returns lrmList()
+          every { mockLrmListService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns lrmList()
           val instance = "/lists/$id1"
           mockMvc.get(instance) {
             with(jwt())
@@ -445,11 +459,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.description") { value(lrmList().description) }
             jsonPath("$.content.name") { value(lrmList().name) }
           }
-          verify(exactly = 1) { mockLrmListService.findById(any()) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
         }
 
         it("list is found ?includeItems=true") {
-          every { mockLrmListService.findByIdIncludeItems(id1) } returns lrmListWithEmptyItems()
+          every { mockLrmListService.findByOwnerAndIdIncludeItems(id = id1, owner = ofType(String::class)) } returns lrmListWithEmptyItems()
           val instance = "/lists/$id1?includeItems=true"
           mockMvc.get(instance) {
             with(jwt())
@@ -468,11 +482,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               isEmpty()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findByIdIncludeItems(any()) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerAndIdIncludeItems(id = ofType(UUID::class), owner = ofType(String::class)) }
         }
 
         it("list is found ?includeItems=false") {
-          every { mockLrmListService.findById(id1) } returns lrmList()
+          every { mockLrmListService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns lrmList()
           val instance = "/lists/$id1?includeItems=false"
           mockMvc.get(instance) {
             with(jwt())
@@ -490,11 +504,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findById(any()) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
         }
 
         it("list is not found") {
-          every { mockLrmListService.findById(id1) } throws ListNotFoundException(id1)
+          every { mockLrmListService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } throws ListNotFoundException(id1)
           val instance = "/lists/$id1"
           mockMvc.get(instance) {
             with(jwt())
@@ -508,13 +522,13 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
-          verify(exactly = 1) { mockLrmListService.findById(any()) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
         }
       }
 
       describe("patch") {
         it("list is found and updated") {
-          every { mockLrmListService.patch(id1, any()) } returns Pair(lrmList(), true)
+          every { mockLrmListService.patchByOwnerAndId(id = id1, owner = ofType(String::class), any()) } returns Pair(lrmList(), true)
           val instance = "/lists/$id1"
           mockMvc.patch(instance) {
             with(jwt())
@@ -535,11 +549,17 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.patch(any(), mapOf("name" to lrmList().name)) }
+          verify(exactly = 1) {
+            mockLrmListService.patchByOwnerAndId(
+              id = ofType(UUID::class),
+              owner = ofType(String::class),
+              patchRequest = mapOf("name" to lrmList().name),
+            )
+          }
         }
 
         it("list is found and not updated") {
-          every { mockLrmListService.patch(id1, any()) } returns Pair(lrmList(), false)
+          every { mockLrmListService.patchByOwnerAndId(id = id1, owner = ofType(String::class), any()) } returns Pair(lrmList(), false)
           val instance = "/lists/$id1"
           mockMvc.patch(instance) {
             with(jwt())
@@ -551,7 +571,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-            jsonPath("$.message") { value("not patched") }
+            jsonPath("$.message") { value("not patched - list is up-to-date") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.description") { value(lrmList().description) }
@@ -560,11 +580,17 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.patch(any(), mapOf("name" to lrmList().name)) }
+          verify(exactly = 1) {
+            mockLrmListService.patchByOwnerAndId(
+              id = ofType(UUID::class),
+              owner = ofType(String::class),
+              patchRequest = mapOf("name" to lrmList().name),
+            )
+          }
         }
 
         it("list is not found") {
-          every { mockLrmListService.patch(id1, any()) } throws ListNotFoundException(id1)
+          every { mockLrmListService.patchByOwnerAndId(id = id1, owner = ofType(String::class), any()) } throws ListNotFoundException(id1)
           val instance = "/lists/$id1"
           mockMvc.patch(instance) {
             with(jwt())
@@ -581,7 +607,13 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
-          verify(exactly = 1) { mockLrmListService.patch(any(), mapOf("name" to lrmList().name)) }
+          verify(exactly = 1) {
+            mockLrmListService.patchByOwnerAndId(
+              id = ofType(UUID::class),
+              owner = ofType(String::class),
+              patchRequest = mapOf("name" to lrmList().name),
+            )
+          }
         }
       }
     }
@@ -595,6 +627,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             mockAssociationService.deleteByItemIdAndListId(
               itemId = id2,
               listId = id1,
+              componentsOwner = ofType(String::class),
             )
           } returns Pair(lrmItemName, lrmListName)
           val instance = "/lists/$id1/items/$id2"
@@ -612,11 +645,23 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.message") { value("Removed item '$lrmItemName' from list '$lrmListName'.") }
           }
-          verify(exactly = 1) { mockAssociationService.deleteByItemIdAndListId(any(), any()) }
+          verify(exactly = 1) {
+            mockAssociationService.deleteByItemIdAndListId(
+              itemId = ofType(UUID::class),
+              listId = ofType(UUID::class),
+              componentsOwner = ofType(String::class),
+            )
+          }
         }
 
         it("item is not found") {
-          every { mockAssociationService.deleteByItemIdAndListId(itemId = id2, listId = id1) } throws ItemNotFoundException(id2)
+          every {
+            mockAssociationService.deleteByItemIdAndListId(
+              itemId = id2,
+              listId = id1,
+              componentsOwner = ofType(String::class),
+            )
+          } throws ItemNotFoundException(id2)
           val expectedMessage = ItemNotFoundException.defaultMessage()
           val instance = "/lists/$id1/items/$id2"
           mockMvc.delete(instance) {
@@ -635,11 +680,19 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value(expectedMessage) }
           }
-          verify(exactly = 1) { mockAssociationService.deleteByItemIdAndListId(any(), any()) }
+          verify(exactly = 1) {
+            mockAssociationService.deleteByItemIdAndListId(
+              itemId = ofType(UUID::class),
+              listId = ofType(UUID::class),
+              componentsOwner = ofType(String::class),
+            )
+          }
         }
 
         it("list is not found") {
-          every { mockAssociationService.deleteByItemIdAndListId(itemId = id2, listId = id1) } throws ListNotFoundException(id1)
+          every {
+            mockAssociationService.deleteByItemIdAndListId(itemId = id2, listId = id1, componentsOwner = ofType(String::class))
+          } throws ListNotFoundException(id1)
           val expectedMessage = ListNotFoundException.defaultMessage()
           val instance = "/lists/$id1/items/$id2"
           mockMvc.delete(instance) {
@@ -658,7 +711,13 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value(expectedMessage) }
           }
-          verify(exactly = 1) { mockAssociationService.deleteByItemIdAndListId(any(), any()) }
+          verify(exactly = 1) {
+            mockAssociationService.deleteByItemIdAndListId(
+              itemId = ofType(UUID::class),
+              listId = ofType(UUID::class),
+              componentsOwner = ofType(String::class),
+            )
+          }
         }
       }
 
@@ -672,7 +731,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             mockAssociationService.create(
               id = id1,
               idCollection = any(),
-              LrmComponentType.List,
+              type = LrmComponentType.List,
+              componentOwner = ofType(String::class),
             )
           } returns mockResponse
           val instance = "/lists/$id1/items"
@@ -707,7 +767,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             mockAssociationService.create(
               id = id1,
               idCollection = any(),
-              LrmComponentType.List,
+              type = LrmComponentType.List,
+              componentOwner = ofType(String::class),
             )
           } returns mockResponse
           val instance = "/lists/$id1/items"
@@ -738,7 +799,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             mockAssociationService.create(
               id = id1,
               idCollection = any(),
-              LrmComponentType.List,
+              type = LrmComponentType.List,
+              componentOwner = ofType(String::class),
             )
           } throws ListNotFoundException(id2)
           val expectedMessage = ListNotFoundException.defaultMessage()
@@ -768,7 +830,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             mockAssociationService.create(
               id = id1,
               idCollection = any(),
-              LrmComponentType.List,
+              type = LrmComponentType.List,
+              componentOwner = ofType(String::class),
             )
           } throws ItemNotFoundException(id2)
           val expectedMessage = ItemNotFoundException.defaultMessage()
@@ -798,7 +861,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/lists/{list-id}/items/count") {
       describe("get") {
         it("count of item associations is returned") {
-          every { mockAssociationService.countForListId(id1) } returns 999
+          every { mockAssociationService.countByOwnerForList(listId = id1, listOwner = ofType(String::class)) } returns 999
           val instance = "/lists/$id1/items/count"
           mockMvc.get(instance) {
             with(jwt())
@@ -813,11 +876,15 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.length()") { value(1) }
             jsonPath("$.content.value") { value(999) }
           }
-          verify(exactly = 1) { mockAssociationService.countForListId(any()) }
+          verify(
+            exactly = 1,
+          ) { mockAssociationService.countByOwnerForList(listId = ofType(UUID::class), listOwner = ofType(String::class)) }
         }
 
         it("item is not found") {
-          every { mockAssociationService.countForListId(id1) } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
+          every {
+            mockAssociationService.countByOwnerForList(listId = id1, listOwner = ofType(String::class))
+          } throws ApiException(httpStatus = HttpStatus.NOT_FOUND)
           val instance = "/lists/$id1/items/count"
           mockMvc.get(instance) {
             with(jwt())
@@ -829,7 +896,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
-          verify(exactly = 1) { mockAssociationService.countForListId(any()) }
+          verify(
+            exactly = 1,
+          ) { mockAssociationService.countByOwnerForList(listId = ofType(UUID::class), listOwner = ofType(String::class)) }
         }
       }
     }
@@ -837,7 +906,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/lists/{list-id}/items") {
       it("all items are removed from a list") {
         val lrmListName = "Lorem List Name"
-        every { mockAssociationService.deleteAllOfList(id1) } returns Pair(lrmListName, 999)
+        every {
+          mockAssociationService.deleteByListOwnerAndListId(
+            listId = id1,
+            listOwner = ofType(String::class),
+          )
+        } returns Pair(lrmListName, 999)
         val instance = "/lists/$id1/items"
         mockMvc.delete(instance) {
           with(jwt())
@@ -853,7 +927,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.value") { value(999) }
         }
-        verify(exactly = 1) { mockAssociationService.deleteAllOfList(any()) }
+        verify(
+          exactly = 1,
+        ) { mockAssociationService.deleteByListOwnerAndListId(listId = ofType(UUID::class), listOwner = ofType(String::class)) }
       }
     }
   }

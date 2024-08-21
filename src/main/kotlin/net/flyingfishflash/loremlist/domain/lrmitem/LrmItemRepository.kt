@@ -8,6 +8,9 @@ import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
@@ -21,55 +24,31 @@ import java.util.UUID
 class LrmItemRepository {
   private val repositoryTable = LrmListItemTable
 
-  fun count(): Long {
+  fun countByOwner(owner: String): Long {
     val idCount = repositoryTable.id.count()
-    val count = repositoryTable.select(idCount).first()[idCount]
+    val count = repositoryTable.select(idCount).where { repositoryTable.createdBy eq owner }.first()[idCount]
     return count
   }
 
-  fun deleteAll(): Int = repositoryTable.deleteAll()
+  fun delete(): Int = repositoryTable.deleteAll()
 
-  fun deleteById(id: UUID): Int = repositoryTable.deleteWhere { repositoryTable.id eq id }
+  fun deleteById(ids: Set<UUID>): Int = repositoryTable.deleteWhere { repositoryTable.id inList ids }
 
-  fun findWithNoListAssociations(): List<LrmItem> {
-    val result = (repositoryTable leftJoin LrmListsItemsTable)
-      .select(
-        repositoryTable.id,
-        repositoryTable.name,
-        repositoryTable.description,
-        repositoryTable.quantity,
-        repositoryTable.created,
-        repositoryTable.updated,
-        LrmListsItemsTable.item,
-      )
-      .where { LrmListsItemsTable.item.isNull() }
-      .map { it.toLrmItem() }
-    return result
+  fun deleteByOwnerAndId(id: UUID, owner: String): Int = repositoryTable.deleteWhere {
+    repositoryTable.id eq id and (repositoryTable.createdBy eq owner)
   }
 
-  fun findAll(): List<LrmItem> = repositoryTable.select(
-    repositoryTable.id,
-    repositoryTable.name,
-    repositoryTable.description,
-    repositoryTable.quantity,
-    repositoryTable.created,
-    repositoryTable.updated,
-  )
+  fun findByOwner(owner: String): List<LrmItem> = repositoryTable
+    .selectAll()
+    .where { repositoryTable.createdBy eq owner }
     .map { it.toLrmItem() }
     .toList()
 
-  fun findAllIncludeLists(): List<LrmItem> {
+  fun findByOwnerIncludeLists(owner: String): List<LrmItem> {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
-      .select(
-        repositoryTable.id,
-        repositoryTable.name,
-        repositoryTable.description,
-        repositoryTable.quantity,
-        repositoryTable.created,
-        repositoryTable.updated,
-        LrmListTable.id,
-        LrmListTable.name,
-      ).toList()
+      .selectAll()
+      .where { repositoryTable.createdBy eq owner }
+      .toList()
 
     val listsByItems = resultRows
       .filter {
@@ -95,36 +74,17 @@ class LrmItemRepository {
     return itemsAndLists
   }
 
-  fun notFoundByIdCollection(itemIdCollection: List<UUID>): Set<UUID> {
-    val resultIdCollection = findByIdCollection(itemIdCollection)
-    val notFoundItemUuidCollection = (itemIdCollection subtract resultIdCollection.toSet())
-    return notFoundItemUuidCollection
-  }
-
-  fun findByIdCollection(itemIdCollection: List<UUID>): List<UUID> {
-    val resultIdCollection = repositoryTable.select(repositoryTable.id).where {
-      repositoryTable.id inList (itemIdCollection)
-    }.map { row -> row[repositoryTable.id].value }.toList()
-    return resultIdCollection
-  }
-
-  fun findByIdOrNull(id: UUID): LrmItem? = repositoryTable.selectAll()
+  fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmItem? = repositoryTable.selectAll()
     .where { repositoryTable.id eq id }
+    .andWhere { repositoryTable.createdBy eq owner }
     .map { it.toLrmItem() }
     .firstOrNull()
 
-  fun findByIdOrNullIncludeLists(id: UUID): LrmItem? {
+  fun findByOwnerAndIdOrNullIncludeLists(id: UUID, owner: String): LrmItem? {
     val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
-      .select(
-        repositoryTable.id,
-        repositoryTable.name,
-        repositoryTable.description,
-        repositoryTable.quantity,
-        repositoryTable.created,
-        repositoryTable.updated,
-        LrmListTable.id,
-        LrmListTable.name,
-      ).where { repositoryTable.id eq id }
+      .selectAll()
+      .where { repositoryTable.id eq id }
+      .andWhere { repositoryTable.createdBy eq owner }
       .toList()
 
     if (resultRows.isEmpty()) return null
@@ -145,7 +105,29 @@ class LrmItemRepository {
     return itemAndLists
   }
 
-  fun insert(lrmItemRequest: LrmItemRequest): UUID {
+  fun findByOwnerAndHavingNoListAssociations(owner: String): List<LrmItem> {
+    val result = (repositoryTable leftJoin LrmListsItemsTable)
+      .selectAll()
+      .where { repositoryTable.createdBy eq owner }
+      .andWhere { LrmListsItemsTable.item.isNull() }
+      .map { it.toLrmItem() }
+    return result
+  }
+
+  fun findIdsById(itemIdCollection: List<UUID>): List<UUID> {
+    val resultIdCollection = repositoryTable.select(repositoryTable.id).where {
+      repositoryTable.id inList (itemIdCollection)
+    }.map { row -> row[repositoryTable.id].value }.toList()
+    return resultIdCollection
+  }
+
+  fun notFoundById(itemIdCollection: List<UUID>): Set<UUID> {
+    val resultIdCollection = findIdsById(itemIdCollection)
+    val notFoundItemUuidCollection = (itemIdCollection subtract resultIdCollection.toSet())
+    return notFoundItemUuidCollection
+  }
+
+  fun insert(lrmItemRequest: LrmItemRequest, owner: String): UUID {
     val now = now()
     val id =
       repositoryTable
@@ -154,7 +136,9 @@ class LrmItemRepository {
           it[description] = lrmItemRequest.description
           it[quantity] = lrmItemRequest.quantity
           it[created] = now
+          it[createdBy] = owner
           it[updated] = now
+          it[updatedBy] = owner
         }
 
     return id.value
@@ -179,7 +163,9 @@ class LrmItemRepository {
       description = this[repositoryTable.description],
       quantity = this[repositoryTable.quantity],
       created = this[repositoryTable.created],
+      createdBy = this[repositoryTable.createdBy],
       updated = this[repositoryTable.updated],
+      updatedBy = this[repositoryTable.updatedBy],
     )
   }
 }

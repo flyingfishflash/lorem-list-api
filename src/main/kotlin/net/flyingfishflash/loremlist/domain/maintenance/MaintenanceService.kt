@@ -20,9 +20,9 @@ class MaintenanceService(
     val exceptionMessage = "Items, Lists, and Associations could not be purged"
     try {
       val purgeResponse = PurgeResponse(
-        associationDeletedCount = associationRepository.deleteAll(),
-        itemDeletedCount = itemRepository.deleteAll(),
-        listDeletedCount = listRepository.deleteAll(),
+        associationDeletedCount = associationRepository.delete(),
+        itemDeletedCount = itemRepository.delete(),
+        listDeletedCount = listRepository.delete(),
       )
       return purgeResponse
     } catch (exception: Exception) {

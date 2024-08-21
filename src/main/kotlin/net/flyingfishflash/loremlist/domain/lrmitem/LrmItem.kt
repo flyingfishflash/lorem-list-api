@@ -18,7 +18,9 @@ data class LrmItem(
   var description: String? = null,
   @EncodeDefault var quantity: Int = 0,
   var created: Instant? = null,
+  var createdBy: String? = null,
   var updated: Instant? = null,
+  var updatedBy: String? = null,
   val lists: Set<LrmListSuccinct>? = null,
 )
 

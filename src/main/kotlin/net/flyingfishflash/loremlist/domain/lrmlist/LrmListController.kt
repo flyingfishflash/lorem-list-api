@@ -42,11 +42,13 @@ import java.util.UUID
 @Tag(name = "list")
 @ApiResponses(
   value = [
+    ApiResponse(responseCode = "200", description = "Success"),
     ApiResponse(
       responseCode = "400",
-      description = "Bad Request",
+      description = "Bad request",
       content = [Content(schema = Schema(implementation = ResponseProblem::class))],
     ),
+    ApiResponse(responseCode = "401", description = "Unauthorized", content = [Content(schema = Schema())]),
   ],
 )
 @RestController
@@ -55,17 +57,12 @@ class LrmListController(private val associationService: AssociationService, priv
   private val logger = KotlinLogging.logger {}
 
   @GetMapping("/count")
-  @Operation(summary = "Count of all lists")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "Successful count of all lists",
-      ),
-    ],
-  )
-  fun count(request: HttpServletRequest): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = lrmListService.count()
+  @Operation(summary = "Count of all lists.")
+  fun countWhereOwnerIsPrincipal(
+    request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
+  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+    val serviceResponse = lrmListService.countByOwner(owner = principal.subject)
     val responseMessage = "$serviceResponse lists."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)
@@ -74,20 +71,15 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Create a list")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "List Created",
-//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
-      ),
-    ],
-  )
+  @Operation(summary = "Create a list.")
   @PostMapping
-  fun create(@Valid @RequestBody lrmListRequest: LrmListRequest, request: HttpServletRequest): ResponseEntity<ResponseSuccess<LrmList>> {
+  fun create(
+    @Valid @RequestBody lrmListRequest: LrmListRequest,
+    request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
+  ): ResponseEntity<ResponseSuccess<LrmList>> {
     val responseStatus = HttpStatus.OK
-    val responseContent = lrmListService.create(lrmListRequest)
+    val responseContent = lrmListService.create(lrmListRequest, principal.subject)
     val responseMessage = "created new list"
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { Json.encodeToString(response) }
@@ -95,14 +87,12 @@ class LrmListController(private val associationService: AssociationService, priv
   }
 
   @Operation(summary = "Delete all lists. Items are disassociated, not deleted.")
-  @ApiResponses(
-    value = [
-      ApiResponse(responseCode = "200", description = "All lists deleted. All items disassociated."),
-    ],
-  )
   @DeleteMapping
-  fun deleteAll(request: HttpServletRequest): ResponseEntity<ResponseSuccess<LrmListDeleteResponse>> {
-    val serviceResponse = lrmListService.deleteAll()
+  fun deleteWhereOwnerIsPrincipal(
+    request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
+  ): ResponseEntity<ResponseSuccess<LrmListDeleteResponse>> {
+    val serviceResponse = lrmListService.deleteByOwner(principal.subject)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Deleted all lists and disassociated all items."
     val response = ResponseSuccess(serviceResponse, responseMessage, request)
@@ -110,29 +100,29 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Delete a list")
+  @Operation(summary = "Delete a list.")
   @ApiResponses(
     value = [
-      ApiResponse(responseCode = "200", description = "List Deleted"),
       ApiResponse(
         responseCode = "404",
-        description = "List Not Found",
+        description = "Not found",
         content = [Content(schema = Schema(implementation = ResponseProblem::class))],
       ),
       ApiResponse(
         responseCode = "422",
-        description = "List Not Deleted Due to Item Associations",
+        description = "Unprocessable content - List not deleted due to existing item associations constraint",
         content = [Content(schema = Schema(implementation = ResponseProblem::class))],
       ),
     ],
   )
   @DeleteMapping("/{list-id}")
-  fun deleteById(
+  fun deleteByIdWhereOwnerIsPrincipal(
     @PathVariable("list-id") @ValidUuid listId: UUID,
     @RequestParam(defaultValue = false.toString()) removeItemAssociations: Boolean,
     request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<LrmListDeleteResponse>> {
-    val serviceResponse = lrmListService.deleteById(listId, removeItemAssociations)
+    val serviceResponse = lrmListService.deleteByOwnerAndId(listId, principal.subject, removeItemAssociations)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Deleted list id $listId."
     val response = ResponseSuccess(serviceResponse, responseMessage, request)
@@ -140,95 +130,60 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Retrieve all public lists, optionally including the details of each associated item")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "all public lists",
-//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
-      ),
-    ],
-  )
-  @GetMapping("/public")
-  fun findAllPublic(
-    @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
-    val responseContent = if (includeItems) lrmListService.findAllPublicIncludeItems() else lrmListService.findAllPublic()
-    val response = ResponseSuccess(responseContent, "retrieved all public lists", request)
-    logger.info { Json.encodeToString(response) }
-    return ResponseEntity(response, HttpStatus.OK)
-  }
-
-  @Operation(summary = "Retrieve all lists, optionally including the details of each associated item")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "all lists",
-//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
-      ),
-    ],
-  )
+  @Operation(summary = "Retrieve all lists, optionally including the id and name of each associated item.")
   @GetMapping
-  fun findAll(
+  fun findWhereOwnerIsPrincipal(
     @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
-    logger.error { principal.subject }
-    logger.error { principal.claims }
-    val responseContent = if (includeItems) lrmListService.findAllIncludeItems() else lrmListService.findAll()
+    val responseContent = if (includeItems) {
+      lrmListService.findByOwnerIncludeItems(principal.subject)
+    } else {
+      lrmListService.findByOwner(
+        principal.subject,
+      )
+    }
     val response = ResponseSuccess(responseContent, "retrieved all lists", request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
   }
 
-  @Operation(summary = "Retrieve a single list, optionally including the details of each associated item")
+  @Operation(summary = "Retrieve a single list, optionally including the id and name of each associated item.")
   @ApiResponses(
     value = [
       ApiResponse(
         responseCode = "404",
-        description = "List Not Found",
+        description = "Not found",
         content = [Content(schema = Schema(implementation = ResponseProblem::class, example = "sdkljsldkfjslfj"))],
-      ),
-      ApiResponse(
-        responseCode = "200",
-        description = "List Found",
-//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
       ),
     ],
   )
   @GetMapping("/{list-id}")
-  fun findById(
+  fun findByIdWhereOwnerIsPrincipal(
     @PathVariable("list-id") @ValidUuid listId: UUID,
     @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<LrmList>> {
     val responseContent =
       if (includeItems) {
-        lrmListService.findByIdIncludeItems(listId)
+        lrmListService.findByOwnerAndIdIncludeItems(id = listId, owner = principal.subject)
       } else {
-        lrmListService.findById(listId)
+        lrmListService.findByOwnerAndId(id = listId, owner = principal.subject)
       }
     val response = ResponseSuccess(responseContent, "retrieved list id $listId", request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
   }
 
-  @Operation(summary = "Retrieve lists that contain no items")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "Retrieved lists that contain no items",
-      ),
-    ],
-  )
+  @Operation(summary = "Retrieve lists that contain no items.")
   @GetMapping("/with-no-items")
-  fun findWithNoItemAssociations(request: HttpServletRequest): ResponseEntity<ResponseSuccess<List<LrmList>>> {
-    val serviceResponse = lrmListService.findWithNoItems()
+  fun findByPrincipalAndHavingNoItemAssociations(
+    request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
+  ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
+    val serviceResponse = lrmListService.findByOwnerAndHavingNoItemAssociations(owner = principal.subject)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Retrieved ${serviceResponse.size} lists containing no items."
     val response = ResponseSuccess(serviceResponse, responseMessage, request)
@@ -236,26 +191,55 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Count of items associated with a list")
+  @Operation(summary = "Update a list.")
+  @ApiResponses(
+    value = [
+      ApiResponse(responseCode = "204", description = "No content - List is up-to-date"),
+      ApiResponse(
+        responseCode = "404",
+        description = "Not found",
+        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
+      ),
+    ],
+  )
+  @PatchMapping("/{list-id}")
+  fun patchByIdWhereOwnerIsPrincipal(
+    @PathVariable("list-id") @ValidUuid listId: UUID,
+    @RequestBody patchRequest: Map<String, Any>,
+    request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
+  ): ResponseEntity<ResponseSuccess<LrmList>> {
+    val (responseContent, patched) = lrmListService.patchByOwnerAndId(id = listId, owner = principal.subject, patchRequest = patchRequest)
+    val response: ResponseSuccess<*>
+    val responseEntity: ResponseEntity<ResponseSuccess<LrmList>>
+    if (patched) {
+      response = ResponseSuccess(responseContent, "patched", request)
+      responseEntity = ResponseEntity(response, HttpStatus.OK)
+    } else {
+      response = ResponseSuccess(responseContent, "not patched - list is up-to-date", request)
+      responseEntity = ResponseEntity(response, HttpStatus.NO_CONTENT)
+    }
+    logger.info { Json.encodeToString(response) }
+    return responseEntity
+  }
+
+  @Operation(summary = "Count of items associated with a list.")
   @ApiResponses(
     value = [
       ApiResponse(
-        responseCode = "200",
-        description = "Successful count of item associations",
-      ),
-      ApiResponse(
         responseCode = "404",
-        description = "List Not Found",
+        description = "Not found",
         content = [Content(schema = Schema(implementation = ResponseProblem::class))],
       ),
     ],
   )
   @GetMapping("/{list-id}/items/count")
-  fun itemAssociationsCount(
+  fun itemAssociationsCountWhereListOwnerIsPrincipal(
     @PathVariable("list-id") @ValidUuid listId: UUID,
     request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.countForListId(listId)
+    val serviceResponse = associationService.countByOwnerForList(listId = listId, listOwner = principal.subject)
     val responseMessage = "List is associated with $serviceResponse items."
     val responseStatus = HttpStatus.OK
     val responseContent = ApiMessageNumeric(serviceResponse)
@@ -264,16 +248,12 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Create an association with a specified item or items")
+  @Operation(summary = "Create an association with a specified item or items.")
   @ApiResponses(
     value = [
       ApiResponse(
-        responseCode = "200",
-        description = "List -> Item Association Created",
-      ),
-      ApiResponse(
         responseCode = "404",
-        description = "Item/List Not Found",
+        description = "Item/List not found",
         content = [Content(schema = Schema(implementation = ResponseProblem::class))],
       ),
     ],
@@ -288,8 +268,14 @@ class LrmListController(private val associationService: AssociationService, priv
       UUID,
       >,
     request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<AssociationCreatedResponse>> {
-    val serviceResponse = associationService.create(id = listId, idCollection = itemIdCollection.toList(), type = LrmComponentType.List)
+    val serviceResponse = associationService.create(
+      id = listId,
+      idCollection = itemIdCollection.toList(),
+      componentOwner = principal.subject,
+      type = LrmComponentType.List,
+    )
     val responseStatus = HttpStatus.OK
     val responseMessage = if (serviceResponse.associatedComponents.size <= 1) {
       "Assigned item '${serviceResponse.associatedComponents.first().name}' to list '${serviceResponse.componentName}'."
@@ -301,13 +287,9 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Delete an association with a specified item")
+  @Operation(summary = "Delete an association with a specified item.")
   @ApiResponses(
     value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "Deleted a list's association with the specified item",
-      ),
       ApiResponse(
         responseCode = "404",
         description = "Item/List/Association Not Found",
@@ -316,12 +298,13 @@ class LrmListController(private val associationService: AssociationService, priv
     ],
   )
   @DeleteMapping("/{list-id}/items/{item-id}")
-  fun itemAssociationsDelete(
+  fun itemAssociationsDeleteByItemIdAndListIdWhereOwnerIsPrincipal(
     @PathVariable("list-id") @ValidUuid listId: UUID,
     @PathVariable("item-id") @ValidUuid itemId: UUID,
     request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val serviceResponse = associationService.deleteByItemIdAndListId(itemId = itemId, listId = listId)
+    val serviceResponse = associationService.deleteByItemIdAndListId(itemId = itemId, listId = listId, componentsOwner = principal.subject)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed item '${serviceResponse.first}' from list '${serviceResponse.second}'."
     val responseContent = ApiMessage(responseMessage)
@@ -329,70 +312,40 @@ class LrmListController(private val associationService: AssociationService, priv
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Delete all of a list's item associations")
+  @Operation(summary = "Delete all of a list's item associations.")
   @ApiResponses(
     value = [
       ApiResponse(
-        responseCode = "200",
-        description = "Deleted all of a list's item associations",
-      ),
-      ApiResponse(
         responseCode = "404",
-        description = "List Not Found",
+        description = "Not found",
         content = [Content(schema = Schema(implementation = ResponseProblem::class))],
       ),
     ],
   )
   @DeleteMapping("/{list-id}/items")
-  fun itemAssociationsDeleteAll(
+  fun itemAssociationsDeleteByListIdWhereListOwnerIsPrincipal(
     @PathVariable("list-id") @ValidUuid listId: UUID,
     request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val serviceResponse = associationService.deleteAllOfList(listId = listId)
+    val serviceResponse = associationService.deleteByListOwnerAndListId(listId = listId, listOwner = principal.subject)
     val responseStatus = HttpStatus.OK
     val responseMessage = "Removed all associated items (${serviceResponse.second}) from list '${serviceResponse.first}'."
     val responseContent = ApiMessageNumeric(serviceResponse.second.toLong())
     val response = ResponseSuccess(responseContent, responseMessage, request)
+    logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Update a list")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "200",
-        description = "List Updated",
-//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
-      ),
-      ApiResponse(
-        responseCode = "204",
-        description = "List Not Updated",
-//        content = [Content(schema = Schema(implementation = ResponseLrmList::class))],
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "List Not Found",
-        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-      ),
-    ],
-  )
-  @PatchMapping("/{list-id}")
-  fun patch(
-    @PathVariable("list-id") @ValidUuid listId: UUID,
-    @RequestBody patchRequest: Map<String, Any>,
+  @Operation(summary = "Retrieve all public lists, optionally including the details of each associated item.")
+  @GetMapping("/public")
+  fun findByPublic(
+    @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<LrmList>> {
-    val (responseContent, patched) = lrmListService.patch(listId, patchRequest)
-    val response: ResponseSuccess<*>
-    val responseEntity: ResponseEntity<ResponseSuccess<LrmList>>
-    if (patched) {
-      response = ResponseSuccess(responseContent, "patched", request)
-      responseEntity = ResponseEntity(response, HttpStatus.OK)
-    } else {
-      response = ResponseSuccess(responseContent, "not patched", request)
-      responseEntity = ResponseEntity(response, HttpStatus.NO_CONTENT)
-    }
+  ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
+    val responseContent = if (includeItems) lrmListService.findByPublicIncludeItems() else lrmListService.findByPublic()
+    val response = ResponseSuccess(responseContent, "retrieved all public lists", request)
     logger.info { Json.encodeToString(response) }
-    return responseEntity
+    return ResponseEntity(response, HttpStatus.OK)
   }
 }

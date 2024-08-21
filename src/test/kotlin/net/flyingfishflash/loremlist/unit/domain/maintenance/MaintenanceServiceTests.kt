@@ -25,9 +25,9 @@ class MaintenanceServiceTests : DescribeSpec({
 
   describe("purge()") {
     it("domain is purged") {
-      every { mockAssociationRepository.deleteAll() } returns 997
-      every { mockLrmItemRepository.deleteAll() } returns 998
-      every { mockLrmListRepository.deleteAll() } returns 999
+      every { mockAssociationRepository.delete() } returns 997
+      every { mockLrmItemRepository.delete() } returns 998
+      every { mockLrmListRepository.delete() } returns 999
       val serviceResponse = maintenanceService.purge()
       serviceResponse.associationDeletedCount.shouldBe(997)
       serviceResponse.itemDeletedCount.shouldBe(998)
@@ -35,7 +35,7 @@ class MaintenanceServiceTests : DescribeSpec({
     }
 
     it("domain is not purged (repository exception") {
-      every { mockAssociationRepository.deleteAll() } throws RuntimeException("Lorem Ipsum")
+      every { mockAssociationRepository.delete() } throws RuntimeException("Lorem Ipsum")
       val exception = shouldThrow<ApiException> { maintenanceService.purge() }
       exception.message.shouldBe("Items, Lists, and Associations could not be purged.")
     }

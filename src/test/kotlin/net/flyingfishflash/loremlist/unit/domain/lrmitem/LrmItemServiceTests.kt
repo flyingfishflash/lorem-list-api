@@ -54,110 +54,138 @@ class LrmItemServiceTests : DescribeSpec({
   afterEach { clearAllMocks() }
   afterSpec { unmockkAll() }
 
-  describe("count()") {
+  describe("countByOwner()") {
     it("count is returned") {
-      every { mockLrmItemRepository.count() } returns 999
-      lrmItemService.count().shouldBe(999)
-      verify(exactly = 1) { mockLrmItemRepository.count() }
+      every { mockLrmItemRepository.countByOwner(owner = ofType(String::class)) } returns 999
+      lrmItemService.countByOwner(owner = "lorem ipsum").shouldBe(999)
+      verify(exactly = 1) { mockLrmItemRepository.countByOwner(owner = ofType(String::class)) }
     }
 
     it("item repository throws exception") {
-      every { mockLrmItemRepository.count() } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.count() }
+      every { mockLrmItemRepository.countByOwner(owner = ofType(String::class)) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.countByOwner("lorem ipsum") }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-      verify(exactly = 1) { mockLrmItemRepository.count() }
+      verify(exactly = 1) { mockLrmItemRepository.countByOwner(owner = ofType(String::class)) }
     }
   }
 
   describe("create()") {
     it("item is created") {
-      every { mockLrmItemRepository.insert(ofType(LrmItemRequest::class)) } returns id1
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
-      lrmItemService.create(lrmItemRequest)
-      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest) }
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
+      every { mockLrmItemRepository.insert(ofType(LrmItemRequest::class), owner = ofType(String::class)) } returns id1
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
+      lrmItemService.create(lrmItemRequest, owner = "lorem ipsum")
+      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest, owner = ofType(String::class)) }
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = ofType(UUID::class), owner = ofType(String::class)) }
     }
 
     it("item repository throws exposed sql exception") {
-      every { mockLrmItemRepository.insert(ofType(LrmItemRequest::class)) } throws exposedSQLExceptionGeneric()
-      val exception = shouldThrow<ApiException> { lrmItemService.create(lrmItemRequest) }
+      every {
+        mockLrmItemRepository.insert(
+          ofType(LrmItemRequest::class),
+          owner = ofType(String::class),
+        )
+      } throws exposedSQLExceptionGeneric()
+      val exception = shouldThrow<ApiException> { lrmItemService.create(lrmItemRequest, owner = "lorem ipsum") }
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
-      exception.message.shouldNotBeNull().shouldBeEqual("Item could not be inserted.")
-      exception.responseMessage.shouldBeEqual("Item could not be inserted.")
+      exception.message.shouldNotBeNull().shouldBeEqual("Item could not be created.")
+      exception.responseMessage.shouldBeEqual("Item could not be created.")
       exception.title.shouldBeEqual(ApiException::class.java.simpleName)
-      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest) }
+      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest, owner = ofType(String::class)) }
     }
   }
 
-  describe("deleteAll()") {
+  describe("deleteAllByOwner()") {
     it("all items deleted") {
-      every { mockLrmItemRepository.findAll() } returns listOf(lrmItem())
-      every { mockLrmItemRepository.findAllIncludeLists() } returns listOf(lrmItemWithLists())
-      every { mockAssociationService.deleteAll() } returns 999
-      every { mockLrmItemRepository.deleteAll() } returns 999
-      val lrmListDeleteResponse = lrmItemService.deleteAll()
+      every { mockLrmItemRepository.findByOwnerIncludeLists(owner = ofType(String::class)) } returns listOf(lrmItemWithLists())
+      every {
+        mockAssociationService.deleteByItemOwnerAndItemId(itemId = ofType(UUID::class), itemOwner = ofType(String::class))
+      } returns Pair(first = "item name", second = 999)
+      every { mockLrmItemRepository.deleteById(ids = any()) } returns 999
+      val lrmListDeleteResponse = lrmItemService.deleteByOwner(owner = "lorem ipsum")
       lrmListDeleteResponse.itemNames.size.shouldBe(1)
       lrmListDeleteResponse.associatedListNames.size.shouldBe(1)
-      verify(exactly = 1) { mockLrmItemRepository.findAll() }
-      verify(exactly = 1) { mockLrmItemRepository.findAllIncludeLists() }
-      verify(exactly = 1) { mockAssociationService.deleteAll() }
-      verify(exactly = 1) { mockLrmItemRepository.deleteAll() }
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerIncludeLists(owner = ofType(String::class)) }
+      verify(
+        exactly = 1,
+      ) { mockAssociationService.deleteByItemOwnerAndItemId(itemId = ofType(UUID::class), itemOwner = ofType(String::class)) }
+      verify(exactly = 1) { mockLrmItemRepository.deleteById(ids = any()) }
     }
 
     it("no lists deleted (none present)") {
-      every { mockLrmItemRepository.findAll() } returns emptyList()
-      every { mockLrmItemRepository.findAllIncludeLists() } returns emptyList()
-      every { mockAssociationService.deleteAll() } returns 999
-      every { mockLrmItemRepository.deleteAll() } returns 999
-      val lrmListDeleteResponse = lrmItemService.deleteAll()
+      every { mockLrmItemRepository.findByOwnerIncludeLists(owner = ofType(String::class)) } returns emptyList()
+      every {
+        mockAssociationService.deleteByItemOwnerAndItemId(itemId = ofType(UUID::class), itemOwner = ofType(String::class))
+      } returns Pair(first = "item name", second = 999)
+      every { mockLrmItemRepository.deleteById(ids = any()) } returns 999
+      val lrmListDeleteResponse = lrmItemService.deleteByOwner(owner = "lorem ipsum")
       lrmListDeleteResponse.itemNames.size.shouldBe(0)
       lrmListDeleteResponse.associatedListNames.size.shouldBe(0)
-      verify(exactly = 1) { mockLrmItemRepository.findAll() }
-      verify(exactly = 1) { mockLrmItemRepository.findAllIncludeLists() }
-      verify(exactly = 0) { mockAssociationService.deleteAll() }
-      verify(exactly = 0) { mockLrmItemRepository.deleteAll() }
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerIncludeLists(owner = ofType(String::class)) }
+      verify(
+        exactly = 0,
+      ) { mockAssociationService.deleteByItemOwnerAndItemId(itemId = ofType(UUID::class), itemOwner = ofType(String::class)) }
+      verify(exactly = 0) { mockLrmItemRepository.deleteById(ids = any()) }
     }
 
     it("no lists deleted (api exception)") {
-      every { mockLrmItemRepository.findAll() } throws (Exception("Lorem Ipsum"))
-      val apiException = shouldThrow<ApiException> { lrmItemService.deleteAll() }
+      every { mockLrmItemRepository.findByOwnerIncludeLists(owner = ofType(String::class)) } throws (Exception("Lorem Ipsum"))
+      val apiException = shouldThrow<ApiException> { lrmItemService.deleteByOwner(owner = "lorem ipsum") }
       apiException.message.shouldContain("No items were deleted")
-      apiException.message.shouldContain("Items could not be retrieved")
-      verify(exactly = 1) { mockLrmItemRepository.findAll() }
-      verify(exactly = 0) { mockLrmItemRepository.findAllIncludeLists() }
-      verify(exactly = 0) { mockAssociationService.deleteAll() }
-      verify(exactly = 0) { mockLrmItemRepository.deleteAll() }
+      apiException.message.shouldContain("Items (including associated lists) could not be retrieved")
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerIncludeLists(owner = ofType(String::class)) }
     }
   }
 
-  describe("deleteById()") {
+  describe("deleteByIdAndOwner()") {
     it("item not found") {
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns null
-      val exception = shouldThrow<ApiException> { lrmItemService.deleteById(id1, removeListAssociations = false) }
+      every { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = id1, owner = ofType(String::class)) } returns null
+      val exception = shouldThrow<ApiException> {
+        lrmItemService.deleteByOwnerAndId(id = id1, owner = "lorem ipsum", removeListAssociations = false)
+      }
       exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       exception.responseMessage.shouldBe("Item id $id1 could not be deleted: Item could not be found.")
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
+      verify(
+        exactly = 1,
+      ) { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = ofType(UUID::class), owner = ofType(String::class)) }
     }
 
     describe("associated lists") {
       it("item is deleted (removeListAssociations = true)") {
-        every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
-        every { mockLrmItemRepository.findByIdOrNullIncludeLists(id1) } returns lrmItemWithLists()
-        every { mockAssociationService.deleteAllOfItem(id1) } returns Pair(lrmItem().name, 999)
-        every { mockLrmItemRepository.deleteById(id1) } returns 1
-        lrmItemService.deleteById(id1, removeListAssociations = true)
-        verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(any()) }
-        verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
-        verify(exactly = 1) { mockAssociationService.deleteAllOfItem(any()) }
-        verify(exactly = 1) { mockLrmItemRepository.deleteById(any()) }
+        every { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = id1, owner = ofType(String::class)) } returns lrmItem()
+        every {
+          mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(
+            id = id1,
+            owner = ofType(String::class),
+          )
+        } returns lrmItemWithLists()
+        every {
+          mockAssociationService.deleteByItemOwnerAndItemId(itemId = id1, itemOwner = ofType(String::class))
+        } returns Pair(lrmItem().name, 999)
+        every { mockLrmItemRepository.deleteByOwnerAndId(id = id1, owner = ofType(String::class)) } returns 1
+        lrmItemService.deleteByOwnerAndId(id = id1, owner = "lorem ipsum", removeListAssociations = true)
+        verify(
+          exactly = 1,
+        ) { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = ofType(UUID::class), owner = ofType(String::class)) }
+        verify(
+          exactly = 1,
+        ) { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = ofType(UUID::class), owner = ofType(String::class)) }
+        verify(
+          exactly = 1,
+        ) { mockAssociationService.deleteByItemOwnerAndItemId(itemId = ofType(UUID::class), itemOwner = ofType(String::class)) }
+        verify(exactly = 1) { mockLrmItemRepository.deleteByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
       }
 
       it("item is not deleted (removeListAssociations = false)") {
-        every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
-        every { mockLrmItemRepository.findByIdOrNullIncludeLists(id1) } returns lrmItemWithLists()
+        every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
+        every {
+          mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(
+            id = id1,
+            owner = ofType(String::class),
+          )
+        } returns lrmItemWithLists()
         val exception = shouldThrow<ApiException> {
-          lrmItemService.deleteById(id1, removeListAssociations = false)
+          lrmItemService.deleteByOwnerAndId(id = id1, owner = "lorem ipsum", removeListAssociations = false)
         }
         exception.supplemental.shouldNotBeNull().size.shouldBe(2)
         exception.message
@@ -171,11 +199,20 @@ class LrmItemServiceTests : DescribeSpec({
       }
 
       it("item repository returns > 1 deleted records") {
-        every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
-        every { mockLrmItemRepository.findByIdOrNullIncludeLists(id1) } returns lrmItemWithLists()
-        every { mockAssociationService.deleteAllOfItem(id1) } returns Pair("Lorem Ipsum", 999)
-        every { mockLrmItemRepository.deleteById(id1) } returns 2
-        val exception = shouldThrow<ApiException> { lrmItemService.deleteById(id1, removeListAssociations = true) }
+        every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
+        every {
+          mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(
+            id = id1,
+            owner = ofType(String::class),
+          )
+        } returns lrmItemWithLists()
+        every {
+          mockAssociationService.deleteByItemOwnerAndItemId(itemId = id1, itemOwner = ofType(String::class))
+        } returns Pair("Lorem Ipsum", 999)
+        every { mockLrmItemRepository.deleteByOwnerAndId(id = id1, owner = ofType(String::class)) } returns 2
+        val exception = shouldThrow<ApiException> {
+          lrmItemService.deleteByOwnerAndId(id = id1, owner = "lorem ipsum", removeListAssociations = true)
+        }
         exception.cause.shouldBeInstanceOf<ApiException>()
         exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
         exception.message
@@ -191,20 +228,26 @@ class LrmItemServiceTests : DescribeSpec({
 
     describe("no associated lists") {
       it("item is deleted") {
-        every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
-        every { mockLrmItemRepository.findByIdOrNullIncludeLists(id1) } returns lrmItem()
-        every { mockLrmItemRepository.deleteById(id1) } returns 1
-        lrmItemService.deleteById(id1, removeListAssociations = false)
-        verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
-        verify(exactly = 1) { mockLrmItemRepository.deleteById(id1) }
+        every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
+        every { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = id1, owner = ofType(String::class)) } returns lrmItem()
+        every { mockLrmItemRepository.deleteByOwnerAndId(id = id1, owner = ofType(String::class)) } returns 1
+        lrmItemService.deleteByOwnerAndId(id = id1, owner = "lorem ipsum", removeListAssociations = false)
+        verify(
+          exactly = 1,
+        ) { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = ofType(UUID::class), owner = ofType(String::class)) }
+        verify(exactly = 1) { mockLrmItemRepository.deleteByOwnerAndId(id = id1, owner = ofType(String::class)) }
       }
 
       it("item repository returns > 1 deleted records") {
-        every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
-        every { mockLrmItemRepository.findByIdOrNullIncludeLists(id1) } returns lrmItem()
-        every { mockAssociationService.deleteAllOfItem(id1) } returns Pair("Lorem Ipsum", 999)
-        every { mockLrmItemRepository.deleteById(id1) } returns 2
-        val exception = shouldThrow<ApiException> { lrmItemService.deleteById(id1, removeListAssociations = false) }
+        every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
+        every { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = id1, owner = ofType(String::class)) } returns lrmItem()
+        every {
+          mockAssociationService.deleteByItemOwnerAndItemId(itemId = id1, itemOwner = ofType(String::class))
+        } returns Pair("Lorem Ipsum", 999)
+        every { mockLrmItemRepository.deleteByOwnerAndId(id = id1, owner = ofType(String::class)) } returns 2
+        val exception = shouldThrow<ApiException> {
+          lrmItemService.deleteByOwnerAndId(id = id1, owner = "lorem ipsum", removeListAssociations = false)
+        }
         exception.cause.shouldBeInstanceOf<ApiException>()
         exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
         exception.message
@@ -215,21 +258,23 @@ class LrmItemServiceTests : DescribeSpec({
           .shouldContainIgnoringCase("$id1")
           .shouldContainIgnoringCase("could not be deleted")
           .shouldContainIgnoringCase("more than one")
-        verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(any()) }
+        verify(exactly = 1) {
+          mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = ofType(UUID::class), owner = ofType(String::class))
+        }
       }
     }
   }
 
-  describe("findAll()") {
+  describe("findAllByOwner()") {
     it("all are returned") {
-      every { mockLrmItemRepository.findAll() } returns listOf(lrmItem())
-      lrmItemService.findAll()
-      verify(exactly = 1) { mockLrmItemRepository.findAll() }
+      every { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) } returns listOf(lrmItem())
+      lrmItemService.findByOwner(owner = "lorem ipsum")
+      verify(exactly = 1) { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) }
     }
 
     it("item repository throws exception") {
-      every { mockLrmItemRepository.findAll() } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.findAll() }
+      every { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findByOwner(owner = "lorem ipsum") }
       exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeInstanceOf<Exception>()
       exception.message.shouldBe("Items could not be retrieved.")
@@ -237,16 +282,16 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("findAllIncludeLists()") {
+  describe("findAllByOwnerIncludeLists()") {
     it("all and lists are returned") {
-      every { mockLrmItemRepository.findAllIncludeLists() } returns listOf(lrmItem())
-      lrmItemService.findAllIncludeLists()
-      verify(exactly = 1) { mockLrmItemRepository.findAllIncludeLists() }
+      every { mockLrmItemRepository.findByOwnerIncludeLists(owner = ofType(String::class)) } returns listOf(lrmItem())
+      lrmItemService.findByOwnerIncludeLists(owner = "lorem ipsum")
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerIncludeLists(owner = ofType(String::class)) }
     }
 
     it("item repository throws exception") {
-      every { mockLrmItemRepository.findAllIncludeLists() } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.findAllIncludeLists() }
+      every { mockLrmItemRepository.findByOwnerIncludeLists(owner = ofType(String::class)) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findByOwnerIncludeLists(owner = "lorem ipsum") }
       exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeInstanceOf<Exception>()
       exception.message.shouldBe("Items (including associated lists) could not be retrieved.")
@@ -254,21 +299,21 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("findById()") {
+  describe("findByIdAndOwner()") {
     it("item is returned") {
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
-      lrmItemService.findById(id1)
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(id1) }
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
+      lrmItemService.findByOwnerAndId(id = id1, owner = "lorem ipsum")
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) }
     }
 
     it("item is not returned") {
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns null
-      shouldThrow<ItemNotFoundException> { lrmItemService.findById(id1) }
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns null
+      shouldThrow<ItemNotFoundException> { lrmItemService.findByOwnerAndId(id = id1, owner = "lorem ipsum") }
     }
 
     it("item repository throws exception") {
-      every { mockLrmItemRepository.findByIdOrNull(id1) } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.findById(id1) }
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findByOwnerAndId(id = id1, owner = "lorem ipsum") }
       exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeInstanceOf<Exception>()
       exception.message
@@ -280,21 +325,26 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("findByIdIncludeLists()") {
+  describe("findByIdAndOwnerIncludeLists()") {
     it("item and lists are returned") {
-      every { mockLrmItemRepository.findByIdOrNullIncludeLists(id1) } returns lrmItem()
-      lrmItemService.findByIdIncludeLists(id1)
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNullIncludeLists(id1) }
+      every { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = id1, owner = ofType(String::class)) } returns lrmItem()
+      lrmItemService.findByOwnerAndIdIncludeLists(id = id1, owner = "lorem ipsum")
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = id1, owner = ofType(String::class)) }
     }
 
     it("item is not returned") {
-      every { mockLrmItemRepository.findByIdOrNullIncludeLists(id1) } returns null
-      shouldThrow<ItemNotFoundException> { lrmItemService.findByIdIncludeLists(id1) }
+      every { mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = id1, owner = ofType(String::class)) } returns null
+      shouldThrow<ItemNotFoundException> { lrmItemService.findByOwnerAndIdIncludeLists(id = id1, owner = "lorem ipsum") }
     }
 
     it("item repository throws exception") {
-      every { mockLrmItemRepository.findByIdOrNullIncludeLists(id1) } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.findByIdIncludeLists(id1) }
+      every {
+        mockLrmItemRepository.findByOwnerAndIdOrNullIncludeLists(
+          id = id1,
+          owner = ofType(String::class),
+        )
+      } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findByOwnerAndIdIncludeLists(id = id1, owner = "lorem ipsum") }
       exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeInstanceOf<Exception>()
       exception.message
@@ -308,34 +358,44 @@ class LrmItemServiceTests : DescribeSpec({
     }
   }
 
-  describe("findWithNoLists()") {
+  describe("findByOwnerWithNoLists()") {
     it("items are returned") {
-      every { mockLrmItemRepository.findWithNoListAssociations() } returns listOf(lrmItem())
-      lrmItemService.findWithNoLists()
-      verify(exactly = 1) { mockLrmItemRepository.findWithNoListAssociations() }
+      every { mockLrmItemRepository.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class)) } returns listOf(lrmItem())
+      lrmItemService.findByOwnerAndHavingNoListAssociations(owner = "lorem ipsum")
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class)) }
     }
 
     it("item repository throws exception") {
-      every { mockLrmItemRepository.findWithNoListAssociations() } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.findWithNoLists() }
+      every { mockLrmItemRepository.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class)) } throws Exception("Lorem Ipsum")
+      val exception = shouldThrow<ApiException> { lrmItemService.findByOwnerAndHavingNoListAssociations(owner = "lorem upsum") }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldContainIgnoringCase("could not be retrieved")
     }
   }
 
-  describe("patch()") {
+  describe("patchByIdAndOwner()") {
     it("item is not found") {
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns null
-      shouldThrow<ItemNotFoundException> { lrmItemService.patch(id1, mapOf("name" to "lorum ipsum")) }
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns null
+      shouldThrow<ItemNotFoundException> {
+        lrmItemService.patchByOwnerAndId(
+          id = id1,
+          owner = "lorem ipsum",
+          patchRequest = mapOf("name" to "lorum ipsum"),
+        )
+      }
     }
 
     it("update name") {
       val expectedName = "patched lorem item"
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
       every { mockLrmItemRepository.update(ofType(LrmItem::class)) } returns 1
-      val patchedLrmItem = lrmItemService.patch(id1, mapOf("name" to expectedName)).first
+      val patchedLrmItem = lrmItemService.patchByOwnerAndId(
+        id = id1,
+        owner = "lorem ipsum",
+        patchRequest = mapOf("name" to expectedName),
+      ).first
       patchedLrmItem.name.shouldBe(expectedName)
-      verify(exactly = 2) { mockLrmItemRepository.findByIdOrNull(id1) }
+      verify(exactly = 2) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) }
       verify(exactly = 1) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
 
@@ -343,66 +403,79 @@ class LrmItemServiceTests : DescribeSpec({
       val expectedName = lrmItem().name
       val expectedDescription = lrmItem().description
       val expectedQuantity = lrmItem().quantity
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
       every { mockLrmItemRepository.update(ofType(LrmItem::class)) } returns 1
-      val patchResponse = lrmItemService.patch(
-        id1,
-        mapOf("name" to expectedName, "description" to (expectedDescription ?: ""), "quantity" to expectedQuantity),
+      val patchResponse = lrmItemService.patchByOwnerAndId(
+        id = id1,
+        owner = "lorem ipsum",
+        patchRequest = mapOf("name" to expectedName, "description" to (expectedDescription ?: ""), "quantity" to expectedQuantity),
       )
       patchResponse.second.shouldBeFalse()
       patchResponse.first.name.shouldBe(expectedName)
       patchResponse.first.description.shouldBe(expectedDescription)
       patchResponse.first.quantity.shouldBe(expectedQuantity)
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(id1) }
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) }
       verify(exactly = 0) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
 
     it("update description") {
       val expectedDescription = "patched lorem list description"
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
       every { mockLrmItemRepository.update(ofType(LrmItem::class)) } returns 1
-      val patchedLrmList = lrmItemService.patch(id1, mapOf("description" to expectedDescription)).first
+      val patchedLrmList = lrmItemService.patchByOwnerAndId(
+        id = id1,
+        owner = "lorem ipsum",
+        patchRequest = mapOf("description" to expectedDescription),
+      ).first
       patchedLrmList.description.shouldBe(expectedDescription)
-      verify(exactly = 2) { mockLrmItemRepository.findByIdOrNull(id1) }
+      verify(exactly = 2) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) }
       verify(exactly = 1) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
 
     it("update quantity") {
       val expectedQuantity = 999
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
       every { mockLrmItemRepository.update(ofType(LrmItem::class)) } returns 1
-      val patchedLrmList = lrmItemService.patch(id1, mapOf("quantity" to expectedQuantity)).first
+      val patchedLrmList = lrmItemService.patchByOwnerAndId(
+        id = id1,
+        owner = "lorem ipsum",
+        patchRequest = mapOf("quantity" to expectedQuantity),
+      ).first
       patchedLrmList.quantity.shouldBe(expectedQuantity)
-      verify(exactly = 2) { mockLrmItemRepository.findByIdOrNull(id1) }
+      verify(exactly = 2) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) }
       verify(exactly = 1) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
 
     it("update description to '  '") {
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
-      shouldThrow<ConstraintViolationException> { lrmItemService.patch(id1, mapOf("description" to "  ")) }
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
+      shouldThrow<ConstraintViolationException> {
+        lrmItemService.patchByOwnerAndId(id = id1, owner = "lorem ipsum", patchRequest = mapOf("description" to "  "))
+      }
     }
 
     it("update an undefined list property") {
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
       shouldThrow<IllegalArgumentException> {
-        lrmItemService.patch(id1, mapOf("undefined property" to "irrelevant value"))
+        lrmItemService.patchByOwnerAndId(id = id1, owner = "lorem ipsum", patchRequest = mapOf("undefined property" to "irrelevant value"))
       }
     }
 
     it("update no properties") {
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
-      val patchReturn = lrmItemService.patch(id1, mapOf())
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
+      val patchReturn = lrmItemService.patchByOwnerAndId(id = id1, owner = "lorem ipsum", patchRequest = mapOf())
       patchReturn.first.shouldBeEqual(lrmItem())
       patchReturn.second.shouldBeFalse()
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(id1) }
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) }
       verify(exactly = 0) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
 
     it("item repository updates more than 1 record") {
       val expectedName = "patched lorem list"
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
       every { mockLrmItemRepository.update(ofType(LrmItem::class)) } returns 2
-      val exception = shouldThrow<ApiException> { lrmItemService.patch(id1, mapOf("name" to expectedName)).first }
+      val exception = shouldThrow<ApiException> {
+        lrmItemService.patchByOwnerAndId(id = id1, owner = "lorem ipsum", patchRequest = mapOf("name" to expectedName)).first
+      }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeNull()
       exception.message?.shouldBeEqual(
@@ -413,15 +486,17 @@ class LrmItemServiceTests : DescribeSpec({
         "Item id ${lrmItem().id} could not be updated. " +
           "2 records would have been updated rather than 1.",
       )
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(id1) }
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) }
       verify(exactly = 1) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
 
     it("item repository throws exposed sql exception") {
       val expectedName = "patched lorem list"
-      every { mockLrmItemRepository.findByIdOrNull(id1) } returns lrmItem()
+      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
       every { mockLrmItemRepository.update(ofType(LrmItem::class)) } throws exposedSQLExceptionGeneric()
-      val exception = shouldThrow<ApiException> { lrmItemService.patch(id1, mapOf("name" to expectedName)).first }
+      val exception = shouldThrow<ApiException> {
+        lrmItemService.patchByOwnerAndId(id = id1, owner = "lorem ipsum", patchRequest = mapOf("name" to expectedName)).first
+      }
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.message?.shouldBeEqual(
@@ -429,7 +504,7 @@ class LrmItemServiceTests : DescribeSpec({
           "The item was found and patch request is valid but an exception was thrown by the item repository.",
       )
       exception.responseMessage.shouldBeEqual("Item id ${lrmItem().id} could not be updated.")
-      verify(exactly = 1) { mockLrmItemRepository.findByIdOrNull(id1) }
+      verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) }
       verify(exactly = 1) { mockLrmItemRepository.update(ofType(LrmItem::class)) }
     }
   }
