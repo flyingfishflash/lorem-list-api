@@ -475,7 +475,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               content { contentType(MediaType.APPLICATION_JSON) }
               jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
               jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-              jsonPath("$.message") { value("not patched") }
+              jsonPath("$.message") { value("not patched - list is up-to-date") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(8) }

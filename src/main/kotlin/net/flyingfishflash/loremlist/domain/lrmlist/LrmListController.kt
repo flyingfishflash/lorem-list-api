@@ -336,16 +336,4 @@ class LrmListController(private val associationService: AssociationService, priv
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
-
-  @Operation(summary = "Retrieve all public lists, optionally including the details of each associated item.")
-  @GetMapping("/public")
-  fun findByPublic(
-    @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
-    request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
-    val responseContent = if (includeItems) lrmListService.findByPublicIncludeItems() else lrmListService.findByPublic()
-    val response = ResponseSuccess(responseContent, "retrieved all public lists", request)
-    logger.info { Json.encodeToString(response) }
-    return ResponseEntity(response, HttpStatus.OK)
-  }
 }
