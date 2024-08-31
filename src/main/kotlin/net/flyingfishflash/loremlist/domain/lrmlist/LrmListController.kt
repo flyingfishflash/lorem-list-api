@@ -273,7 +273,7 @@ class LrmListController(private val associationService: AssociationService, priv
     val serviceResponse = associationService.create(
       id = listId,
       idCollection = itemIdCollection.toList(),
-      componentOwner = principal.subject,
+      componentsOwner = principal.subject,
       type = LrmComponentType.List,
     )
     val responseStatus = HttpStatus.OK

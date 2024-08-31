@@ -654,7 +654,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               id = id1,
               idCollection = any(),
               type = LrmComponentType.List,
-              componentOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           } returns mockResponse
           val instance = "/lists/$id1/items"
@@ -690,7 +690,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               id = id1,
               idCollection = any(),
               type = LrmComponentType.List,
-              componentOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           } returns mockResponse
           val instance = "/lists/$id1/items"
@@ -722,7 +722,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               id = id1,
               idCollection = any(),
               type = LrmComponentType.List,
-              componentOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           } throws ListNotFoundException(id2)
           val expectedMessage = ListNotFoundException.defaultMessage()
@@ -753,7 +753,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               id = id1,
               idCollection = any(),
               type = LrmComponentType.List,
-              componentOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           } throws ItemNotFoundException(id2)
           val expectedMessage = ItemNotFoundException.defaultMessage()

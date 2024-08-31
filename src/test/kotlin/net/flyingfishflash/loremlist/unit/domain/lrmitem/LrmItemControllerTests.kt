@@ -633,7 +633,12 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val fromListName = "List A"
           val toListName = "List B"
           every {
-            mockAssociationService.updateList(itemId = id1, currentListId = id2, destinationListId = id3, listOwner = ofType(String::class))
+            mockAssociationService.updateList(
+              itemId = id1,
+              currentListId = id2,
+              destinationListId = id3,
+              componentsOwner = ofType(String::class),
+            )
           } returns Triple(lrmItem().name, fromListName, toListName)
           val instance = "/items/$id1/lists/$id2/$id3"
           mockMvc.patch(instance) {
@@ -655,14 +660,19 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               itemId = ofType(UUID::class),
               currentListId = ofType(UUID::class),
               destinationListId = ofType(UUID::class),
-              listOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           }
         }
 
         it("item is not moved") {
           every {
-            mockAssociationService.updateList(itemId = id1, currentListId = id2, destinationListId = id3, listOwner = ofType(String::class))
+            mockAssociationService.updateList(
+              itemId = id1,
+              currentListId = id2,
+              destinationListId = id3,
+              componentsOwner = ofType(String::class),
+            )
           } throws ApiException(httpStatus = HttpStatus.I_AM_A_TEAPOT, responseMessage = "Api Exception Detail")
           val instance = "/items/$id1/lists/$id2/$id3"
           mockMvc.patch(instance) {
@@ -683,7 +693,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               itemId = ofType(UUID::class),
               currentListId = ofType(UUID::class),
               destinationListId = ofType(UUID::class),
-              listOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           }
         }
@@ -700,7 +710,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               id = id1,
               idCollection = any(),
               LrmComponentType.Item,
-              componentOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           } returns mockResponse
           val instance = "/items/$id1/lists"
@@ -736,7 +746,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               id = id1,
               idCollection = any(),
               LrmComponentType.Item,
-              componentOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           } returns mockResponse
           val instance = "/items/$id1/lists"
@@ -768,7 +778,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               id = id1,
               idCollection = any(),
               LrmComponentType.Item,
-              componentOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           } throws ItemNotFoundException(id1)
           val expectedMessage = ItemNotFoundException.defaultMessage()
@@ -799,7 +809,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               id = id1,
               idCollection = any(),
               LrmComponentType.Item,
-              componentOwner = ofType(String::class),
+              componentsOwner = ofType(String::class),
             )
           } throws ListNotFoundException(id2)
           val expectedMessage = ListNotFoundException.defaultMessage()

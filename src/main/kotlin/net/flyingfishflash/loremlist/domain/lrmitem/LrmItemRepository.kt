@@ -114,15 +114,16 @@ class LrmItemRepository {
     return result
   }
 
-  fun findIdsById(itemIdCollection: List<UUID>): List<UUID> {
-    val resultIdCollection = repositoryTable.select(repositoryTable.id).where {
-      repositoryTable.id inList (itemIdCollection)
-    }.map { row -> row[repositoryTable.id].value }.toList()
+  fun findIdsByOwnerAndIds(itemIdCollection: List<UUID>, owner: String): List<UUID> {
+    val resultIdCollection = repositoryTable.select(repositoryTable.id)
+      .where { repositoryTable.id inList (itemIdCollection) }
+      .andWhere { repositoryTable.createdBy eq owner }
+      .map { row -> row[repositoryTable.id].value }.toList()
     return resultIdCollection
   }
 
-  fun notFoundById(itemIdCollection: List<UUID>): Set<UUID> {
-    val resultIdCollection = findIdsById(itemIdCollection)
+  fun notFoundByOwnerAndId(itemIdCollection: List<UUID>, owner: String): Set<UUID> {
+    val resultIdCollection = findIdsByOwnerAndIds(itemIdCollection = itemIdCollection, owner = owner)
     val notFoundItemUuidCollection = (itemIdCollection subtract resultIdCollection.toSet())
     return notFoundItemUuidCollection
   }

@@ -45,19 +45,22 @@ class AssociationService(
    * Count of associations for a specified item
    *
    *  @param itemId item id
+   *  @param itemOwner item owner
    *  @return association count
    */
   fun countByIdAndItemOwnerForItem(itemId: UUID, itemOwner: String): Long {
     val exceptionMessage = "Count of lists associated with item id $itemId could not be retrieved."
     val associations = try {
-      lrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = itemOwner) ?: throw ItemNotFoundException(itemId)
+      lrmItemRepository.findByOwnerAndIdOrNull(
+        id = itemId,
+        owner = itemOwner,
+      ) ?: throw ItemNotFoundException(itemId)
       associationRepository.countItemToListByIdAndItemOwner(itemId = itemId, itemOwner = itemOwner)
     } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
         cause = itemNotFoundException,
         httpStatus = itemNotFoundException.httpStatus,
         message = "$exceptionMessage: ${itemNotFoundException.message}",
-//        responseMessage = "$exceptionMessage: ${itemNotFoundException.message}",
       )
     } catch (exception: Exception) {
       throw ApiException(
@@ -72,19 +75,22 @@ class AssociationService(
    * Count of associations for a specified list
    *
    * @param listId list id
+   * @param listOwner list owner
    * @return association count
    */
   fun countByOwnerForList(listId: UUID, listOwner: String): Long {
     val exceptionMessage = "Count of items associated with list id $listId could not be retrieved"
     val associations = try {
-      lrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = listOwner) ?: throw ListNotFoundException(listId)
+      lrmListRepository.findByOwnerAndIdOrNull(
+        id = listId,
+        owner = listOwner,
+      ) ?: throw ListNotFoundException(listId)
       associationRepository.countListToItemByIdandListOwner(listId, listOwner)
     } catch (listNotFoundException: ListNotFoundException) {
       throw ApiException(
         cause = listNotFoundException,
         httpStatus = listNotFoundException.httpStatus,
         message = "$exceptionMessage: ${listNotFoundException.message}",
-//        responseMessage = "$exceptionMessage: ${listNotFoundException.message}",
       )
     } catch (exception: Exception) {
       throw ApiException(
@@ -97,10 +103,19 @@ class AssociationService(
 
   private fun doCreateForItem(itemId: UUID, owner: String, listIdCollection: List<UUID>): AssociationCreatedResponse {
     // ensure the item exists and has the correct owner
-    val item = lrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) ?: throw ItemNotFoundException(itemId)
+    val item = lrmItemRepository.findByOwnerAndIdOrNull(
+      id = itemId,
+      owner = owner,
+    ) ?: throw ItemNotFoundException(itemId)
+
     // ensure the lists exist and have the correct owner
-    val notFoundListIdCollection: Set<UUID> = lrmListRepository.notFoundByOwnerAndId(listIdCollection = listIdCollection, owner = owner)
+    val notFoundListIdCollection: Set<UUID> = lrmListRepository.notFoundByOwnerAndId(
+      listIdCollection = listIdCollection,
+      owner = owner,
+    )
+
     if (notFoundListIdCollection.isNotEmpty()) throw ListNotFoundException(notFoundListIdCollection)
+
     // create the associations
     val associationCollection = listIdCollection.map { listId -> Pair(listId, itemId) }.toSet()
     val createdAssociations = associationRepository.create(associationCollection)
@@ -110,6 +125,7 @@ class AssociationService(
           "(created = ${createdAssociations.size} / requested = ${listIdCollection.size})",
       )
     }
+
     // capture the names of the newly associated lists
     val associatedLists = createdAssociations.map { it.list }.sortedBy { it.name }
     return AssociationCreatedResponse(componentName = item.name, associatedComponents = associatedLists)
@@ -117,10 +133,18 @@ class AssociationService(
 
   private fun doCreateForList(listId: UUID, owner: String, itemIdCollection: List<UUID>): AssociationCreatedResponse {
     // ensure the list exists
-    val list = lrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) ?: throw ListNotFoundException(listId)
+    val list = lrmListRepository.findByOwnerAndIdOrNull(
+      id = listId,
+      owner = owner,
+    ) ?: throw ListNotFoundException(listId)
+
     // ensure the items exist
-    val notFoundItemUuidCollection = lrmItemRepository.notFoundById(itemIdCollection)
+    val notFoundItemUuidCollection: Set<UUID> = lrmItemRepository.notFoundByOwnerAndId(
+      itemIdCollection = itemIdCollection,
+      owner = owner,
+    )
     if (notFoundItemUuidCollection.isNotEmpty()) throw ItemNotFoundException(notFoundItemUuidCollection)
+
     // create the associations
     val associationCollection = itemIdCollection.map { itemId -> Pair(listId, itemId) }.toSet()
     val createdAssociations = associationRepository.create(associationCollection)
@@ -130,6 +154,7 @@ class AssociationService(
           "(created = ${createdAssociations.size} / requested = ${itemIdCollection.size})",
       )
     }
+
     // capture the names of the newly associated items
     val associatedItems = createdAssociations.map { it.item }.sortedBy { it.name }
     return AssociationCreatedResponse(componentName = list.name, associatedComponents = associatedItems)
@@ -139,23 +164,23 @@ class AssociationService(
    * Create a new association.
    * - Each associated component must have the same owner.
    *
-   * @param id anchor id
-   * @param idCollection collection of id's for components to associate
-   * @param type component type
-   * @param componentOwner component owner
+   * @param id id of primary component
+   * @param idCollection collection of id's to associate with primary component
+   * @param type type of primary component
+   * @param componentsOwner owner of primary and secondary components
    * @return [AssociationCreatedResponse]
    */
-  fun create(id: UUID, idCollection: List<UUID>, type: LrmComponentType, componentOwner: String): AssociationCreatedResponse {
+  fun create(id: UUID, idCollection: List<UUID>, type: LrmComponentType, componentsOwner: String): AssociationCreatedResponse {
     val exceptionMessage = "Could not create a new association"
     try {
       val result = when (type) {
         // associate a single item with an arbitrary number of lists
         LrmComponentType.Item -> {
-          doCreateForItem(itemId = id, owner = componentOwner, listIdCollection = idCollection)
+          doCreateForItem(itemId = id, owner = componentsOwner, listIdCollection = idCollection)
         }
         // associate a single list with an arbitrary number of items
         LrmComponentType.List -> {
-          doCreateForList(listId = id, owner = componentOwner, itemIdCollection = idCollection)
+          doCreateForList(listId = id, owner = componentsOwner, itemIdCollection = idCollection)
         }
       }
       return result
@@ -213,6 +238,7 @@ class AssociationService(
    * Delete all of an item's list associations.
    *
    * @param itemId item id
+   * @param itemOwner item owner
    * @return item name, count of deleted associations
    */
   fun deleteByItemOwnerAndItemId(itemId: UUID, itemOwner: String): Pair<String, Int> {
@@ -220,15 +246,17 @@ class AssociationService(
     val exceptionMessage = "Item id $itemId could not be removed from any/all lists"
 
     try {
-      item = lrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = itemOwner) ?: throw ItemNotFoundException(itemId)
-      val deletedCount = associationRepository.deleteByItemId(itemId)
+      item = lrmItemRepository.findByOwnerAndIdOrNull(
+        id = itemId,
+        owner = itemOwner,
+      ) ?: throw ItemNotFoundException(itemId)
+      val deletedCount = associationRepository.deleteByItemId(itemId = itemId)
       return Pair(item.name, deletedCount)
     } catch (itemNotFoundException: ItemNotFoundException) {
       throw ApiException(
         cause = itemNotFoundException,
         httpStatus = itemNotFoundException.httpStatus,
         message = "$exceptionMessage: ${itemNotFoundException.message}",
-//        responseMessage = "$exceptionMessage: ${itemNotFoundException.message}",
       )
     } catch (exception: Exception) {
       throw ApiException(
@@ -242,6 +270,7 @@ class AssociationService(
    * Delete all of a list's item associations
    *
    * @param listId list id
+   * @param listOwner list owner
    * @return list name, count of deleted associations
    */
   fun deleteByListOwnerAndListId(listId: UUID, listOwner: String): Pair<String, Int> {
@@ -249,15 +278,17 @@ class AssociationService(
     val exceptionMessage = "Could not remove any/all items from List id $listId"
 
     try {
-      list = lrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = listOwner) ?: throw ListNotFoundException(listId)
-      val deletedCount = associationRepository.deleteByListId(listId)
+      list = lrmListRepository.findByOwnerAndIdOrNull(
+        id = listId,
+        owner = listOwner,
+      ) ?: throw ListNotFoundException(listId)
+      val deletedCount = associationRepository.deleteByListId(listId = listId)
       return Pair(list.name, deletedCount)
     } catch (listNotFoundException: ListNotFoundException) {
       throw ApiException(
         cause = listNotFoundException,
         httpStatus = listNotFoundException.httpStatus,
         message = "$exceptionMessage: ${listNotFoundException.message}",
-//        responseMessage = "$exceptionMessage: ${listNotFoundException.message}",
       )
     } catch (exception: Exception) {
       throw ApiException(
@@ -272,6 +303,7 @@ class AssociationService(
    *
    * @param itemId item id
    * @param listId list id
+   * @param componentsOwner expected owner of item and list
    * @return item name, list name
    */
   fun deleteByItemIdAndListId(itemId: UUID, listId: UUID, componentsOwner: String): Pair<String, String> {
@@ -281,8 +313,16 @@ class AssociationService(
     val exceptionMessage = "Item id $itemId could not be removed from list id $listId"
 
     try {
-      item = lrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = componentsOwner) ?: throw ItemNotFoundException(itemId)
-      list = lrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = componentsOwner) ?: throw ListNotFoundException(listId)
+      item = lrmItemRepository.findByOwnerAndIdOrNull(
+        id = itemId,
+        owner = componentsOwner,
+      ) ?: throw ItemNotFoundException(itemId)
+
+      list = lrmListRepository.findByOwnerAndIdOrNull(
+        id = listId,
+        owner = componentsOwner,
+      ) ?: throw ListNotFoundException(listId)
+
       association = associationRepository.findByItemIdAndListIdOrNull(
         itemId = itemId,
         listId = listId,
@@ -296,7 +336,7 @@ class AssociationService(
     }
 
     val deletedCount = try {
-      associationRepository.deleteById(association.id)
+      associationRepository.deleteById(id = association.id)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
@@ -333,9 +373,10 @@ class AssociationService(
    * @param itemId item id
    * @param currentListId current list id
    * @param destinationListId new list id
+   * @param componentsOwner expected owner of item and list
    * @return item name, current list name, new list name
    */
-  fun updateList(itemId: UUID, currentListId: UUID, destinationListId: UUID, listOwner: String): Triple<String, String, String> {
+  fun updateList(itemId: UUID, currentListId: UUID, destinationListId: UUID, componentsOwner: String): Triple<String, String, String> {
     val item: LrmItem
     val currentList: LrmList
     val destinationList: LrmList
@@ -343,18 +384,28 @@ class AssociationService(
     val exceptionMessage = "Item id $itemId was not moved from list id $currentListId to list id $destinationListId"
 
     try {
-      item = lrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = listOwner) ?: throw ItemNotFoundException(itemId)
+      item = lrmItemRepository.findByOwnerAndIdOrNull(
+        id = itemId,
+        owner = componentsOwner,
+      ) ?: throw ItemNotFoundException(itemId)
+
       currentList = lrmListRepository.findByOwnerAndIdOrNull(
         id = currentListId,
-        owner = listOwner,
+        owner = componentsOwner,
       ) ?: throw ListNotFoundException(currentListId)
+
       destinationList = lrmListRepository.findByOwnerAndIdOrNull(
         id = destinationListId,
-        owner = listOwner,
+        owner = componentsOwner,
       ) ?: throw ListNotFoundException(destinationListId)
-      association = associationRepository.findByItemIdAndListIdOrNull(itemId, currentListId) ?: throw AssociationNotFoundException()
+
+      association = associationRepository.findByItemIdAndListIdOrNull(
+        itemId = itemId,
+        listId = currentListId,
+      ) ?: throw AssociationNotFoundException()
+
       val updatedAssociation = association.copy(listId = destinationListId)
-      associationRepository.update(updatedAssociation)
+      associationRepository.update(association = updatedAssociation)
     } catch (apiException: ApiException) {
       throw ApiException(
         cause = apiException,

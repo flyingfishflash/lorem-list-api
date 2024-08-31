@@ -292,7 +292,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val serviceResponse = associationService.create(
       id = itemId,
       idCollection = listIdCollection.toList(),
-      componentOwner = principal.subject,
+      componentsOwner = principal.subject,
       type = LrmComponentType.Item,
     )
     val responseStatus = HttpStatus.OK
@@ -379,7 +379,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       itemId = itemId,
       currentListId = currentListId,
       destinationListId = destinationListId,
-      listOwner = principal.subject,
+      componentsOwner = principal.subject,
     )
     val responseMessage = "Moved item '${serviceResponse.first}'" +
       " from list '${serviceResponse.second}'" +
