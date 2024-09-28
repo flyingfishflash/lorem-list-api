@@ -80,7 +80,7 @@ class LrmListController(private val associationService: AssociationService, priv
   ): ResponseEntity<ResponseSuccess<LrmList>> {
     val responseStatus = HttpStatus.OK
     val responseContent = lrmListService.create(lrmListRequest, principal.subject)
-    val responseMessage = "created new list"
+    val responseMessage = "Created new list: '${lrmListRequest.name}'"
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
