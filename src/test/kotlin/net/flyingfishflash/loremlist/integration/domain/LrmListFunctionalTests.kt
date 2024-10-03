@@ -343,7 +343,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               content { contentType(MediaType.APPLICATION_JSON) }
               jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
               jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-              jsonPath("$.message") { value("created new list") }
+              jsonPath("$.message") { value("Created new list: '${listRequest.name}'") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(8) }
