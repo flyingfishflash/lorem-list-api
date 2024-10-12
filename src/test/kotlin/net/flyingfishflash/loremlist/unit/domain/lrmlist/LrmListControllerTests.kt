@@ -25,8 +25,8 @@ import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListController
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleteResponse
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpMethod
@@ -61,13 +61,13 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     val id1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
     val id2 = UUID.fromString("00000000-0000-4000-a000-000000000002")
     val id3 = UUID.fromString("00000000-0000-4000-a000-000000000003")
-    val lrmListRequest = LrmListRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
+    val lrmListCreateRequest = LrmListCreateRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
 
     fun lrmList(): LrmList = LrmList(
       id = id0,
-      name = lrmListRequest.name,
-      description = lrmListRequest.description,
-      public = lrmListRequest.public,
+      name = lrmListCreateRequest.name,
+      description = lrmListCreateRequest.description,
+      public = lrmListCreateRequest.public,
     )
 
     fun lrmListWithEmptyItems(): LrmList = lrmList().copy(items = setOf())
@@ -183,26 +183,26 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
       describe("post") {
         it("list is created") {
-          println(Json.encodeToString(lrmListRequest))
-          every { mockLrmListService.create(lrmListRequest, ofType(String::class)) } returns lrmList()
+          println(Json.encodeToString(lrmListCreateRequest))
+          every { mockLrmListService.create(lrmListCreateRequest, ofType(String::class)) } returns lrmList()
           val instance = "/lists"
           mockMvc.post(instance) {
             with(jwt())
             with(csrf())
-            content = Json.encodeToString(lrmListRequest)
+            content = Json.encodeToString(lrmListCreateRequest)
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isOk() }
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("Created new list: '${lrmListRequest.name}'") }
+            jsonPath("$.message") { value("Created new list: '${lrmListCreateRequest.name}'") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.description") { value(lrmList().description) }
             jsonPath("$.content.name") { value(lrmList().name) }
           }
-          verify(exactly = 1) { mockLrmListService.create(lrmListRequest, ofType(String::class)) }
+          verify(exactly = 1) { mockLrmListService.create(lrmListCreateRequest, ofType(String::class)) }
         }
 
         it("requested list name is an empty string") {
@@ -210,7 +210,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           mockMvc.post(instance) {
             with(jwt())
             with(csrf())
-            content = Json.encodeToString(LrmListRequest("", lrmList().description, lrmList().public))
+            content = Json.encodeToString(LrmListCreateRequest("", lrmList().description, lrmList().public))
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isBadRequest() }
@@ -223,7 +223,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
           }
-          verify(exactly = 0) { mockLrmListService.create(ofType(LrmListRequest::class), ofType(String::class)) }
+          verify(exactly = 0) { mockLrmListService.create(ofType(LrmListCreateRequest::class), ofType(String::class)) }
         }
 
         it("requested list description is an empty string") {
@@ -231,7 +231,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           mockMvc.post(instance) {
             with(jwt())
             with(csrf())
-            content = Json.encodeToString(LrmListRequest(lrmList().name, "", lrmList().public))
+            content = Json.encodeToString(LrmListCreateRequest(lrmList().name, "", lrmList().public))
             contentType = MediaType.APPLICATION_JSON
           }.andExpect {
             status { isBadRequest() }
@@ -244,7 +244,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
           }
-          verify(exactly = 0) { mockLrmListService.create(ofType(LrmListRequest::class), ofType(String::class)) }
+          verify(exactly = 0) { mockLrmListService.create(ofType(LrmListCreateRequest::class), ofType(String::class)) }
         }
       }
     }

@@ -1,9 +1,9 @@
 package net.flyingfishflash.loremlist.domain.lrmlist
 
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListPatchRequest
 
 object LrmListConverter {
-  fun toLrmList(lrmListRequest: LrmListRequest, lrmList: LrmList): LrmList {
+  fun toLrmList(lrmListRequest: LrmListPatchRequest, lrmList: LrmList): LrmList {
     lrmList.name = lrmListRequest.name
     lrmList.description = lrmListRequest.description
     lrmList.public = lrmListRequest.public

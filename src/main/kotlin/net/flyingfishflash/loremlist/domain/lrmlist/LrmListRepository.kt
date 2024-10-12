@@ -12,7 +12,7 @@ import net.flyingfishflash.loremlist.domain.LrmListTable.updated
 import net.flyingfishflash.loremlist.domain.LrmListTable.updatedBy
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
@@ -188,15 +188,15 @@ class LrmListRepository {
     return notFoundListIdCollection
   }
 
-  fun insert(lrmListRequest: LrmListRequest, subject: String): UUID {
+  fun insert(lrmListCreateRequest: LrmListCreateRequest, subject: String): UUID {
     val now = now()
     val id =
       repositoryTable
         .insertAndGetId {
           it[id] = UUID.randomUUID()
-          it[name] = lrmListRequest.name
-          it[description] = lrmListRequest.description
-          it[public] = lrmListRequest.public
+          it[name] = lrmListCreateRequest.name
+          it[description] = lrmListCreateRequest.description
+          it[public] = lrmListCreateRequest.public
           it[created] = now
           it[createdBy] = subject
           it[updated] = now

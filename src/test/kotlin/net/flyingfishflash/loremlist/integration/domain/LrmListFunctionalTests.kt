@@ -14,7 +14,7 @@ import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
@@ -54,26 +54,26 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
   val itemIds: MutableMap<Int, UUID> = HashMap()
   val listIds: MutableMap<Int, UUID> = HashMap()
 
-  fun createLrmListOneRequest(): LrmListRequest = LrmListRequest(
+  fun createLrmListOneRequest(): LrmListCreateRequest = LrmListCreateRequest(
     name = "Lorem List 1 Name",
     description = "Lorem List 1 Description",
     public = true,
   )
 
-  fun createLrmListTwoRequest(): LrmListRequest = LrmListRequest(
+  fun createLrmListTwoRequest(): LrmListCreateRequest = LrmListCreateRequest(
     name = "Lorem List 2 Name",
     description = "Lorem List 2 Description",
     public = true,
   )
   val listCreateRequests = listOf(createLrmListOneRequest(), createLrmListTwoRequest())
 
-  fun updateLrmListOneRequest(): LrmListRequest = LrmListRequest(
+  fun updateLrmListOneRequest(): LrmListCreateRequest = LrmListCreateRequest(
     name = "Updated Lorem List 1 Name",
     description = "Updated Lorem List 1 Description",
     public = true,
   )
 
-  fun updateLrmListTwoRequest(): LrmListRequest = LrmListRequest(
+  fun updateLrmListTwoRequest(): LrmListCreateRequest = LrmListCreateRequest(
     name = "Updated Lorem List 2 Name",
     description = "Updated Lorem List 2 Description",
     public = true,

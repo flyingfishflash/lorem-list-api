@@ -11,7 +11,7 @@ import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSucces
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListPublicController
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpMethod
@@ -34,13 +34,13 @@ class PublicControllerTests(mockMvc: MockMvc) : DescribeSpec() {
   init {
 
     val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
-    val lrmListRequest = LrmListRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
+    val lrmListCreateRequest = LrmListCreateRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
 
     fun lrmList(): LrmList = LrmList(
       id = id0,
-      name = lrmListRequest.name,
-      description = lrmListRequest.description,
-      public = lrmListRequest.public,
+      name = lrmListCreateRequest.name,
+      description = lrmListCreateRequest.description,
+      public = lrmListCreateRequest.public,
     )
 
     fun lrmListWithEmptyItems(): LrmList = lrmList().copy(items = setOf())

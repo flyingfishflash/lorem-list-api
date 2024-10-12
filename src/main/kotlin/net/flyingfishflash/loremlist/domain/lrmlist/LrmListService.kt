@@ -5,8 +5,9 @@ import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleteResponse
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListPatchRequest
 import net.flyingfishflash.loremlist.toJsonElement
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -31,9 +32,9 @@ class LrmListService(
     }
   }
 
-  fun create(lrmListRequest: LrmListRequest, owner: String): LrmList {
+  fun create(lrmListCreateRequest: LrmListCreateRequest, owner: String): LrmList {
     try {
-      val id = lrmListRepository.insert(lrmListRequest, owner)
+      val id = lrmListRepository.insert(lrmListCreateRequest, owner)
       return findByOwnerAndId(id = id, owner = owner)
     } catch (cause: Exception) {
       throw ApiException(
@@ -210,7 +211,10 @@ class LrmListService(
           }
           "description" -> {
             if (value != lrmList.description) {
-              newDescription = value as String
+              newDescription = null
+              if (value != "") {
+                newDescription = value as String
+              }
               patched = true
             }
           }
@@ -226,8 +230,8 @@ class LrmListService(
     }
 
     if (patched) {
-      val lrmListRequest = LrmListRequest(name = newName, description = newDescription, public = newIsPublic)
-      val violations: Set<ConstraintViolation<LrmListRequest>> =
+      val lrmListRequest = LrmListPatchRequest(name = newName, description = newDescription, public = newIsPublic)
+      val violations: Set<ConstraintViolation<LrmListPatchRequest>> =
         Validation.buildDefaultValidatorFactory().validator.validate(lrmListRequest)
       if (violations.isNotEmpty()) {
         throw ConstraintViolationException(violations)

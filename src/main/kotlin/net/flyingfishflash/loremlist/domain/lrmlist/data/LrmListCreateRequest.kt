@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LrmListRequest(
+data class LrmListCreateRequest(
 //  @Schema(requiredMode = Schema.RequiredMode.REQUIRED)
   @field:Pattern(regexp = "^(?!\\s*$).+", message = "List name must not consist only of whitespace characters.")
   @field:Size(min = 1, max = 64, message = "List name must have at least 1, and no more than 64 characters.")

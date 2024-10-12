@@ -23,7 +23,7 @@ import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import net.flyingfishflash.loremlist.toJsonElement
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Transaction
@@ -39,7 +39,7 @@ class LrmListServiceTests : DescribeSpec({
   val mockLrmListRepository = mockk<LrmListRepository>()
   val lrmListService = LrmListService(mockAssociationService, mockLrmListRepository)
 
-  val lrmListRequest = LrmListRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
+  val lrmListCreateRequest = LrmListCreateRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
 
   val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
   val id1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
@@ -48,9 +48,9 @@ class LrmListServiceTests : DescribeSpec({
 
   fun lrmList(): LrmList = LrmList(
     id = id0,
-    name = lrmListRequest.name,
-    description = lrmListRequest.description,
-    public = lrmListRequest.public,
+    name = lrmListCreateRequest.name,
+    description = lrmListCreateRequest.description,
+    public = lrmListCreateRequest.public,
   )
 
   fun lrmListWithItems() = lrmList().copy(
@@ -83,16 +83,16 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("create()") {
     it("list repository returns inserted list id") {
-      every { mockLrmListRepository.insert(ofType(LrmListRequest::class), ofType(String::class)) } returns id1
+      every { mockLrmListRepository.insert(ofType(LrmListCreateRequest::class), ofType(String::class)) } returns id1
       every { mockLrmListRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmList()
-      lrmListService.create(lrmListRequest, mockUserName)
-      verify(exactly = 1) { mockLrmListRepository.insert(ofType(LrmListRequest::class), ofType(String::class)) }
+      lrmListService.create(lrmListCreateRequest, mockUserName)
+      verify(exactly = 1) { mockLrmListRepository.insert(ofType(LrmListCreateRequest::class), ofType(String::class)) }
       verify(exactly = 1) { mockLrmListRepository.findByOwnerAndIdOrNull(id = ofType(UUID::class), owner = ofType(String::class)) }
     }
 
     it("list repository throws exposed sql exception") {
-      every { mockLrmListRepository.insert(ofType(LrmListRequest::class), ofType(String::class)) } throws exposedSQLExceptionGeneric()
-      val exception = shouldThrow<ApiException> { lrmListService.create(lrmListRequest, mockUserName) }
+      every { mockLrmListRepository.insert(ofType(LrmListCreateRequest::class), ofType(String::class)) } throws exposedSQLExceptionGeneric()
+      val exception = shouldThrow<ApiException> { lrmListService.create(lrmListCreateRequest, mockUserName) }
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldNotBeNull().shouldBeEqual("List could not be created.")

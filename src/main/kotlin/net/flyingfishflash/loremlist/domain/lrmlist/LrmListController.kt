@@ -22,8 +22,8 @@ import net.flyingfishflash.loremlist.core.validation.ValidUuid
 import net.flyingfishflash.loremlist.domain.LrmComponentType
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.association.data.AssociationCreatedResponse
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleteResponse
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -74,13 +74,13 @@ class LrmListController(private val associationService: AssociationService, priv
   @Operation(summary = "Create a list.")
   @PostMapping
   fun create(
-    @Valid @RequestBody lrmListRequest: LrmListRequest,
+    @Valid @RequestBody lrmListCreateRequest: LrmListCreateRequest,
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<LrmList>> {
     val responseStatus = HttpStatus.OK
-    val responseContent = lrmListService.create(lrmListRequest, principal.subject)
-    val responseMessage = "Created new list: '${lrmListRequest.name}'"
+    val responseContent = lrmListService.create(lrmListCreateRequest, principal.subject)
+    val responseMessage = "Created new list: '${lrmListCreateRequest.name}'"
     val response = ResponseSuccess(responseContent, responseMessage, request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
