@@ -239,6 +239,7 @@ trigger:
     - push
   ref:
     - refs/heads/ci-*
+    - refs/heads/dependencies
     - refs/heads/feature-*
     - refs/heads/fix-*
     - refs/heads/perf-*
