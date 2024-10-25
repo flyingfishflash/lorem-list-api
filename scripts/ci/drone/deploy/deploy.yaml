@@ -87,7 +87,7 @@
 
     - name: Remove Lorem-List-Api container quadlets
       ansible.builtin.file:
-        name: ~/.config/containers/systemd/{{ item }}.container
+        name: ~/.config/containers/systemd/{{ item }}/{{ item }}.container
         state: absent
       loop:
         - lorem-list-api-{{ region }}
@@ -95,13 +95,13 @@
 
     - name: Remove Lorem-List-Api network quadlets
       ansible.builtin.file:
-        name: ~/.config/containers/systemd/lorem-list-api-{{ region }}.network
+        name: ~/.config/containers/systemd/lorem-list-api-{{ region }}/lorem-list-api-{{ region }}.network
         state: absent
 
     - name: Push network quadlet lorem-list-api-{{ region }}
       ansible.builtin.copy:
         content: "[Network]"
-        dest: ~/.config/containers/systemd/lorem-list-api-{{ region }}.network
+        dest: ~/.config/containers/systemd/lorem-list-api-{{ region }}/lorem-list-api-{{ region }}.network
         mode: "0644"
         force: false
 
@@ -164,7 +164,7 @@
     - name: Push container quadlet
       ansible.builtin.template:
         src: quadlets/quadlet.container.j2
-        dest: ~/.config/containers/systemd/{{ quadlet.file_name }}
+        dest: ~/.config/containers/systemd/lorem-list-api-{{ region }}/{{ quadlet.file_name }}
         mode: "0644"
 
     - name: Define quadlet
@@ -174,7 +174,7 @@
     - name: Push container quadlet
       ansible.builtin.template:
         src: quadlets/quadlet.container.j2
-        dest: ~/.config/containers/systemd/{{ quadlet.file_name }}
+        dest: ~/.config/containers/systemd/lorem-list-api-{{ region }}/{{ quadlet.file_name }}
         mode: "0644"
 
     - name: Re-read systemd configuration
