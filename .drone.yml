@@ -402,9 +402,11 @@ steps:
     commands:
       - https --sorted $OPTIONS get $URL/api/v1/management/health
       - https --sorted $OPTIONS get $URL/api/v1/management/info
-      - https $OPTIONS get $URL/api/v1/items
-      - https $OPTIONS get $URL/api/v1/lists
-      - https $OPTIONS get $URL/api/v1/lists/00000000-0000-4000-a000-000000000000
+      - https $OPTIONS get $URL/api/v1/public/lists
+      # below items return HTTP 401
+      # - https $OPTIONS get $URL/api/v1/items
+      # - https $OPTIONS get $URL/api/v1/lists
+      # - https $OPTIONS get $URL/api/v1/lists/00000000-0000-4000-a000-000000000000
     when:
       ref:
         exclude:
@@ -420,9 +422,11 @@ steps:
     commands:
       - https --sorted $OPTIONS get $URL/api/v1/management/health
       - https --sorted $OPTIONS get $URL/api/v1/management/info
-      - https $OPTIONS get $URL/api/v1/items
-      - https $OPTIONS get $URL/api/v1/lists
-      - https $OPTIONS get $URL/api/v1/lists/00000000-0000-4000-a000-000000000000
+      - https $OPTIONS get $URL/api/v1/public/lists
+      # below items return HTTP 401
+      # - https $OPTIONS get $URL/api/v1/items
+      # - https $OPTIONS get $URL/api/v1/lists
+      # - https $OPTIONS get $URL/api/v1/lists/00000000-0000-4000-a000-000000000000
     when:
       ref:
         include:
