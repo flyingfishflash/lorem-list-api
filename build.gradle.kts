@@ -12,16 +12,16 @@ plugins {
   id("java")
   id("jacoco")
   id("com.adarshr.test-logger") version "4.0.0"
-  id("com.diffplug.spotless") version "6.25.0"
+  id("com.diffplug.spotless") version "7.0.0.BETA4"
   id("com.github.ben-manes.versions") version "0.51.0"
-  id("io.spring.dependency-management") version "1.1.6"
-  id("org.sonarqube") version "5.1.0.4882"
-  id("org.springframework.boot") version "3.3.5"
+  id("io.spring.dependency-management") version "1.1.7"
+  id("org.sonarqube") version "6.0.1.5171"
+  id("org.springframework.boot") version "3.4.1"
   id("org.springdoc.openapi-gradle-plugin") version "1.9.0"
-  kotlin("jvm") version "2.0.20"
-  kotlin("plugin.jpa") version "2.0.20"
-  kotlin("plugin.serialization") version "2.0.20"
-  kotlin("plugin.spring") version "2.0.20"
+  kotlin("jvm") version "2.1.0"
+  kotlin("plugin.jpa") version "2.1.0"
+  kotlin("plugin.serialization") version "2.1.0"
+  kotlin("plugin.spring") version "2.1.0"
 //  id("org.graalvm.buildtools.native") version "0.9.28"
 }
 
@@ -29,16 +29,16 @@ val ciCommit by extra { ciCommit() }
 val ciPlatform by extra { ciPlatform() }
 val ciPipelineId by extra { ciPipelineId() }
 
-val exposedVersion = "0.55.0"
-val flywayVersion = "10.20.1"
+val exposedVersion = "0.57.0"
+val flywayVersion = "11.1.0"
 val jakartaValidationApiVersion = "3.1.0"
 val kotestVersion = "5.9.1"
 val kotestExtensionsSpringVersion = "1.3.0"
-val kotlinLoggingVersion = "7.0.0"
+val kotlinLoggingVersion = "7.0.3"
 val kotlinxDateTimeVersion = "0.6.1"
 val kotlinxSerializationJson = "1.7.3"
 val postgresqlVersion = "42.7.4"
-val springDocOpenApiStarterWebmvcUiVersion = "2.6.0"
+val springDocOpenApiStarterWebmvcUiVersion = "2.7.0"
 val springmockkVersion = "4.0.2"
 
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
@@ -92,7 +92,12 @@ dependencies {
 
 jacoco { toolVersion = "0.8.11" }
 
-java { sourceCompatibility = JavaVersion.VERSION_22 }
+java {
+  sourceCompatibility = JavaVersion.VERSION_22
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(22)
+  }
+}
 
 sonarqube {
   properties {
@@ -137,17 +142,23 @@ springBoot {
 }
 
 spotless {
-  kotlinGradle { ktlint() }
+  kotlinGradle { ktlint("1.5.0") }
 
   kotlin {
-    ktlint()
+    ktlint("1.5.0")
       .editorConfigOverride(
         mapOf(
           "indent_size" to 2,
           "ktlint_code_style" to "intellij_idea",
           "max_line_length" to 140,
+          "ktlint_standard_function-expression-body" to "disabled",
+          "ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than" to "3",
         ),
       )
+    suppressLintsFor {
+      step = "ktlint"
+      shortCode = "standard:max-line-length"
+    }
   }
 
   json {
@@ -205,7 +216,13 @@ tasks {
   register<JacocoReport>("jacocoUnitTestReport") {
     mustRunAfter(test)
     executionData(fileTree(project.layout.buildDirectory).include("jacoco/test.exec"))
-    sourceDirectories.setFrom(files(project.sourceSets.main.get().allSource.srcDirs))
+    sourceDirectories.setFrom(
+      files(
+        project.sourceSets.main
+          .get()
+          .allSource.srcDirs,
+      ),
+    )
     classDirectories.setFrom(
       files(
         project.sourceSets.main.get().output.asFileTree.filter { f: File ->

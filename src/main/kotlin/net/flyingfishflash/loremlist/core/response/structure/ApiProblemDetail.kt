@@ -29,7 +29,4 @@ data class ApiProblemDetail(
 
 /** Root cause of the exception, if applicable */
 @Serializable
-data class ExceptionCauseDetail(
-  val name: String,
-  val message: String?,
-)
+data class ExceptionCauseDetail(val name: String, val message: String?)

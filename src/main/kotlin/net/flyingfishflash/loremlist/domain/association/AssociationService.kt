@@ -101,7 +101,11 @@ class AssociationService(
     return associations
   }
 
-  private fun doCreateForItem(itemId: UUID, owner: String, listIdCollection: List<UUID>): AssociationCreatedResponse {
+  private fun doCreateForItem(
+    itemId: UUID,
+    owner: String,
+    listIdCollection: List<UUID>,
+  ): AssociationCreatedResponse {
     // ensure the item exists and has the correct owner
     val item = lrmItemRepository.findByOwnerAndIdOrNull(
       id = itemId,
@@ -131,7 +135,11 @@ class AssociationService(
     return AssociationCreatedResponse(componentName = item.name, associatedComponents = associatedLists)
   }
 
-  private fun doCreateForList(listId: UUID, owner: String, itemIdCollection: List<UUID>): AssociationCreatedResponse {
+  private fun doCreateForList(
+    listId: UUID,
+    owner: String,
+    itemIdCollection: List<UUID>,
+  ): AssociationCreatedResponse {
     // ensure the list exists
     val list = lrmListRepository.findByOwnerAndIdOrNull(
       id = listId,
@@ -170,7 +178,12 @@ class AssociationService(
    * @param componentsOwner owner of primary and secondary components
    * @return [AssociationCreatedResponse]
    */
-  fun create(id: UUID, idCollection: List<UUID>, type: LrmComponentType, componentsOwner: String): AssociationCreatedResponse {
+  fun create(
+    id: UUID,
+    idCollection: List<UUID>,
+    type: LrmComponentType,
+    componentsOwner: String,
+  ): AssociationCreatedResponse {
     val exceptionMessage = "Could not create a new association"
     try {
       val result = when (type) {
@@ -193,7 +206,8 @@ class AssociationService(
       )
     } catch (sqlException: SQLException) {
       when {
-        sqlException.message?.contains("duplicate key value violates unique constraint") == true || // postgresql
+        sqlException.message?.contains("duplicate key value violates unique constraint") == true ||
+          // postgresql
           sqlException.message?.contains("Unique index or primary key violation") == true -> { // h2
           throw ApiException(
             cause = sqlException,
@@ -306,7 +320,11 @@ class AssociationService(
    * @param componentsOwner expected owner of item and list
    * @return item name, list name
    */
-  fun deleteByItemIdAndListId(itemId: UUID, listId: UUID, componentsOwner: String): Pair<String, String> {
+  fun deleteByItemIdAndListId(
+    itemId: UUID,
+    listId: UUID,
+    componentsOwner: String,
+  ): Pair<String, String> {
     val item: LrmItem
     val list: LrmList
     val association: Association
@@ -376,7 +394,12 @@ class AssociationService(
    * @param componentsOwner expected owner of item and list
    * @return item name, current list name, new list name
    */
-  fun updateList(itemId: UUID, currentListId: UUID, destinationListId: UUID, componentsOwner: String): Triple<String, String, String> {
+  fun updateList(
+    itemId: UUID,
+    currentListId: UUID,
+    destinationListId: UUID,
+    componentsOwner: String,
+  ): Triple<String, String, String> {
     val item: LrmItem
     val currentList: LrmList
     val destinationList: LrmList

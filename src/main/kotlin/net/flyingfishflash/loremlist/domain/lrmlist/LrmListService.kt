@@ -16,10 +16,7 @@ import java.util.UUID
 
 @Service
 @Transactional
-class LrmListService(
-  private val associationService: AssociationService,
-  private val lrmListRepository: LrmListRepository,
-) {
+class LrmListService(private val associationService: AssociationService, private val lrmListRepository: LrmListRepository) {
   fun countByOwner(owner: String): Long {
     try {
       val count = lrmListRepository.countByOwner(owner = owner)
@@ -75,7 +72,11 @@ class LrmListService(
     }
   }
 
-  fun deleteByOwnerAndId(id: UUID, owner: String, removeItemAssociations: Boolean): LrmListDeleteResponse {
+  fun deleteByOwnerAndId(
+    id: UUID,
+    owner: String,
+    removeItemAssociations: Boolean,
+  ): LrmListDeleteResponse {
     try {
       val list = findByOwnerAndIdIncludeItems(id = id, owner = owner)
       val lrmListDeleteResponse = LrmListDeleteResponse(
@@ -194,7 +195,11 @@ class LrmListService(
   }
 
   @Suppress("kotlin:S3776")
-  fun patchByOwnerAndId(id: UUID, owner: String, patchRequest: Map<String, Any>): Pair<LrmList, Boolean> {
+  fun patchByOwnerAndId(
+    id: UUID,
+    owner: String,
+    patchRequest: Map<String, Any>,
+  ): Pair<LrmList, Boolean> {
     var patched = false
     var lrmList = findByOwnerAndId(id = id, owner = owner)
     var newName = lrmList.name

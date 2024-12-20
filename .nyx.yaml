@@ -7,7 +7,7 @@ changelog:
   path: "build/CHANGELOG.md"
   template: ".nyx-changelog.template"
   sections:
-    "Dependencies": "^dependency$"
+    "Dependencies": "^dependency$|^dependencies$"
     "Additions": "^feature$"
     "Changes": "(^refactor$|^perf$)"
     "Fixes": "^fix$"

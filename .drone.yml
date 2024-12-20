@@ -112,6 +112,7 @@ steps:
         -Dsonar.host.url=$SONAR_HOST
         -Dsonar.token=$SONAR_TOKEN
         -Dsonar.qualitygate.wait=true
+        -Dsonar.scanner.skipJreProvisioning=true
         -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
     environment:
       SONAR_HOST:
