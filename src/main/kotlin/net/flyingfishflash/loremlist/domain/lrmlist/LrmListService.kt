@@ -93,7 +93,7 @@ class LrmListService(
           }
         } else {
           // throw an exception rather than removing the item from all lists and then deleting it
-          val message = "List $id is associated with ${lrmListDeleteResponse.associatedItemNames.size} item(s). " +
+          val message = "List '${list.name}' is associated with ${lrmListDeleteResponse.associatedItemNames.size} item(s). " +
             "First remove each item from the list."
           throw ApiException(
             httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
@@ -101,6 +101,7 @@ class LrmListService(
               "listNames" to lrmListDeleteResponse.listNames.toJsonElement(),
               "associatedItemNames" to lrmListDeleteResponse.associatedItemNames.toJsonElement(),
             ),
+            responseMessage = "'${list.name}' includes ${lrmListDeleteResponse.associatedItemNames.size} item(s).",
             message = message,
           )
         }
@@ -116,7 +117,7 @@ class LrmListService(
 
       return lrmListDeleteResponse
     } catch (apiException: ApiException) {
-      val message = "List id $id could not be deleted: ${apiException.responseMessage}"
+      val message = "List could not be deleted: ${apiException.responseMessage}"
       throw ApiException(
         cause = apiException,
         httpStatus = apiException.httpStatus,

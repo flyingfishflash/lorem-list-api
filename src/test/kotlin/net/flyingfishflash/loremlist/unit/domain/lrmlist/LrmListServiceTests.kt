@@ -155,7 +155,7 @@ class LrmListServiceTests : DescribeSpec({
       val exception =
         shouldThrow<ApiException> { lrmListService.deleteByOwnerAndId(id = id1, owner = "lorem list", removeItemAssociations = false) }
       exception.cause.shouldBeInstanceOf<ListNotFoundException>()
-      exception.responseMessage.shouldBe("List id $id1 could not be deleted: List could not be found.")
+      exception.responseMessage.shouldBe("List could not be deleted: List could not be found.")
       verify(
         exactly = 1,
       ) { mockLrmListRepository.findByOwnerAndIdOrNullIncludeItems(id = ofType(UUID::class), owner = ofType(String::class)) }
@@ -200,13 +200,13 @@ class LrmListServiceTests : DescribeSpec({
         exception.supplemental.shouldNotBeNull()["associatedItemNames"]
           .shouldBe(lrmListWithItems().items?.map { it.name }.toJsonElement())
         exception.message
-          .shouldContainIgnoringCase("$id1")
+          .shouldContainIgnoringCase(lrmList().name)
           .shouldContainIgnoringCase("could not be deleted")
-          .shouldContainIgnoringCase("is associated with")
+          .shouldContainIgnoringCase("includes")
         exception.responseMessage
-          .shouldContainIgnoringCase("$id1")
+          .shouldContainIgnoringCase(lrmList().name)
           .shouldContainIgnoringCase("could not be deleted")
-          .shouldContainIgnoringCase("is associated with")
+          .shouldContainIgnoringCase("includes")
       }
 
       it("list repository returns > 1 deleted records") {
