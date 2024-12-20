@@ -1,18 +1,30 @@
 ---
-- name: Deploy Lorem-List-Api via podman
+- name: Deploy lorem-list-api via podman
   hosts: all
   remote_user: container-runner
   vars:
+    deploy_postgresql_container: false
+
+    # to keep these out of the repository they could be definied as drone repository secrets
+    # and written to variables.yaml
+
+    # for connecting to an existing database
+    dev_datasource_connection_url: jdbc:postgresql://proxy.flyingfishflash.net:53577/lorem-list
+    prd_datasource_connection_url: jdbc:postgresql://proxy.flyingfishflash.net:53571/lorem-list
+
+    # for creating a postgresql container
     dev_published_ports_postgresql:
       - "53172:5432"
-    dev_published_ports_api:
-      - "53171:8282"
     prd_published_ports_postgresql:
       - "53162:5432"
+
+    # published api ports
+    dev_published_ports_api:
+      - "53171:8282"
     prd_published_ports_api:
       - "53161:8282"
 
-    # https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html
+  # https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html
 
   tasks:
     - name: Include variables file
@@ -31,50 +43,15 @@
       ansible.builtin.fail:
         msg: tag is not defined or empty
       when:
-        - (tag is not defined) or (tag | length == 0)
+        - (tag is not defined)  or (tag == None) or (tag | length == 0)
 
     - name: Ensure registry_url is defined and not empty
       ansible.builtin.fail:
         msg: registry_url is not defined or empty
       when:
-        - (registry_url is not defined) or (registry_url | length == 0)
+        - (registry_url is not defined) or (registry_url == None) or (registry_url | length == 0)
 
-    - name: Define region specific variables - dev
-      ansible.builtin.set_fact:
-        published_ports_postgresql: "{{ dev_published_ports_postgresql }}"
-        published_ports_api: "{{ dev_published_ports_api }}"
-        region_configured: true
-      when:
-        - region == "dev"
-        - (published_ports_postgresql is not defined) and (published_ports_api is not defined)
-        - (dev_published_ports_postgresql is defined) and (dev_published_ports_postgresql | length > 0)
-        - (dev_published_ports_api is defined) and (dev_published_ports_api | length > 0)
-
-    - name: Define region specific variables - prd
-      ansible.builtin.set_fact:
-        published_ports_postgresql: "{{ prd_published_ports_postgresql }}"
-        published_ports_api: "{{ prd_published_ports_api }}"
-        region_configured: true
-      when:
-        - region_configured is not defined
-        - region == "prd"
-        - (published_ports_postgresql is not defined) and (published_ports_api is not defined)
-        - (prd_published_ports_postgresql is defined) and (prd_published_ports_postgresql | length > 0)
-        - (prd_published_ports_api is defined) and (prd_published_ports_api | length > 0)
-
-    - name: Ensure published_ports_postgresql is defined and not empty
-      ansible.builtin.fail:
-        msg: published_ports_postgresql is not defined or empty
-      when:
-        - (published_ports_postgresql is not defined) or (published_ports_postgresql | length == 0)
-
-    - name: Ensure published_ports_api is defined and not empty
-      ansible.builtin.fail:
-        msg: published_ports_api is not defined or empty
-      when:
-        - (published_ports_api is not defined) or (published_ports_api | length == 0)
-
-    - name: Stop Lorem-List-Api container services
+    - name: Stop lorem-list-api container services
       ansible.builtin.systemd:
         name: "{{ item }}"
         state: stopped
@@ -85,15 +62,19 @@
         - lorem-list-api-{{ region }}
         - lorem-list-api-postgresql-{{ region }}
 
-    - name: Remove Lorem-List-Api container quadlets
+    # -----------------------------------------
+    # remove existing quadlets (if any)
+    # -----------------------------------------
+
+    - name: Remove lorem-list-api container quadlets
       ansible.builtin.file:
-        name: ~/.config/containers/systemd/{{ item }}/{{ item }}.container
+        name: ~/.config/containers/systemd/lorem-list-api-{{ region }}/{{ item }}.container
         state: absent
       loop:
         - lorem-list-api-{{ region }}
         - lorem-list-api-postgresql-{{ region }}
 
-    - name: Remove Lorem-List-Api network quadlets
+    - name: Remove lorem-list-api network quadlets
       ansible.builtin.file:
         name: ~/.config/containers/systemd/lorem-list-api-{{ region }}/lorem-list-api-{{ region }}.network
         state: absent
@@ -104,6 +85,35 @@
         dest: ~/.config/containers/systemd/lorem-list-api-{{ region }}/lorem-list-api-{{ region }}.network
         mode: "0644"
         force: false
+
+    # -----------------------------------------
+    # configure lorem-list-postgresql container
+    # -----------------------------------------
+
+    - name: Define region specific variables - dev - lorem-list-postgresql
+      ansible.builtin.set_fact:
+        published_ports_postgresql: "{{ dev_published_ports_postgresql }}"
+      when:
+        - deploy_postgresql_container
+        - region == "dev"
+        - published_ports_postgresql is not defined
+        - (dev_published_ports_postgresql is defined) and (dev_published_ports_postgresql == None or dev_published_ports_postgresql | length > 0)
+
+    - name: Define region specific variables - prd - lorem-list-postgresql
+      ansible.builtin.set_fact:
+        published_ports_postgresql: "{{ prd_published_ports_postgresql }}"
+      when:
+        - deploy_postgresql_container
+        - region == "prd"
+        - (published_ports_postgresql is not defined)
+        - (prd_published_ports_postgresql is defined) and (prd_published_ports_postgresql == None or prd_published_ports_postgresql | length > 0)
+
+    - name: Ensure published_ports_postgresql is defined and not empty
+      ansible.builtin.fail:
+        msg: published_ports_postgresql is not defined or empty
+      when:
+        - deploy_postgresql_container
+        - (published_ports_postgresql is not defined) or (published_ports_postgresql == None) or (published_ports_postgresql | length == 0)
 
     - name: Define quadlet lorem-list-api-postgresql-{{ region }}
       ansible.builtin.set_fact:
@@ -127,6 +137,76 @@
           service_restart: on-failure
           service_restart_sec: 30
           install_wanted_by: default.target
+      when:
+        - deploy_postgresql_container
+
+    - name: Define quadlet_lorem_list_api_postgresql template variable
+      ansible.builtin.set_fact:
+        quadlet: "{{ quadlet_lorem_list_api_postgresql }}"
+      when:
+        - deploy_postgresql_container
+
+    - name: Push lorem-list-api-postgreql container quadlet
+      ansible.builtin.template:
+        src: quadlets/quadlet.container.j2
+        dest: ~/.config/containers/systemd/lorem-list-api-{{ region }}/{{ quadlet.file_name }}
+        mode: "0644"
+      when:
+        - deploy_postgresql_container
+
+    # -----------------------------------------
+    # configure lorem-list-api container
+    # -----------------------------------------
+
+    - name: Define region specific variables - dev - lorem-list-api
+      ansible.builtin.set_fact:
+        published_ports_api: "{{ dev_published_ports_api }}"
+        region_configured: true
+      when:
+        - region == "dev"
+        - published_ports_api is not defined
+        - (dev_published_ports_api is defined) and (dev_published_ports_api | length > 0)
+
+    - name: Define region specific variables - prd - lorem-list-api
+      ansible.builtin.set_fact:
+        published_ports_api: "{{ prd_published_ports_api }}"
+      when:
+        - region == "prd"
+        - (published_ports_api is not defined)
+        - (prd_published_ports_api is defined) and (prd_published_ports_api == None or prd_published_ports_api | length > 0)
+
+    - name: Ensure published_ports_api is defined and not empty
+      ansible.builtin.fail:
+        msg: published_ports_api is not defined or empty
+      when:
+        - (published_ports_api is not defined) or (published_ports_api == None) or (published_ports_api | length == 0)
+
+    - name: Define datasource connection for managed postgresql container
+      ansible.builtin.set_fact:
+        datasource_url: jdbc:postgresql://lorem-list-api-postgresql-{{ region }}:5432/lorem-list
+        quadlet_lorem_list_api_unit_requires: lorem-list-api-postgresql-{{ region }}.service
+      when:
+        - deploy_postgresql_container
+
+    - name: Define datsource connection for unmanaged postgresql server - dev
+      ansible.builtin.set_fact:
+        datasource_url: "{{ dev_datasource_connection_url }}"
+      when:
+        - not deploy_postgresql_container
+        - region == "dev"
+
+    - name: Define datsource connection for unmanaged postgresql server - prd
+      ansible.builtin.set_fact:
+        datasource_url: "{{ prd_datasource_connection_url }}"
+      when:
+        - not deploy_postgresql_container
+        - region == "prd"
+
+    - name: Ensure datasource_url is defined and not empty
+      ansible.builtin.fail:
+        msg: datasource_url is not defined or empty
+      when:
+        - (datasource_url is not defined) or (datasource_url == None) or (datasource_url | length == 0)
 
     - name: Define quadlet lorem-list-api-{{ region }}
       ansible.builtin.set_fact:
@@ -135,14 +215,14 @@
           file_name: lorem-list-api-{{ region }}.container
           unit_after: lorem-list-api-{{ region }}.service
           unit_description: "lorem-list-api [{{ region }}]"
-          unit_requires: lorem-list-api-postgresql-{{ region }}.service
+          unit_requires: "{{ quadlet_lorem_list_api_unit_requires | default('') }}"
           unit_start_limit_interval_sec: 175
           unit_start_limit_burst: 5
           container_environment:
             - JDK_JAVA_OPTIONS: -Djava.security.egd=file:/dev/./urandom -Duser.timezone="UTC"
             - SPRING_PROFILES_ACTIVE: postgresql
             - SPRING_JPA_SHOW_SQL: false
-            - SPRING_DATASOURCE_URL: jdbc:postgresql://lorem-list-api-postgresql-{{ region }}:5432/lorem-list
+            - SPRING_DATASOURCE_URL: "{{ datasource_url }}"
             - SPRING_DATASOURCE_USERNAME: lorem-list-api
             - SPRING_DATASOURCE_PASSWORD: lorem-list-api
             - SPRING_DATASOURCE_PLATFORM: POSTGRESQL
@@ -157,25 +237,19 @@
           service_restart_sec: 35
           install_wanted_by: default.target
 
-    - name: Define quadlet
-      ansible.builtin.set_fact:
-        quadlet: "{{ quadlet_lorem_list_api_postgresql }}"
-
-    - name: Push container quadlet
-      ansible.builtin.template:
-        src: quadlets/quadlet.container.j2
-        dest: ~/.config/containers/systemd/lorem-list-api-{{ region }}/{{ quadlet.file_name }}
-        mode: "0644"
-
-    - name: Define quadlet
+    - name: Define quadlet_lorem_list_api template variable
       ansible.builtin.set_fact:
         quadlet: "{{ quadlet_lorem_list_api }}"
 
-    - name: Push container quadlet
+    - name: Push lorem-list-api container quadlet
       ansible.builtin.template:
         src: quadlets/quadlet.container.j2
         dest: ~/.config/containers/systemd/lorem-list-api-{{ region }}/{{ quadlet.file_name }}
         mode: "0644"
+
+    # -----------------------------------------
+    # start lorem-list containers
+    # -----------------------------------------
 
     - name: Re-read systemd configuration
       ansible.builtin.systemd:
@@ -187,6 +261,8 @@
         name: lorem-list-api-postgresql-{{ region }}
         state: started
         scope: user
+      when:
+        - deploy_postgresql_container
 
     - name: Pull image lorem-list-api:{{ tag }}
       containers.podman.podman_image:
