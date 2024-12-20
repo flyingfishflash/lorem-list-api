@@ -1540,9 +1540,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("delete list 0 (removeItemAssociations = false)") {
-        val expected =
-          "List id ${listIds[0]} could not be deleted: List ${listIds[0]} is associated with 1 item(s). " +
-            "First remove each item from the list."
+        val expected = "List could not be deleted: '${updateLrmListOneRequest().name}' includes 1 item(s)."
         val instance = "/lists/${listIds[0]}"
         mockMvc.delete(instance) {
           with(jwt())
