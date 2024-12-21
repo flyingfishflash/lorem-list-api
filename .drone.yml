@@ -56,7 +56,7 @@ services:
 steps:
   # nyx requires git tags to infer the current version
   - name: fetch git tags
-    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:3.1.0
     commands:
       - git fetch --tags -q
 
@@ -156,7 +156,7 @@ environment:
 
 steps:
   - name: generate image tags
-    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:3.1.0
     commands:
       # nyx requires git tags to infer the current version
       - git fetch --tags -q
@@ -208,7 +208,7 @@ volumes:
 
 steps:
   - name: "publish - release"
-    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:3.1.0
     environment:
       NYX_FLYINGFISHFLASH_TOKEN_CODEBERG:
         from_secret: nyx_flyingfishflash_token_codeberg
@@ -255,7 +255,7 @@ environment:
 
 steps:
   - name: infer version
-    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:3.1.0
     commands:
       # nyx requires git tags to infer the current version
       - git fetch --tags -q
@@ -323,7 +323,7 @@ environment:
 
 steps:
   - name: infer version
-    image: registry.flyingfishflash.net/flyingfishflash/nyx:latest
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:3.1.0
     commands:
       # nyx requires git tags to infer the current version
       - git fetch --tags -q
