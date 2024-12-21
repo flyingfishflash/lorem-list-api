@@ -226,6 +226,7 @@ steps:
       - git remote add lan https://forgejo.flyingfishflash.net/lorem-list/lorem-list-api.git
       - mkdir /drone/src/build
       - nyx publish --dry-run=false
+      - cat /drone/src/build/CHANGELOG.md
     volumes:
       - name: drone_cache
         path: /drone/cache
