@@ -212,18 +212,20 @@ steps:
     environment:
       NYX_FLYINGFISHFLASH_TOKEN_CODEBERG:
         from_secret: nyx_flyingfishflash_token_codeberg
-#      NYX_FLYINGFISHFLASH_TOKEN_GITHUB:
-#        from_secret: nyx_flyingfishflash_token_github
-#      NYX_FLYINGFISHFLASH_TOKEN_GITLAB:
-#        from_secret: nyx_flyingfishflash_token_gitlab
+      NYX_FLYINGFISHFLASH_TOKEN_GITLAB:
+       from_secret: nyx_flyingfishflash_token_gitlab
       NYX_FLYINGFISHFLASH_TOKEN_LAN:
         from_secret: nyx_flyingfishflash_token_lan
+#      NYX_FLYINGFISHFLASH_TOKEN_GITHUB:
+#        from_secret: nyx_flyingfishflash_token_github
+
     commands:
       # nyx requires git tags to infer the current version
       - git fetch --tags -q
       # nyx is configured to push to the 'lan' remote
       # the 'lan' remote is mirrored to codeberg
       - git remote add lan https://forgejo.flyingfishflash.net/lorem-list/lorem-list-api.git
+      - git remote add gitlab https://gitlab.com/flyingfishflash/lorem-list-api.git
       - mkdir /drone/src/build
       - nyx publish --dry-run=false
       - cat /drone/src/build/CHANGELOG.md

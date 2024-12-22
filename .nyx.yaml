@@ -31,6 +31,10 @@ git:
       authenticationMethod: USER_PASSWORD
       user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_LAN{{/environmentVariable}}"
       password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_LAN{{/environmentVariable}}"
+    gitlab:
+      authenticationMethod: USER_PASSWORD
+      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITLAB{{/environmentVariable}}"
+      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITLAB{{/environmentVariable}}"
 #    codeberg:
 #      authenticationMethod: USER_PASSWORD
 #      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
@@ -41,9 +45,11 @@ releaseTypes:
     - release
     - internal
   publicationServices:
+    - gitlab
     - lan
-    - codeberg
+    # - codeberg
   remoteRepositories:
+    - gitlab
     - lan
   items:
     mainline:
