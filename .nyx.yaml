@@ -39,10 +39,10 @@ git:
       authenticationMethod: USER_PASSWORD
       user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITHUB{{/environmentVariable}}"
       password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITHUB{{/environmentVariable}}"
-#    codeberg:
-#      authenticationMethod: USER_PASSWORD
-#      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
-#      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+    codeberg:
+      authenticationMethod: USER_PASSWORD
+      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
 releaseTypes:
   enabled:
     - mainline
@@ -57,6 +57,7 @@ releaseTypes:
     - gitlab
     - github
     - lan
+    - codeberg
   items:
     mainline:
       collapseVersions: false
