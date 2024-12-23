@@ -52,7 +52,7 @@ releaseTypes:
     - gitlab
     - github
     - lan
-    # - codeberg
+    - codeberg
   remoteRepositories:
     - gitlab
     - github
