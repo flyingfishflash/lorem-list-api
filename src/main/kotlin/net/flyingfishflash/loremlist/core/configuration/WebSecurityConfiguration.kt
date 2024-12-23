@@ -51,7 +51,7 @@ class WebSecurityConfiguration {
         jwt { }
       }
       sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
-      authorizeRequests {
+      authorizeHttpRequests {
         authorize(AntPathRequestMatcher("favicon.ico", HttpMethod.GET.name()), permitAll)
         authorize(AntPathRequestMatcher("/v3/api-docs/**", HttpMethod.GET.name()), permitAll)
         authorize(AntPathRequestMatcher("/swagger-resources/**", HttpMethod.GET.name()), permitAll)
