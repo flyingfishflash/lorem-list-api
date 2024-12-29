@@ -90,7 +90,7 @@ dependencies {
   }
 }
 
-jacoco { toolVersion = "0.8.11" }
+jacoco { toolVersion = "0.8.12" }
 
 java {
   sourceCompatibility = JavaVersion.VERSION_23
@@ -244,6 +244,7 @@ tasks {
       xml.required.set(true)
     }
   }
+
   register("writeVersionToFile") {
     doLast { File(".version").writeText(project.version.toString()) }
   }
