@@ -1,4 +1,4 @@
-FROM eclipse-temurin:22-jdk-alpine
+FROM eclipse-temurin:23-jdk-alpine
 VOLUME /tmp
 EXPOSE 8282
 RUN mkdir /app

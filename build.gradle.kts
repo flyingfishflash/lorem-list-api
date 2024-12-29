@@ -93,9 +93,9 @@ dependencies {
 jacoco { toolVersion = "0.8.11" }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_22
+  sourceCompatibility = JavaVersion.VERSION_23
   toolchain {
-    languageVersion = JavaLanguageVersion.of(22)
+    languageVersion = JavaLanguageVersion.of(23)
   }
 }
 
@@ -177,7 +177,7 @@ spotless {
 tasks {
   compileKotlin {
     compilerOptions {
-      jvmTarget.set(JvmTarget.JVM_22)
+      jvmTarget.set(JvmTarget.JVM_23)
       freeCompilerArgs.add("-Xjsr305=strict")
     }
   }
