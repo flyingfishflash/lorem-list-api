@@ -1,0 +1,52 @@
+variables:
+  - &validation_image registry.flyingfishflash.net/docker.io/alpine/httpie
+  - TERM: &validation_term xterm-256color
+  - OPTIONS: &validation_options --verify=no --style=gruvbox-dark --pretty=all --print=mhb
+  - &validation_commands
+      - sleep 3
+      - https --sorted $OPTIONS get $URL/api/v1/management/health
+      - https --sorted $OPTIONS get $URL/api/v1/management/info
+      - https $OPTIONS get $URL/api/v1/public/lists
+
+when:
+  event:
+    - push
+    - manual
+  branch:
+    - ci-*
+    - dependencies
+    - feature-*
+    - fix-*
+    - perf-*
+    - refactor-*
+    - release
+
+depends_on:
+  - deploy
+
+skip_clone: true
+
+steps:
+  - name: verify api is up [dev]
+    image: *validation_image
+    environment:
+      TERM: *validation_term
+      OPTIONS: *validation_options
+      URL:
+        from_secret: url_dev
+    commands: *validation_commands
+    when:
+      - branch:
+          exclude: release
+
+  - name: verify api is up [prd]
+    image: *validation_image
+    environment:
+      TERM: *validation_term
+      OPTIONS: *validation_options
+      URL:
+        from_secret: url_prd
+    commands: *validation_commands
+    when:
+      - branch:
+          include: release

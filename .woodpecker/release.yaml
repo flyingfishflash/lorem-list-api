@@ -1,0 +1,44 @@
+when:
+  event:
+    - push
+    - manual
+  ref: refs/heads/release
+
+depends_on:
+  - publish-image
+
+variables:
+  - &cache_volume '/home/container-runner/.local/share/docker/volumes-managed/woodpecker-ci-cache:/woodpecker/cache'
+
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      partial: false
+      tags: true
+
+steps:
+  - name: release
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:3.1.0
+    environment:
+      NYX_FLYINGFISHFLASH_TOKEN_CODEBERG:
+        from_secret: nyx_flyingfishflash_token_codeberg
+      NYX_FLYINGFISHFLASH_TOKEN_GITLAB:
+       from_secret: nyx_flyingfishflash_token_gitlab
+      NYX_FLYINGFISHFLASH_TOKEN_LAN:
+        from_secret: nyx_flyingfishflash_token_lan
+      NYX_FLYINGFISHFLASH_TOKEN_GITHUB:
+        from_secret: nyx_flyingfishflash_token_github
+
+    commands:
+      # 'lan' is push-mirrored to all other remotes
+      # configuring the remotes is neccesary because nyx adds the release tag.
+      - git remote add lan https://forgejo.flyingfishflash.net/lorem-list/lorem-list-api.git
+      - git remote add gitlab https://gitlab.com/flyingfishflash/lorem-list-api.git
+      - git remote add github https://github.com/flyingfishflash/lorem-list-api.git
+      - git remote add codeberg https://codeberg.org/lorem-list/lorem-list-api.git
+      - mkdir ./build
+      - nyx publish --dry-run=false
+      - cat ./build/CHANGELOG.md
+    volumes: 
+      - *cache_volume

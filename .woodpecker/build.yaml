@@ -1,0 +1,100 @@
+variables:
+  - &cache_volume '/home/container-runner/.local/share/docker/volumes-managed/woodpecker-ci-cache:/woodpecker/cache'
+
+when:
+  event:
+    - push
+    - manual
+  branch:
+    - build-*
+    - ci-*
+    - dependencies
+    - dependency-*
+    - dependency
+    - feature-*
+    - fix-*
+    - main
+    - perf-*
+    - refactor-*
+    - release
+    - style-*
+    - test-*
+  
+services:
+  - name: postgres
+    image: registry.flyingfishflash.net/docker.io/postgres:17-alpine
+    environment:
+      POSTGRES_USER: lorem-list
+      POSTGRES_PASSWORD: lorem-list
+      POSTGRES_DB: lorem-list
+
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      partial: false
+      tags: true
+
+steps:
+  - name: verify postgres
+    image: registry.flyingfishflash.net/docker.io/postgres:17-alpine
+    commands:
+      - |
+        until psql "dbname=lorem-list host=postgres user=lorem-list password=lorem-list port=5432" \
+          -c "select 1;" >/dev/null 2>&1; do sleep 1; done        
+      - |
+        psql "dbname=lorem-list host=postgres user=lorem-list password=lorem-list port=5432" \
+          -c "select count(*) from pg_catalog.pg_tables;"   
+
+  - name: build
+    # for some reason when building with the -alpine tag the postgres password property does not propogate
+    image: registry.flyingfishflash.net/docker.io/gradle:8-jdk23
+    depends_on:
+      - verify postgres
+    commands:
+      - export GRADLE_USER_HOME=/woodpecker/cache/$CI_REPO/gradle-user-home
+      - echo $GRADLE_USER_HOME
+      - mkdir -pv $GRADLE_USER_HOME
+      - touch $GRADLE_USER_HOME/gradle.properties
+      - echo org.gradle.caching=true > $GRADLE_USER_HOME/gradle.properties
+      - echo org.gradle.daemon=false >> $GRADLE_USER_HOME/gradle.properties
+      - export GRADLE_PROJECT_BUILD_DIR=/woodpecker/cache/$CI_REPO/build
+      - echo $GRADLE_PROJECT_BUILD_DIR
+      - mkdir -pv $GRADLE_PROJECT_BUILD_DIR
+      - >
+        gradle
+        clean
+        :explodebootjar
+        :copyBuildInfo
+        :testClasses
+        :spotlessCheck
+        :test
+        :integrationTests
+        :bootBuildInfo
+        -Pspring.profiles.active=h2
+        -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
+      - >
+        gradle
+        :integrationTests
+        -Pspring.profiles.active=postgresql
+        -Pspring.datasource.url=jdbc:postgresql://postgres:5432/lorem-list?reWriteBatchedInserts=true
+        -Pspring.datasource.username=lorem-list
+        -Pspring.datasource.password=lorem-list
+        -Pspring.datasource.platform=postgresql
+        -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
+      - >
+        ./scripts/ci/drone/drone-is-sonar-configured.sh &&
+        gradle
+        sonar
+        -Dsonar.host.url=$SONAR_HOST
+        -Dsonar.token=$SONAR_TOKEN
+        -Dsonar.qualitygate.wait=true
+        -Dsonar.scanner.skipJreProvisioning=true
+        -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
+    environment:
+      SONAR_HOST:
+        from_secret: sonar_host
+      SONAR_TOKEN:
+        from_secret: sonar_token
+    volumes: 
+      - *cache_volume

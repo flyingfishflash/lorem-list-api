@@ -1,0 +1,96 @@
+when:
+  event:
+    - push
+    - manual
+  branch:
+    - ci-*
+    - dependencies
+    - feature-*
+    - fix-*
+    - perf-*
+    - refactor-*
+    - release
+
+depends_on:
+  - publish-image
+
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      partial: false
+      tags: true
+
+steps:
+  - name: infer version
+    image: registry.flyingfishflash.net/flyingfishflash/nyx:3.1.0
+    commands:
+      - rm -fv .version
+      - echo "export NYX_CURRENT_VERSION=$(nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n')" > .version
+      - cat .version
+
+  - name: create inventory file
+    image: registry.flyingfishflash.net/docker.io/alpine:latest
+    environment:
+      DEPLOY_TO_HOST:
+        from_secret: DEPLOY_TO_HOST
+    commands:
+      - echo "$DEPLOY_TO_HOST" > scripts/ci/drone/deploy/inventory
+      - cat scripts/ci/drone/deploy/inventory
+
+  - name: create variables file
+    image: registry.flyingfishflash.net/docker.io/alpine:latest
+    depends_on:
+      - infer version
+    environment:
+      DEPLOY_TO_HOST:
+        from_secret: DEPLOY_TO_HOST
+      REGISTRY_URL:
+        from_secret: REGISTRY_HOSTNAME
+    commands:
+      - source .version
+      - ls -la
+      - echo "---" > scripts/ci/drone/deploy/variables.yaml
+      - 'echo "tag: $NYX_CURRENT_VERSION" >> scripts/ci/drone/deploy/variables.yaml'
+      - 'echo "registry_url: $REGISTRY_URL/lorem-list" >> scripts/ci/drone/deploy/variables.yaml'
+      - 'echo "deploy_to_host: $DEPLOY_TO_HOST" >> scripts/ci/drone/deploy/variables.yaml'
+      - cat scripts/ci/drone/deploy/variables.yaml
+
+  - name: execute deployment [dev]
+    image: woodpeckerci/plugin-ansible
+    depends_on:
+      - create inventory file
+      - create variables file
+    settings:
+      extra_vars: 'region=dev'
+      galaxy: scripts/ci/drone/deploy/requirements.yaml
+      inventory: scripts/ci/drone/deploy/inventory
+      playbook: scripts/ci/drone/deploy/deploy.yaml
+      private_key:
+        from_secret: drone_deployer_ssh_key_private
+      ssh-extra-args: '-o StrictHostKeyChecking=no'
+      user:
+        from_secret: drone_deployer_ssh_username
+    when:
+      - branch:
+          exclude: release
+
+  - name: execute deployment [prd]
+    image: woodpeckerci/plugin-ansible
+    depends_on:
+      - create inventory file
+      - create variables file
+    settings:
+      extra_vars: 'region=prd'
+      galaxy: scripts/ci/drone/deploy/requirements.yaml
+      inventory: scripts/ci/drone/deploy/inventory
+      playbook: scripts/ci/drone/deploy/deploy.yaml
+      private_key:
+        from_secret: drone_deployer_ssh_key_private
+      ssh-extra-args: '-o StrictHostKeyChecking=no'
+      user:
+        from_secret: drone_deployer_ssh_username
+    when:
+      - branch:
+          include: release
+
