@@ -10,7 +10,6 @@ when:
     - dependency
     - feature-*
     - fix-*
-    - main
     - perf-*
     - refactor-*
     - release
