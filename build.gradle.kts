@@ -269,6 +269,8 @@ fun ciPlatform(): String {
     } else if (System.getenv("GITLAB_CI") == "true") {
       ciPlatform = "gitlab"
     }
+  } else if (System.getenv("CI") == "woodpecker") {
+    ciPlatform = System.getenv("CI")
   }
   return ciPlatform
 }
@@ -279,6 +281,8 @@ fun ciPipelineId(): String {
     ciPipelineId = System.getenv("DRONE_BUILD_NUMBER")
   } else if (ciPlatform() == "gitlab") {
     ciPipelineId = System.getenv("CI_PIPELINE_ID")
+  } else if (ciPlatform() == "woodpecker") {
+    ciPipelineId = System.getenv("CI_PIPELINE_NUMBER")
   }
   return ciPipelineId
 }
@@ -289,6 +293,8 @@ fun ciCommit(): String {
     ciCommit = System.getenv("DRONE_COMMIT_SHA").slice(0..7)
   } else if (ciPlatform() == "gitlab") {
     ciCommit = System.getenv("CI_COMMIT_SHORT_SHA")
+  } else if (ciPlatform() == "woodpecker") {
+    ciCommit = System.getenv("CI_COMMIT_SHA").slice(0..7)
   }
   return ciCommit
 }
