@@ -49,12 +49,12 @@ releaseTypes:
     - release
     - internal
   publicationServices:
-    - gitlab
+    # - gitlab
     - github
     - lan
     - codeberg
   remoteRepositories:
-    - gitlab
+    # - gitlab
     - github
     - lan
     - codeberg
@@ -92,7 +92,7 @@ releaseTypes:
         -
           position: PRE_RELEASE
           qualifier: "{{#lower}}{{branch}}{{/lower}}"
-          value: "{{#sanitize}}{{#environmentVariable}}DRONE_BUILD_NUMBER{{/environmentVariable}}{{/sanitize}}"
+          value: "{{#sanitize}}{{#environmentVariable}}CI_PIPELINE_NUMBER{{/environmentVariable}}{{/sanitize}}"
 services:
   codeberg:
     type: "GITHUB"
