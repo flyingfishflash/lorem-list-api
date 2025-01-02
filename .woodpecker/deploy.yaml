@@ -25,6 +25,7 @@ steps:
   - name: infer version
     image: registry.flyingfishflash.net/flyingfishflash/nyx:3.1.0
     commands:
+      - nyx infer --debug
       - rm -fv .version
       - echo "export NYX_CURRENT_VERSION=$(nyx infer --fatal | grep 'current version' | awk '{ print $NF }' | tr -d '\n')" > .version
       - cat .version
