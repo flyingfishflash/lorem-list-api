@@ -68,7 +68,7 @@ releaseTypes:
       gitTag: "false"
       matchBranches: "^main$"
       matchEnvironmentVariables:
-        CI: "^true$"
+        CI: "^(true|woodpecker)$"
       matchWorkspaceStatus: "CLEAN"
       publish: "false"
     release:
@@ -80,7 +80,7 @@ releaseTypes:
       gitTag: "true"
       matchBranches: "^release$"
       matchEnvironmentVariables:
-        CI: "^true$"
+        CI: "^(true|woodpecker)$"
       matchWorkspaceStatus: "CLEAN"
       publish: "true"
     internal:
