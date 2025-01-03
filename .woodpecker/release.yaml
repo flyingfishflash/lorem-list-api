@@ -29,7 +29,6 @@ steps:
         from_secret: nyx_flyingfishflash_token_lan
       NYX_FLYINGFISHFLASH_TOKEN_GITHUB:
         from_secret: nyx_flyingfishflash_token_github
-
     commands:
       # 'lan' is push-mirrored to all other remotes
       # configuring the remotes is neccesary because nyx adds the release tag.

@@ -47,7 +47,7 @@ steps:
           -c "select count(*) from pg_catalog.pg_tables;"   
 
   - name: build
-    # for some reason when building with the -alpine tag the postgres password property does not propogate
+    # for reason unknown, when building with the -alpine tag the postgres password property does not propogate
     image: registry.flyingfishflash.net/docker.io/gradle:8-jdk23
     depends_on:
       - verify postgres

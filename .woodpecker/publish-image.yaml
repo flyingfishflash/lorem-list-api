@@ -41,6 +41,8 @@ steps:
 
   - name: publish
     image: woodpeckerci/plugin-docker-buildx
+    depends_on:
+      - generate image tags
     settings:
       auto_tag: false
       context: /woodpecker/cache/lorem-list/lorem-list-api/
