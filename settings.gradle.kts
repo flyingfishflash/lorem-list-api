@@ -1,5 +1,5 @@
 plugins {
-  id("com.mooltiverse.oss.nyx") version "3.0.0"
+  id("com.mooltiverse.oss.nyx") version "3.1.2"
 }
 
 rootProject.name = "lorem-list-api"
