@@ -36,8 +36,8 @@ steps:
       DEPLOY_TO_HOST:
         from_secret: DEPLOY_TO_HOST
     commands:
-      - echo "$DEPLOY_TO_HOST" > scripts/ci/drone/deploy/inventory
-      - cat scripts/ci/drone/deploy/inventory
+      - echo "$DEPLOY_TO_HOST" > ci/scripts/deploy/inventory
+      - cat ci/scripts/deploy/inventory
 
   - name: create variables file
     image: registry.flyingfishflash.net/docker.io/alpine:latest
@@ -51,11 +51,11 @@ steps:
     commands:
       - source .version
       - ls -la
-      - echo "---" > scripts/ci/drone/deploy/variables.yaml
-      - 'echo "tag: $NYX_CURRENT_VERSION" >> scripts/ci/drone/deploy/variables.yaml'
-      - 'echo "registry_url: $REGISTRY_URL/lorem-list" >> scripts/ci/drone/deploy/variables.yaml'
-      - 'echo "deploy_to_host: $DEPLOY_TO_HOST" >> scripts/ci/drone/deploy/variables.yaml'
-      - cat scripts/ci/drone/deploy/variables.yaml
+      - echo "---" > ci/scripts/deploy/variables.yaml
+      - 'echo "tag: $NYX_CURRENT_VERSION" >> ci/scripts/deploy/variables.yaml'
+      - 'echo "registry_url: $REGISTRY_URL/lorem-list" >> ci/scripts/deploy/variables.yaml'
+      - 'echo "deploy_to_host: $DEPLOY_TO_HOST" >> ci/scripts/deploy/variables.yaml'
+      - cat ci/scripts/deploy/variables.yaml
 
   - name: execute deployment [dev]
     image: woodpeckerci/plugin-ansible
@@ -64,9 +64,9 @@ steps:
       - create variables file
     settings:
       extra_vars: 'region=dev'
-      galaxy: scripts/ci/drone/deploy/requirements.yaml
-      inventory: scripts/ci/drone/deploy/inventory
-      playbook: scripts/ci/drone/deploy/deploy.yaml
+      galaxy: ci/scripts/deploy/requirements.yaml
+      inventory: ci/scripts/deploy/inventory
+      playbook: ci/scripts/deploy/deploy.yaml
       private_key:
         from_secret: drone_deployer_ssh_key_private
       ssh-extra-args: '-o StrictHostKeyChecking=no'
@@ -83,9 +83,9 @@ steps:
       - create variables file
     settings:
       extra_vars: 'region=prd'
-      galaxy: scripts/ci/drone/deploy/requirements.yaml
-      inventory: scripts/ci/drone/deploy/inventory
-      playbook: scripts/ci/drone/deploy/deploy.yaml
+      galaxy: ci/scripts/deploy/requirements.yaml
+      inventory: ci/scripts/deploy/inventory
+      playbook: ci/scripts/deploy/deploy.yaml
       private_key:
         from_secret: drone_deployer_ssh_key_private
       ssh-extra-args: '-o StrictHostKeyChecking=no'

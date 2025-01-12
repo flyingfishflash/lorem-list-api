@@ -83,7 +83,7 @@ steps:
         -Pspring.datasource.platform=postgresql
         -PbuildDir=$GRADLE_PROJECT_BUILD_DIR
       - >
-        ./scripts/ci/drone/drone-is-sonar-configured.sh &&
+        ./ci/scripts/is-sonar-configured.sh &&
         gradle
         sonar
         -Dsonar.host.url=$SONAR_HOST
