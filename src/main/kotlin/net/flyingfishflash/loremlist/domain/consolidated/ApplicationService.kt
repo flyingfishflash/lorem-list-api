@@ -2,7 +2,7 @@
 class ApplicationService(
   private val listRepository: ListRepository,
   private val itemRepository: ItemRepository,
-  private val listItemService: ListItemService
+  private val listItemService: ListItemService,
 ) {
 
   fun createItem(name: String, description: String): Item {
@@ -32,9 +32,7 @@ class ApplicationService(
   }
 }
 
-
-
-//fun main() {
+// fun main() {
 //  // Set up repositories and services
 //  val listRepository = InMemoryListRepository()
 //  val itemRepository = InMemoryItemRepository()
@@ -63,4 +61,4 @@ class ApplicationService(
 //
 //  // Display all lists for Item 2
 //  println("Lists for Item 2: ${applicationService.listListsForItem(item2.id)}")
-//}
+// }
