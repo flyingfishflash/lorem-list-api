@@ -1,12 +1,10 @@
 package net.flyingfishflash.loremlist.domain.lrmlist
 
 import kotlinx.datetime.Instant
-import net.flyingfishflash.loremlist.domain.association.LrmAssociation
-import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemDomain
 import java.util.*
-import net.flyingfishflash.loremlist.domain.association.ItemAssociationContext
 
-data class LrmListDomain(
+class LrmListDomain(
   val id: UUID,
   var name: String,
   var description: String? = null,
@@ -15,34 +13,13 @@ data class LrmListDomain(
   val createdBy: String? = null,
   var updated: Instant? = null,
   var updatedBy: String? = null,
-  private var associations: MutableSet<LrmAssociation> = mutableSetOf(),
-//  private var items: MutableSet<LrmItem> = mutableSetOf(),
 ) {
 
-  fun getItems(): Set<ItemAssociationContext> {
-    return this.associations.
-  }
+  private var items: MutableSet<LrmItemDomain> = mutableSetOf()
 
-//  fun getItems(): Set<LrmItem> {
-//    return items.toSet()
-//  }
+  fun getItems(): Set<LrmItemDomain> = items
 
-  fun addItem(lrmItem: LrmItem): Boolean {
-    return items.add(lrmItem)
-  }
+  fun addItem(item: LrmItemDomain): Boolean = items.add(item)
 
-  fun removeItem(lrmItem: LrmItem): Boolean {
-    return items.remove(lrmItem)
-  }
-
-//  override fun equals(other: Any?): Boolean {
-//    if (this === other) return true
-//    if (javaClass != other?.javaClass) return false
-//    other as LrmListDomain
-//    return id == other.id
-//  }
-//
-//  override fun hashCode(): Int {
-//    return id.hashCode()
-//  }
+  fun removeItem(lrmItem: LrmItemDomain): Boolean = items.remove(lrmItem)
 }

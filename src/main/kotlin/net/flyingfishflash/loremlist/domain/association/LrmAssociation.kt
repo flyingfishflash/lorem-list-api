@@ -1,11 +1,11 @@
 package net.flyingfishflash.loremlist.domain.association
 
-import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemDomain
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListDomain
 
-data class ItemAssociationContext(val lrmItem: LrmItem, val isItemSelected: Boolean)
+data class ItemAssociationContext(val lrmItem: LrmItemDomain, val isItemSelected: Boolean)
 
-class LrmAssociation(val list: LrmList, val item: LrmItem, val isItemSelected: Boolean = true) {
+class LrmAssociation(val list: LrmListDomain, val item: LrmItemDomain, private val isItemSelected: Boolean = true) {
 
   fun getItemAssociationContext(): ItemAssociationContext {
     return ItemAssociationContext(this.item, this.isItemSelected)
