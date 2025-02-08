@@ -101,11 +101,7 @@ class AssociationService(
     return associations
   }
 
-  private fun doCreateForItem(
-    itemId: UUID,
-    owner: String,
-    listIdCollection: List<UUID>,
-  ): AssociationCreatedResponse {
+  private fun doCreateForItem(itemId: UUID, owner: String, listIdCollection: List<UUID>): AssociationCreatedResponse {
     // ensure the item exists and has the correct owner
     val item = lrmItemRepository.findByOwnerAndIdOrNull(
       id = itemId,
@@ -135,11 +131,7 @@ class AssociationService(
     return AssociationCreatedResponse(componentName = item.name, associatedComponents = associatedLists)
   }
 
-  private fun doCreateForList(
-    listId: UUID,
-    owner: String,
-    itemIdCollection: List<UUID>,
-  ): AssociationCreatedResponse {
+  private fun doCreateForList(listId: UUID, owner: String, itemIdCollection: List<UUID>): AssociationCreatedResponse {
     // ensure the list exists
     val list = lrmListRepository.findByOwnerAndIdOrNull(
       id = listId,
@@ -320,11 +312,7 @@ class AssociationService(
    * @param componentsOwner expected owner of item and list
    * @return item name, list name
    */
-  fun deleteByItemIdAndListId(
-    itemId: UUID,
-    listId: UUID,
-    componentsOwner: String,
-  ): Pair<String, String> {
+  fun deleteByItemIdAndListId(itemId: UUID, listId: UUID, componentsOwner: String): Pair<String, String> {
     val item: LrmItem
     val list: LrmList
     val association: Association

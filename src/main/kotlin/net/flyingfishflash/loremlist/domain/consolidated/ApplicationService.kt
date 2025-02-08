@@ -1,42 +1,44 @@
+import net.flyingfishflash.loremlist.domain.consolidated.LrmAssociationService
+
 // A class to coordinate commands for managing items and lists.
 class ApplicationService(
-  private val listRepository: ListRepository,
-  private val itemRepository: ItemRepository,
-  private val listItemService: ListItemService,
+//  private val listRepository: ListRepository,
+//  private val itemRepository: ItemRepository,
+  private val lrmAssociationService: LrmAssociationService,
 ) {
 
-  fun createItem(name: String, description: String): Item {
-    val id = itemRepository.findAll().size.toLong() + 1
-    val item = Item(id, name, description)
-    itemRepository.save(item)
-    return item
-  }
-
-  fun createList(name: String, description: String): List {
-    val id = listRepository.findAll().size.toLong() + 1
-    val list = List(id, name, description)
-    listRepository.save(list)
-    return list
-  }
-
-  fun addItemToList(listId: Long, itemId: Long) {
-    listItemService.addItemToList(listId, itemId)
-  }
-
-  fun listItemsInList(listId: Long): List<Item> {
-    return listItemService.getItemsInList(listId)
-  }
-
-  fun listListsForItem(itemId: Long): List<List> {
-    return listItemService.getListsForItem(itemId)
-  }
+//  fun createItem(name: String, description: String): Item {
+//    val id = itemRepository.findAll().size.toLong() + 1
+//    val item = Item(id, name, description)
+//    itemRepository.save(item)
+//    return item
+//  }
+//
+//  fun createList(name: String, description: String): List {
+//    val id = listRepository.findAll().size.toLong() + 1
+//    val list = List(id, name, description)
+//    listRepository.save(list)
+//    return list
+//  }
+//
+//  fun addItemToList(listId: Long, itemId: Long) {
+//    lrmAssociationService.addItemToList(listId, itemId)
+//  }
+//
+//  fun listItemsInList(listId: Long): List<Item> {
+//    return lrmAssociationService.getItemsInList(listId)
+//  }
+//
+//  fun listListsForItem(itemId: Long): List<List> {
+//    return lrmAssociationService.getListsForItem(itemId)
+//  }
 }
 
 // fun main() {
 //  // Set up repositories and services
 //  val listRepository = InMemoryListRepository()
 //  val itemRepository = InMemoryItemRepository()
-//  val listItemService = ListItemService(listRepository, itemRepository)
+//  val listItemService = net.flyingfishflash.loremlist.domain.consolidated.LrmAssociationService(listRepository, itemRepository)
 //  val applicationService = ApplicationService(listRepository, itemRepository, listItemService)
 //
 //  // Create some items

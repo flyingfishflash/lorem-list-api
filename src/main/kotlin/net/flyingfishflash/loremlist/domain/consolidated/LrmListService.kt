@@ -1,10 +1,11 @@
-package net.flyingfishflash.loremlist.domain.lrmlist
+package net.flyingfishflash.loremlist.domain.consolidated
 
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.association.AssociationService
+import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListPatchRequest
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+// import net.flyingfishflash.loremlist.domain.lrmlist.LrmListConverter
 
 @Service
 @Transactional
@@ -31,6 +33,9 @@ class LrmListService(private val associationService: AssociationService, private
 
   fun create(lrmListCreateRequest: LrmListCreateRequest, owner: String): LrmList {
     try {
+      // create new domain LrmList and sent it to the repository for saving
+
+      // repository should be accepting a domain object, not a create request
       val id = lrmListRepository.insert(lrmListCreateRequest, owner)
       return findByOwnerAndId(id = id, owner = owner)
     } catch (cause: Exception) {

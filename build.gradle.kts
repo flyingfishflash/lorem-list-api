@@ -152,7 +152,7 @@ spotless {
           "ktlint_code_style" to "intellij_idea",
           "max_line_length" to 140,
           "ktlint_standard_function-expression-body" to "disabled",
-          "ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than" to "3",
+          "ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than" to "4",
         ),
       )
     suppressLintsFor {

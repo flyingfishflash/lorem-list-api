@@ -4,7 +4,7 @@ import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import java.util.*
 
-interface LrmItemRepository {
+interface LrmListItemRepository {
   fun countByOwner(owner: String): Long
   fun delete(): Int
   fun deleteById(ids: Set<UUID>): Int

@@ -15,11 +15,7 @@ class AssociationManager {
     allLists.add(list)
   }
 
-  fun addItemToList(
-    item: LrmItemDomain,
-    list: LrmListDomain,
-    isVisible: Boolean,
-  ) {
+  fun addItemToList(item: LrmItemDomain, list: LrmListDomain, isVisible: Boolean) {
     list.addItem(item)
     item.setVisibilityInList(list, isVisible)
   }

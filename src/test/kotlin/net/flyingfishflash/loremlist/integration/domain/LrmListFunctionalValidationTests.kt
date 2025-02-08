@@ -56,11 +56,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
 
     val itemUuids: MutableMap<Int, UUID> = HashMap()
 
-    fun buildMvc(
-      httpMethod: HttpMethod,
-      instance: String,
-      dsl: MockHttpServletRequestDsl.() -> Unit = {},
-    ): ResultActionsDsl {
+    fun buildMvc(httpMethod: HttpMethod, instance: String, dsl: MockHttpServletRequestDsl.() -> Unit = {}): ResultActionsDsl {
       val methodUnsupported = "$httpMethod is not supported by MockMvc"
       require(
         httpMethod != HttpMethod.TRACE &&

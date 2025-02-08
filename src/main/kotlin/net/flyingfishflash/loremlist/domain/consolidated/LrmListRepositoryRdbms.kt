@@ -12,7 +12,7 @@ import net.flyingfishflash.loremlist.domain.LrmListTable.updated
 import net.flyingfishflash.loremlist.domain.LrmListTable.updatedBy
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
+//import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -93,9 +93,9 @@ class LrmListRepositoryRdbms : LrmListRepository {
         description = it[description],
         public = it[public],
         created = it[created],
-        createdBy = it[createdBy],
+        creator = it[createdBy],
         updated = it[updated],
-        updatedBy = it[updatedBy],
+        updater = it[updatedBy],
       )
     }
 
@@ -228,9 +228,9 @@ class LrmListRepositoryRdbms : LrmListRepository {
       description = this[repositoryTable.description],
       public = this[repositoryTable.public],
       created = this[repositoryTable.created],
-      createdBy = this[repositoryTable.createdBy],
+      creator = this[repositoryTable.createdBy],
       updated = this[repositoryTable.updated],
-      updatedBy = this[repositoryTable.updatedBy],
+      updater = this[repositoryTable.updatedBy],
     )
   }
 }

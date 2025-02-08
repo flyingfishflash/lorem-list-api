@@ -1,6 +1,6 @@
 package net.flyingfishflash.loremlist.domain.consolidated
 
-import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
+// import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import java.util.*
 

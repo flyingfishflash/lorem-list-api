@@ -22,7 +22,7 @@ import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-class LrmItemRepositoryRdbms : LrmItemRepository {
+class LrmListItemRepositoryRdbms : LrmListItemRepository {
   private val repositoryTable = LrmListItemTable
 
   override fun countByOwner(owner: String): Long {
