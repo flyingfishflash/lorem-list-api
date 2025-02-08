@@ -24,6 +24,7 @@ import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.association.data.AssociationCreatedResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleteResponse
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -82,11 +83,11 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @RequestBody @Valid lrmItemRequest: LrmItemRequest,
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<LrmItem>> {
+  ): ResponseEntity<ResponseSuccess<LrmItemResponse>> {
     val responseStatus = HttpStatus.OK
     val responseContent = lrmItemService.create(lrmItemRequest, owner = principal.subject)
     val responseMessage = "created new item"
-    val response = ResponseSuccess(responseContent, responseMessage, request)
+    val response = ResponseSuccess(responseContent.toDto(), responseMessage, request)
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
@@ -141,7 +142,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @RequestParam(defaultValue = false.toString()) includeLists: Boolean,
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<List<LrmItem>>> {
+  ): ResponseEntity<ResponseSuccess<List<LrmItemResponse>>> {
     val responseStatus = HttpStatus.OK
     val responseMessage = if (includeLists) {
       "retrieved all items and the lists each item is associated with."
@@ -155,7 +156,8 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     } else {
       lrmItemService.findByOwner(owner = principal.subject)
     }
-    val response = ResponseSuccess(responseContent, responseMessage, request)
+    val responseContentDto = responseContent.map { it.toDto() }
+    val response = ResponseSuccess(responseContentDto, responseMessage, request)
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
@@ -176,7 +178,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @RequestParam(defaultValue = false.toString()) includeLists: Boolean,
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<LrmItem>> {
+  ): ResponseEntity<ResponseSuccess<LrmItemResponse>> {
     val responseStatus = HttpStatus.OK
     val responseMessage = if (includeLists) "retrieved item id $itemId and it's associated lists" else "retrieved item id $itemId"
     val responseContent = if (includeLists) {
@@ -187,7 +189,7 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     } else {
       lrmItemService.findByOwnerAndId(itemId, owner = principal.subject)
     }
-    val response = ResponseSuccess(responseContent, responseMessage, request)
+    val response = ResponseSuccess(responseContent.toDto(), responseMessage, request)
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
@@ -197,11 +199,12 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   fun findByPrincipalAndHavingNoListAssociations(
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<List<LrmItem>>> {
+  ): ResponseEntity<ResponseSuccess<List<LrmItemResponse>>> {
     val serviceResponse = lrmItemService.findByOwnerAndHavingNoListAssociations(owner = principal.subject)
+    val serviceResponseDto = serviceResponse.map { it.toDto() }
     val responseStatus = HttpStatus.OK
-    val responseMessage = "Retrieved ${serviceResponse.size} items that are not a part of a list."
-    val response = ResponseSuccess(serviceResponse, responseMessage, request)
+    val responseMessage = "Retrieved ${serviceResponseDto.size} items that are not a part of a list."
+    val response = ResponseSuccess(serviceResponseDto, responseMessage, request)
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
@@ -223,15 +226,15 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     @RequestBody patchRequest: Map<String, Any>,
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<LrmItem>> {
+  ): ResponseEntity<ResponseSuccess<LrmItemResponse>> {
     val (responseContent, patched) = lrmItemService.patchByOwnerAndId(id = itemId, owner = principal.subject, patchRequest)
     val response: ResponseSuccess<*>
-    val responseEntity: ResponseEntity<ResponseSuccess<LrmItem>>
+    val responseEntity: ResponseEntity<ResponseSuccess<LrmItemResponse>>
     if (patched) {
-      response = ResponseSuccess(responseContent, "patched", request)
+      response = ResponseSuccess(responseContent.toDto(), "patched", request)
       responseEntity = ResponseEntity(response, HttpStatus.OK)
     } else {
-      response = ResponseSuccess(responseContent, "not patched - item is up-to-date", request)
+      response = ResponseSuccess(responseContent.toDto(), "not patched - item is up-to-date", request)
       responseEntity = ResponseEntity(response, HttpStatus.NO_CONTENT)
     }
     logger.info { json.encodeToString(response) }

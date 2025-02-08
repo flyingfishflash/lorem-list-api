@@ -1,23 +1,18 @@
 package net.flyingfishflash.loremlist.domain.lrmlist
 
 import kotlinx.datetime.Instant
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
-import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
+import net.flyingfishflash.loremlist.domain.lrmitem.toDto
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListResponse
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import java.util.UUID
 
-@Serializable
-@OptIn(ExperimentalSerializationApi::class)
 data class LrmList
 constructor(
-  @Serializable(with = UUIDSerializer::class)
   var id: UUID,
   var name: String,
   var description: String? = null,
-  @EncodeDefault var public: Boolean = false,
+  var public: Boolean = false,
   var created: Instant? = null,
   var createdBy: String? = null,
   var updated: Instant? = null,
@@ -26,3 +21,14 @@ constructor(
 )
 
 fun LrmList.succinct() = LrmListSuccinct(id = this.id, name = this.name)
+fun LrmList.toDto() = LrmListResponse(
+  id = this.id,
+  name = this.name,
+  description = this.description,
+  public = this.public,
+  created = this.created,
+  createdBy = this.createdBy,
+  updated = this.updated,
+  updatedBy = this.updatedBy,
+  items = this.items?.map { it.toDto() }?.toSet(),
+)

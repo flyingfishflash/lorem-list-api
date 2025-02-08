@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -23,9 +24,10 @@ class LrmListPublicController(val lrmListService: LrmListService) {
   fun findByPublic(
     @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
-  ): ResponseEntity<ResponseSuccess<List<LrmList>>> {
+  ): ResponseEntity<ResponseSuccess<List<LrmListResponse>>> {
     val responseContent = if (includeItems) lrmListService.findByPublicIncludeItems() else lrmListService.findByPublic()
-    val response = ResponseSuccess(responseContent, "retrieved all public lists", request)
+    val responseContentDto = responseContent.map { it.toDto() }
+    val response = ResponseSuccess(responseContentDto, "retrieved all public lists", request)
     logger.info { Json.encodeToString(response) }
     return ResponseEntity(response, HttpStatus.OK)
   }
