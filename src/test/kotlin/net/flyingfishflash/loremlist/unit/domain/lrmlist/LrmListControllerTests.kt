@@ -7,6 +7,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlinx.datetime.Clock.System.now
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.core.configuration.SerializationConfig
@@ -57,6 +58,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
   lateinit var mockLrmListService: LrmListService
 
   init {
+    val now = now()
     val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
     val id1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
     val id2 = UUID.fromString("00000000-0000-4000-a000-000000000002")
@@ -68,12 +70,48 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       name = lrmListCreateRequest.name,
       description = lrmListCreateRequest.description,
       public = lrmListCreateRequest.public,
+      created = now,
+      createdBy = "Lorem Ipsum Created By",
+      updated = now,
+      updatedBy = "Lorem Ipsum Updated By",
+      items = null,
     )
 
     fun lrmListWithEmptyItems(): LrmList = lrmList().copy(items = setOf())
-    fun lrmList1(): LrmList = LrmList(id = id1, name = "Lorem List Name (id1)", description = "Lorem List Description", public = true)
-    fun lrmItem2(): LrmItem = LrmItem(id = id2, name = "Lorem Item Name (id2)", description = "Lorem Item Description")
-    fun lrmItem3(): LrmItem = LrmItem(id = id3, name = "Lorem Item Name (id3)", description = "Lorem Item Description")
+
+    fun lrmList1(): LrmList = LrmList(
+      id = id1,
+      name = "Lorem List Name (id1)",
+      description = "Lorem List Description",
+      public = true,
+      created = now,
+      createdBy = "Lorem Ipsum Created By",
+      updated = now,
+      updatedBy = "Lorem Ipsum Updated By",
+      items = null,
+    )
+    fun lrmItem2(): LrmItem = LrmItem(
+      id = id2,
+      name = "Lorem Item Name (id2)",
+      description = "Lorem Item Description",
+      quantity = 0,
+      created = now,
+      createdBy = "Lorem Ipsum Created By",
+      updated = now,
+      updatedBy = "Lorem Ipsum Updated By",
+      lists = null,
+    )
+    fun lrmItem3(): LrmItem = LrmItem(
+      id = id3,
+      name = "Lorem Item Name (id3)",
+      description = "Lorem Item Description",
+      quantity = 0,
+      created = now,
+      createdBy = "Lorem Ipsum Created By",
+      updated = now,
+      updatedBy = "Lorem Ipsum Updated By",
+      lists = null,
+    )
 
     afterEach { clearAllMocks() }
     afterSpec { unmockkAll() }

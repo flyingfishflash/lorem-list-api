@@ -7,8 +7,8 @@ import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler.Co
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
-import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemResponse
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
@@ -202,7 +202,7 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
             content = Json.encodeToString(createLrmItemOneRequest())
             contentType = MediaType.APPLICATION_JSON
           }.andExpect { status { isOk() } }.andReturn().response.contentAsString
-          val id = Json.decodeFromString<ResponseSuccess<LrmItem>>(response).content.id
+          val id = Json.decodeFromString<ResponseSuccess<LrmItemResponse>>(response).content.id
           itemUuids[0] = id
         }
 

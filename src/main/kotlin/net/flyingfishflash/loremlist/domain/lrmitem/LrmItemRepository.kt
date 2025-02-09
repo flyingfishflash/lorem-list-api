@@ -4,7 +4,6 @@ import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -14,7 +13,7 @@ import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
@@ -56,10 +55,10 @@ class LrmItemRepository {
         it[LrmListTable.id] != null
       }
       .groupBy(
-        keySelector = { it[repositoryTable.id].value },
+        keySelector = { it[repositoryTable.id] },
         valueTransform = {
           LrmListSuccinct(
-            id = it[LrmListTable.id].value,
+            id = it[LrmListTable.id],
             name = it[LrmListTable.name],
           )
         },
@@ -95,7 +94,7 @@ class LrmItemRepository {
         it[LrmListTable.id] != null
       }.map {
         LrmListSuccinct(
-          id = it[LrmListTable.id].value,
+          id = it[LrmListTable.id],
           name = it[LrmListTable.name],
         )
       }
@@ -118,7 +117,7 @@ class LrmItemRepository {
     val resultIdCollection = repositoryTable.select(repositoryTable.id)
       .where { repositoryTable.id inList (itemIdCollection) }
       .andWhere { repositoryTable.createdBy eq owner }
-      .map { row -> row[repositoryTable.id].value }.toList()
+      .map { row -> row[repositoryTable.id] }.toList()
     return resultIdCollection
   }
 
@@ -128,21 +127,19 @@ class LrmItemRepository {
     return notFoundItemUuidCollection
   }
 
-  fun insert(lrmItemRequest: LrmItemRequest, owner: String): UUID {
-    val now = now()
-    val id =
-      repositoryTable
-        .insertAndGetId {
-          it[name] = lrmItemRequest.name
-          it[description] = lrmItemRequest.description
-          it[quantity] = lrmItemRequest.quantity
-          it[created] = now
-          it[createdBy] = owner
-          it[updated] = now
-          it[updatedBy] = owner
-        }
+  fun insert(lrmItem: LrmItem): UUID {
+    repositoryTable.insert {
+      it[id] = lrmItem.id
+      it[name] = lrmItem.name
+      it[description] = lrmItem.description
+      it[quantity] = lrmItem.quantity
+      it[created] = lrmItem.created
+      it[createdBy] = lrmItem.createdBy
+      it[updated] = lrmItem.updated
+      it[updatedBy] = lrmItem.updatedBy
+    }
 
-    return id.value
+    return lrmItem.id
   }
 
   fun update(lrmItem: LrmItem): Int {
@@ -159,7 +156,7 @@ class LrmItemRepository {
 
   fun ResultRow.toLrmItem(): LrmItem {
     return LrmItem(
-      id = this[repositoryTable.id].value,
+      id = this[repositoryTable.id],
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
       quantity = this[repositoryTable.quantity],

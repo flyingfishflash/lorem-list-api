@@ -30,6 +30,7 @@ import net.flyingfishflash.loremlist.domain.lrmlist.succinct
 import org.springframework.http.HttpStatus
 import java.sql.SQLException
 import java.util.UUID
+import kotlinx.datetime.Clock.System.now
 
 class AssociationServiceTests : DescribeSpec({
   val mockAssociationRepository = mockk<AssociationRepository>()
@@ -38,15 +39,76 @@ class AssociationServiceTests : DescribeSpec({
   val associationService = AssociationService(mockAssociationRepository, mockLrmItemRepository, mockLrmListRepository)
 
   val lrmItemRequest = LrmItemRequest("Lorem Item Name", "Lorem Item Description")
+  val now = now()
   val id1 = UUID.fromString("00000000-0000-0000-0000-000000000001")
   val id2 = UUID.fromString("00000000-0000-0000-0000-000000000002")
   val id3 = UUID.fromString("00000000-0000-0000-0000-000000000003")
-  fun lrmItem1(): LrmItem = LrmItem(id = id1, name = lrmItemRequest.name, description = lrmItemRequest.description)
-  fun lrmItem2(): LrmItem = LrmItem(id = id2, name = "Lorem Item Name (id2)", description = "Lorem Item Description")
-  fun lrmItem3(): LrmItem = LrmItem(id = id3, name = "Lorem Item Name (id3)", description = "Lorem Item Description")
-  fun lrmList1(): LrmList = LrmList(id = id1, name = "Lorem List Name (id1)", description = "Lorem List Description", public = true)
-  fun lrmList2(): LrmList = LrmList(id = id2, name = "Lorem List Name (id2)", description = "Lorem List Description", public = true)
-  fun lrmList3(): LrmList = LrmList(id = id3, name = "Lorem List Name (id3)", description = "Lorem List Description", public = true)
+  fun lrmItem1(): LrmItem = LrmItem(
+    id = id1,
+    name = lrmItemRequest.name,
+    description = lrmItemRequest.description,
+    quantity = 0,
+    created = now,
+    createdBy = "Lorem Ipsum Created By",
+    updated = now,
+    updatedBy = "Lorem Ipsum Updated By",
+    lists = null
+  )
+  fun lrmItem2(): LrmItem = LrmItem(
+    id = id2,
+    name = "Lorem Item Name (id2)",
+    description = "Lorem Item Description",
+    quantity = 0,
+    created = now,
+    createdBy = "Lorem Ipsum Created By",
+    updated = now,
+    updatedBy = "Lorem Ipsum Updated By",
+    lists = null
+  )
+  fun lrmItem3(): LrmItem = LrmItem(
+    id = id3,
+    name = "Lorem Item Name (id3)",
+    description = "Lorem Item Description",
+    quantity = 0,
+    created = now,
+    createdBy = "Lorem Ipsum Created By",
+    updated = now,
+    updatedBy = "Lorem Ipsum Updated By",
+    lists = null
+  )
+  fun lrmList1(): LrmList = LrmList(
+    id = id1,
+    name = "Lorem List Name (id1)",
+    description = "Lorem List Description",
+    public = true,
+    created = now,
+    createdBy = "Lorem Ipsum Created By",
+    updated = now,
+    updatedBy = "Lorem Ipsum Updated By",
+    items = null
+  )
+  fun lrmList2(): LrmList = LrmList(
+    id = id2,
+    name = "Lorem List Name (id2)",
+    description = "Lorem List Description",
+    public = true,
+    created = now,
+    createdBy = "Lorem Ipsum Created By",
+    updated = now,
+    updatedBy = "Lorem Ipsum Updated By",
+    items = null
+  )
+  fun lrmList3(): LrmList = LrmList(
+    id = id3,
+    name = "Lorem List Name (id3)",
+    description = "Lorem List Description",
+    public = true,
+    created = now,
+    createdBy = "Lorem Ipsum Created By",
+    updated = now,
+    updatedBy = "Lorem Ipsum Updated By",
+    items = null
+  )
   fun associationItem1ListId2(): Association = Association(id = UUID.randomUUID(), itemId = lrmItem1().id, listId = id2)
 
   afterEach { clearAllMocks() }

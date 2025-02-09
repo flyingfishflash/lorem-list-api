@@ -30,17 +30,30 @@ import org.jetbrains.exposed.sql.statements.StatementContext
 import org.springframework.http.HttpStatus
 import java.sql.SQLException
 import java.util.UUID
+import kotlinx.datetime.Clock.System.now
 
 class LrmItemServiceTests : DescribeSpec({
   val mockAssociationService = mockk<AssociationService>()
   val mockLrmItemRepository = mockk<LrmItemRepository>()
   val lrmItemService = LrmItemService(mockAssociationService, mockLrmItemRepository)
 
+  val now = now()
   val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
   val id1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
   val lrmItemRequest = LrmItemRequest("Lorem Item Name", "Lorem Item Description")
 
-  fun lrmItem(): LrmItem = LrmItem(id = id0, name = lrmItemRequest.name, description = lrmItemRequest.description)
+  fun lrmItem(): LrmItem = LrmItem(
+    id = id0,
+    name = lrmItemRequest.name,
+    description = lrmItemRequest.description,
+    quantity = 0,
+    created = now,
+    createdBy = "Lorem Ipsum Created By",
+    updated = now,
+    updatedBy = "Lorem Ipsum Updated By",
+    lists = null
+  )
+
   fun lrmItemWithLists() = lrmItem().copy(
     lists = setOf(LrmListSuccinct(id = id0, name = "Lorem List Name")),
   )
@@ -71,27 +84,22 @@ class LrmItemServiceTests : DescribeSpec({
 
   describe("create()") {
     it("item is created") {
-      every { mockLrmItemRepository.insert(ofType(LrmItemRequest::class), owner = ofType(String::class)) } returns id1
+      every { mockLrmItemRepository.insert(ofType(LrmItem::class)) } returns id1
       every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
       lrmItemService.create(lrmItemRequest, owner = "lorem ipsum")
-      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest, owner = ofType(String::class)) }
+      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItem = ofType(LrmItem::class)) }
       verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = ofType(UUID::class), owner = ofType(String::class)) }
     }
 
     it("item repository throws exposed sql exception") {
-      every {
-        mockLrmItemRepository.insert(
-          ofType(LrmItemRequest::class),
-          owner = ofType(String::class),
-        )
-      } throws exposedSQLExceptionGeneric()
+      every { mockLrmItemRepository.insert(ofType(LrmItem::class)) } throws exposedSQLExceptionGeneric()
       val exception = shouldThrow<ApiException> { lrmItemService.create(lrmItemRequest, owner = "lorem ipsum") }
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldNotBeNull().shouldBeEqual("Item could not be created.")
       exception.responseMessage.shouldBeEqual("Item could not be created.")
       exception.title.shouldBeEqual(ApiException::class.java.simpleName)
-      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItemRequest, owner = ofType(String::class)) }
+      verify(exactly = 1) { mockLrmItemRepository.insert(lrmItem = ofType(LrmItem::class)) }
     }
   }
 

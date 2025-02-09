@@ -10,10 +10,8 @@ import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSucces
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.domain.association.AssociationNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
-import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
-import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -30,6 +28,8 @@ import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
 import java.util.UUID
 import kotlin.collections.HashMap
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemResponse
+import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListResponse
 
 /**
  * LrmList Integration/Functional Tests
@@ -131,7 +131,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
             }.andReturn().response.contentAsString
-            val id = Json.decodeFromString<ResponseSuccess<LrmItem>>(response).content.id
+            val id = Json.decodeFromString<ResponseSuccess<LrmItemResponse>>(response).content.id
             itemIds[index] = id
           }
         }
@@ -354,7 +354,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
             }.andReturn().response.contentAsString
-            val id = Json.decodeFromString<ResponseSuccess<LrmList>>(response).content.id
+            val id = Json.decodeFromString<ResponseSuccess<LrmListResponse>>(response).content.id
             listIds[index] = id
           }
         }
@@ -738,7 +738,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.created") { isNotEmpty() }
           jsonPath("$.content.updated") { isNotEmpty() }
           jsonPath("$.content.items.length()") { value(1) }
-          jsonPath("$.content.items.[0].length()") { value(6) }
+          jsonPath("$.content.items.[0].length()") { value(8) }
           jsonPath("$.content.items.[0].id") { value("${itemIds[1]}") }
           jsonPath("$.content.items.[0].name") { value(updateLrmItemTwoRequest().name) }
           jsonPath("$.content.items.[0].description") { value(updateLrmItemTwoRequest().description) }
@@ -819,7 +819,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.content.created") { isNotEmpty() }
           jsonPath("$.content.updated") { isNotEmpty() }
           jsonPath("$.content.items.length()") { value(2) }
-          jsonPath("$.content.items.[0].length()") { value(6) }
+          jsonPath("$.content.items.[0].length()") { value(8) }
           jsonPath("$.content.items.[0].id") { value("${itemIds[0]}") }
           jsonPath("$.content.items.[0].name") { value(updateLrmItemOneRequest().name) }
           jsonPath("$.content.items.[0].description") { value(updateLrmItemOneRequest().description) }

@@ -65,8 +65,8 @@ class AssociationRepository {
       .where { repositoryTable.id inList (associationIdSet) }
       .map {
         SuccinctLrmComponentPair(
-          list = LrmListSuccinct(it[LrmListTable.id].value, it[LrmListTable.name]),
-          item = LrmItemSuccinct(it[LrmListItemTable.id].value, it[LrmListItemTable.name]),
+          list = LrmListSuccinct(it[LrmListTable.id], it[LrmListTable.name]),
+          item = LrmItemSuccinct(it[LrmListItemTable.id], it[LrmListItemTable.name]),
         )
       }
 
@@ -108,8 +108,8 @@ class AssociationRepository {
     return repositoryTable.selectAll().where { item eq itemId and (list eq listId) }.firstOrNull()?.let {
       Association(
         id = it[repositoryTable.id].value,
-        listId = it[repositoryTable.list].value,
-        itemId = it[repositoryTable.item].value,
+        listId = it[repositoryTable.list],
+        itemId = it[repositoryTable.item],
       )
     }
   }

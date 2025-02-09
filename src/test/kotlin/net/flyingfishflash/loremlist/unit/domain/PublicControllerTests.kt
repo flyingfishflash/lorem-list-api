@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringExtension
 import io.mockk.every
 import io.mockk.verify
+import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.core.configuration.SerializationConfig
 import net.flyingfishflash.loremlist.core.configuration.WebSecurityConfiguration
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
@@ -35,12 +36,18 @@ class PublicControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
     val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
     val lrmListCreateRequest = LrmListCreateRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
+    val now = now()
 
     fun lrmList(): LrmList = LrmList(
       id = id0,
       name = lrmListCreateRequest.name,
       description = lrmListCreateRequest.description,
       public = lrmListCreateRequest.public,
+      created = now,
+      createdBy = "Lorum Ipsum Created By",
+      updated = now,
+      updatedBy = "Lorem Ipsum Updated By",
+      items = null,
     )
 
     fun lrmListWithEmptyItems(): LrmList = lrmList().copy(items = setOf())

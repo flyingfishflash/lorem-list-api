@@ -11,10 +11,10 @@ data class LrmItem(
   var name: String,
   var description: String? = null,
   var quantity: Int = 0,
-  var created: Instant? = null,
-  var createdBy: String? = null,
-  var updated: Instant? = null,
-  var updatedBy: String? = null,
+  var created: Instant,
+  var createdBy: String,
+  var updated: Instant,
+  var updatedBy: String,
   val lists: Set<LrmListSuccinct>? = null,
 )
 

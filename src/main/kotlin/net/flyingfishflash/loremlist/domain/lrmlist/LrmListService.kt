@@ -3,6 +3,7 @@ package net.flyingfishflash.loremlist.domain.lrmlist
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
+import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
@@ -31,7 +32,19 @@ class LrmListService(private val associationService: AssociationService, private
 
   fun create(lrmListCreateRequest: LrmListCreateRequest, owner: String): LrmList {
     try {
-      val id = lrmListRepository.insert(lrmListCreateRequest, owner)
+      val now = now()
+      val lrmList = LrmList(
+        id = UUID.randomUUID(),
+        name = lrmListCreateRequest.name,
+        description = lrmListCreateRequest.description,
+        public = lrmListCreateRequest.public,
+        created = now,
+        createdBy = owner,
+        updated = now,
+        updatedBy = owner,
+        items = emptySet(),
+      )
+      val id = lrmListRepository.insert(lrmList, owner)
       return findByOwnerAndId(id = id, owner = owner)
     } catch (cause: Exception) {
       throw ApiException(

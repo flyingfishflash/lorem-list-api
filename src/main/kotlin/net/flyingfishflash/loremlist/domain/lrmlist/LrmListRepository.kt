@@ -6,13 +6,13 @@ import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListTable.created
 import net.flyingfishflash.loremlist.domain.LrmListTable.createdBy
 import net.flyingfishflash.loremlist.domain.LrmListTable.description
+import net.flyingfishflash.loremlist.domain.LrmListTable.id
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
 import net.flyingfishflash.loremlist.domain.LrmListTable.public
 import net.flyingfishflash.loremlist.domain.LrmListTable.updated
 import net.flyingfishflash.loremlist.domain.LrmListTable.updatedBy
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreateRequest
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
@@ -21,7 +21,7 @@ import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
@@ -60,15 +60,18 @@ class LrmListRepository {
         it[LrmListItemTable.id] != null
       }
       .groupBy(
-        keySelector = { it[repositoryTable.id].value },
+        keySelector = { it[repositoryTable.id] },
         valueTransform = {
           LrmItem(
-            id = it[LrmListItemTable.id].value,
+            id = it[LrmListItemTable.id],
             name = it[LrmListItemTable.name],
             description = it[LrmListItemTable.description],
             quantity = it[LrmListItemTable.quantity],
             created = it[LrmListItemTable.created],
             updated = it[LrmListItemTable.updated],
+            createdBy = it[LrmListItemTable.createdBy],
+            updatedBy = it[LrmListItemTable.updatedBy],
+            lists = null,
           )
         },
       )
@@ -87,7 +90,7 @@ class LrmListRepository {
     .andWhere { repositoryTable.createdBy eq owner }
     .firstOrNull()?.let {
       LrmList(
-        id = it[repositoryTable.id].value,
+        id = it[repositoryTable.id],
         name = it[name],
         description = it[description],
         public = it[public],
@@ -112,12 +115,15 @@ class LrmListRepository {
         it[LrmListItemTable.id] != null
       }.map {
         LrmItem(
-          id = it[LrmListItemTable.id].value,
+          id = it[LrmListItemTable.id],
           name = it[LrmListItemTable.name],
           description = it[LrmListItemTable.description],
           quantity = it[LrmListItemTable.quantity],
           created = it[LrmListItemTable.created],
           updated = it[LrmListItemTable.updated],
+          createdBy = it[LrmListItemTable.createdBy],
+          updatedBy = it[LrmListItemTable.updatedBy],
+          lists = null,
         )
       }.sortedBy { item -> item.name }.toSet()
 
@@ -152,15 +158,18 @@ class LrmListRepository {
         it[LrmListItemTable.id] != null
       }
       .groupBy(
-        keySelector = { it[repositoryTable.id].value },
+        keySelector = { it[repositoryTable.id] },
         valueTransform = {
           LrmItem(
-            id = it[LrmListItemTable.id].value,
+            id = it[LrmListItemTable.id],
             name = it[LrmListItemTable.name],
             description = it[LrmListItemTable.description],
             quantity = it[LrmListItemTable.quantity],
             created = it[LrmListItemTable.created],
             updated = it[LrmListItemTable.updated],
+            createdBy = it[LrmListItemTable.createdBy],
+            updatedBy = it[LrmListItemTable.updatedBy],
+            lists = null,
           )
         },
       )
@@ -178,7 +187,7 @@ class LrmListRepository {
       .select(repositoryTable.id)
       .where { repositoryTable.id inList (listIdCollection) }
       .andWhere { repositoryTable.createdBy eq owner }
-      .map { row -> row[repositoryTable.id].value }.toList()
+      .map { row -> row[repositoryTable.id] }.toList()
     return resultIdCollection
   }
 
@@ -188,22 +197,20 @@ class LrmListRepository {
     return notFoundListIdCollection
   }
 
-  fun insert(lrmListCreateRequest: LrmListCreateRequest, subject: String): UUID {
-    val now = now()
-    val id =
-      repositoryTable
-        .insertAndGetId {
-          it[id] = UUID.randomUUID()
-          it[name] = lrmListCreateRequest.name
-          it[description] = lrmListCreateRequest.description
-          it[public] = lrmListCreateRequest.public
-          it[created] = now
-          it[createdBy] = subject
-          it[updated] = now
-          it[updatedBy] = subject
-        }
+  fun insert(lrmList: LrmList, subject: String): UUID {
+    repositoryTable
+      .insert {
+        it[id] = lrmList.id
+        it[name] = lrmList.name
+        it[description] = lrmList.description
+        it[public] = lrmList.public
+        it[created] = lrmList.created
+        it[createdBy] = lrmList.createdBy
+        it[updated] = lrmList.updated
+        it[updatedBy] = lrmList.updatedBy
+      }
 
-    return id.value
+    return lrmList.id
   }
 
   fun update(lrmList: LrmList): Int {
@@ -220,7 +227,7 @@ class LrmListRepository {
 
   private fun ResultRow.toLrmList(): LrmList {
     return LrmList(
-      id = this[repositoryTable.id].value,
+      id = this[repositoryTable.id],
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
       public = this[repositoryTable.public],

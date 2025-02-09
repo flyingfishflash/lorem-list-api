@@ -32,6 +32,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpStatus
 import java.sql.SQLException
 import java.util.UUID
+import kotlinx.datetime.Clock.System.now
 
 class LrmListServiceTests : DescribeSpec({
 
@@ -44,6 +45,7 @@ class LrmListServiceTests : DescribeSpec({
   val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
   val id1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
 
+  val now = now()
   val mockUserName = "mockUserName"
 
   fun lrmList(): LrmList = LrmList(
@@ -51,10 +53,25 @@ class LrmListServiceTests : DescribeSpec({
     name = lrmListCreateRequest.name,
     description = lrmListCreateRequest.description,
     public = lrmListCreateRequest.public,
+    created = now,
+    createdBy = "Lorem Ipsum Created By",
+    updated = now,
+    updatedBy = "Lorem Ipsum Updated By",
+    items = null,
   )
 
   fun lrmListWithItems() = lrmList().copy(
-    items = setOf(LrmItem(id = id0, name = "Lorem Item Name")),
+    items = setOf(LrmItem(
+      id = id0,
+      name = "Lorem Item Name",
+      description = "Lorem Ipsum Description",
+      quantity = 0,
+      created = now,
+      createdBy = "Lorem Ipsum Created By",
+      updated = now,
+      updatedBy = "Lorem Ipsum Updated By",
+      lists = null
+    )),
   )
 
   fun exposedSQLExceptionGeneric(): ExposedSQLException = ExposedSQLException(
@@ -83,15 +100,15 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("create()") {
     it("list repository returns inserted list id") {
-      every { mockLrmListRepository.insert(ofType(LrmListCreateRequest::class), ofType(String::class)) } returns id1
+      every { mockLrmListRepository.insert(ofType(LrmList::class), ofType(String::class)) } returns id1
       every { mockLrmListRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmList()
       lrmListService.create(lrmListCreateRequest, mockUserName)
-      verify(exactly = 1) { mockLrmListRepository.insert(ofType(LrmListCreateRequest::class), ofType(String::class)) }
+      verify(exactly = 1) { mockLrmListRepository.insert(ofType(LrmList::class), ofType(String::class)) }
       verify(exactly = 1) { mockLrmListRepository.findByOwnerAndIdOrNull(id = ofType(UUID::class), owner = ofType(String::class)) }
     }
 
     it("list repository throws exposed sql exception") {
-      every { mockLrmListRepository.insert(ofType(LrmListCreateRequest::class), ofType(String::class)) } throws exposedSQLExceptionGeneric()
+      every { mockLrmListRepository.insert(ofType(LrmList::class), ofType(String::class)) } throws exposedSQLExceptionGeneric()
       val exception = shouldThrow<ApiException> { lrmListService.create(lrmListCreateRequest, mockUserName) }
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)

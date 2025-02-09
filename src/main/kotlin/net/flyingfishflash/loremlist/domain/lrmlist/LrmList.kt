@@ -13,10 +13,10 @@ constructor(
   var name: String,
   var description: String? = null,
   var public: Boolean = false,
-  var created: Instant? = null,
-  var createdBy: String? = null,
-  var updated: Instant? = null,
-  var updatedBy: String? = null,
+  var created: Instant,
+  var createdBy: String,
+  var updated: Instant,
+  var updatedBy: String,
   val items: Set<LrmItem>? = null,
 )
 
