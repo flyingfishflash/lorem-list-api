@@ -6,7 +6,6 @@ import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListTable.created
 import net.flyingfishflash.loremlist.domain.LrmListTable.createdBy
 import net.flyingfishflash.loremlist.domain.LrmListTable.description
-import net.flyingfishflash.loremlist.domain.LrmListTable.id
 import net.flyingfishflash.loremlist.domain.LrmListTable.name
 import net.flyingfishflash.loremlist.domain.LrmListTable.public
 import net.flyingfishflash.loremlist.domain.LrmListTable.updated
@@ -61,19 +60,7 @@ class LrmListRepository {
       }
       .groupBy(
         keySelector = { it[repositoryTable.id] },
-        valueTransform = {
-          LrmItem(
-            id = it[LrmListItemTable.id],
-            name = it[LrmListItemTable.name],
-            description = it[LrmListItemTable.description],
-            quantity = it[LrmListItemTable.quantity],
-            created = it[LrmListItemTable.created],
-            updated = it[LrmListItemTable.updated],
-            createdBy = it[LrmListItemTable.createdBy],
-            updatedBy = it[LrmListItemTable.updatedBy],
-            lists = null,
-          )
-        },
+        valueTransform = { it.toLrmItem() },
       )
 
     val listsAndItems = resultRows
@@ -113,19 +100,7 @@ class LrmListRepository {
       .filter {
         @Suppress("SENSELESS_COMPARISON")
         it[LrmListItemTable.id] != null
-      }.map {
-        LrmItem(
-          id = it[LrmListItemTable.id],
-          name = it[LrmListItemTable.name],
-          description = it[LrmListItemTable.description],
-          quantity = it[LrmListItemTable.quantity],
-          created = it[LrmListItemTable.created],
-          updated = it[LrmListItemTable.updated],
-          createdBy = it[LrmListItemTable.createdBy],
-          updatedBy = it[LrmListItemTable.updatedBy],
-          lists = null,
-        )
-      }.sortedBy { item -> item.name }.toSet()
+      }.map { it.toLrmItem() }.sortedBy { item -> item.name }.toSet()
 
     val listWithItems = resultRows
       .map { it.toLrmList() }
@@ -159,19 +134,7 @@ class LrmListRepository {
       }
       .groupBy(
         keySelector = { it[repositoryTable.id] },
-        valueTransform = {
-          LrmItem(
-            id = it[LrmListItemTable.id],
-            name = it[LrmListItemTable.name],
-            description = it[LrmListItemTable.description],
-            quantity = it[LrmListItemTable.quantity],
-            created = it[LrmListItemTable.created],
-            updated = it[LrmListItemTable.updated],
-            createdBy = it[LrmListItemTable.createdBy],
-            updatedBy = it[LrmListItemTable.updatedBy],
-            lists = null,
-          )
-        },
+        valueTransform = { it.toLrmItem() },
       )
 
     val listsAndItems = resultRows
@@ -235,6 +198,20 @@ class LrmListRepository {
       createdBy = this[repositoryTable.createdBy],
       updated = this[repositoryTable.updated],
       updatedBy = this[repositoryTable.updatedBy],
+    )
+  }
+
+  private fun ResultRow.toLrmItem(): LrmItem {
+    return LrmItem(
+      id = this[LrmListItemTable.id],
+      name = this[LrmListItemTable.name],
+      description = this[LrmListItemTable.description],
+      quantity = this[LrmListItemTable.quantity],
+      created = this[LrmListItemTable.created],
+      updated = this[LrmListItemTable.updated],
+      createdBy = this[LrmListItemTable.createdBy],
+      updatedBy = this[LrmListItemTable.updatedBy],
+      lists = null,
     )
   }
 }
