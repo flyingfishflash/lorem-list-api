@@ -346,13 +346,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("Created new list: '${listRequest.name}'") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(8) }
+              jsonPath("$.content.length()") { value(9) }
               jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.public") { value(listRequest.public) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
+              jsonPath("$.content.items") { isEmpty() }
             }.andReturn().response.contentAsString
             val id = Json.decodeFromString<ResponseSuccess<LrmListResponse>>(response).content.id
             listIds[index] = id
@@ -398,13 +399,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("retrieved list id ${listIds[index]}") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(8) }
+              jsonPath("$.content.length()") { value(9) }
               jsonPath("$.content.id") { isNotEmpty() }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.public") { value(listRequest.public) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
+              jsonPath("$.content.items") { isEmpty() }
               jsonPath("$.content.lists") { doesNotExist() }
             }
           }
@@ -453,13 +455,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("patched") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(8) }
+              jsonPath("$.content.length()") { value(9) }
               jsonPath("$.content.id") { value("${listIds[index]}") }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.public") { value(listRequest.public) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
+              jsonPath("$.content.items") { isEmpty() }
             }
           }
 
@@ -478,13 +481,14 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               jsonPath("$.message") { value("not patched - list is up-to-date") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
-              jsonPath("$.content.length()") { value(8) }
+              jsonPath("$.content.length()") { value(9) }
               jsonPath("$.content.id") { value("${listIds[index]}") }
               jsonPath("$.content.name") { value(listRequest.name) }
               jsonPath("$.content.description") { value(listRequest.description) }
               jsonPath("$.content.public") { value(listRequest.public) }
               jsonPath("$.content.created") { isNotEmpty() }
               jsonPath("$.content.updated") { isNotEmpty() }
+              jsonPath("$.content.items") { isEmpty() }
             }
           }
         }

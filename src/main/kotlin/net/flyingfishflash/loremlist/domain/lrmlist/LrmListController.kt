@@ -139,11 +139,9 @@ class LrmListController(private val associationService: AssociationService, priv
     @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<List<LrmListResponse>>> {
     val responseContent = if (includeItems) {
-      lrmListService.findByOwnerIncludeItems(principal.subject)
+      lrmListService.findByOwner(principal.subject)
     } else {
-      lrmListService.findByOwner(
-        principal.subject,
-      )
+      lrmListService.findByOwnerExcludeItems(principal.subject)
     }
     val responseContentDto = responseContent.map { it.toDto() }
     val response = ResponseSuccess(responseContentDto, "retrieved all lists", request)
@@ -170,9 +168,9 @@ class LrmListController(private val associationService: AssociationService, priv
   ): ResponseEntity<ResponseSuccess<LrmListResponse>> {
     val responseContent =
       if (includeItems) {
-        lrmListService.findByOwnerAndIdIncludeItems(id = listId, owner = principal.subject)
-      } else {
         lrmListService.findByOwnerAndId(id = listId, owner = principal.subject)
+      } else {
+        lrmListService.findByOwnerAndIdExcludeItems(id = listId, owner = principal.subject)
       }
     val response = ResponseSuccess(responseContent.toDto(), "retrieved list id $listId", request)
     logger.info { Json.encodeToString(response) }

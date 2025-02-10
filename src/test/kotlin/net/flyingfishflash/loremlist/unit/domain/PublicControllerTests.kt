@@ -56,7 +56,7 @@ class PublicControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("get") {
         it("lists are found") {
           val mockReturn = listOf(lrmList())
-          every { mockLrmListService.findByPublic() } returns mockReturn
+          every { mockLrmListService.findByPublicExcludeItems() } returns mockReturn
           val instance = "/public/lists"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
@@ -76,12 +76,12 @@ class PublicControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findByPublic() }
+          verify(exactly = 1) { mockLrmListService.findByPublicExcludeItems() }
         }
 
         it("lists are found ?includeItems=false") {
           val mockReturn = listOf(lrmList())
-          every { mockLrmListService.findByPublic() } returns mockReturn
+          every { mockLrmListService.findByPublicExcludeItems() } returns mockReturn
           val instance = "/public/lists?includeItems=false"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
@@ -100,12 +100,12 @@ class PublicControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findByPublic() }
+          verify(exactly = 1) { mockLrmListService.findByPublicExcludeItems() }
         }
 
         it("lists are found ?includeItems=true") {
           val mockReturn = listOf(lrmListWithEmptyItems())
-          every { mockLrmListService.findByPublicIncludeItems() } returns mockReturn
+          every { mockLrmListService.findByPublic() } returns mockReturn
           val instance = "/public/lists?includeItems=true"
           mockMvc.get(instance) {
             contentType = MediaType.APPLICATION_JSON
@@ -125,7 +125,7 @@ class PublicControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               isEmpty()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findByPublicIncludeItems() }
+          verify(exactly = 1) { mockLrmListService.findByPublic() }
         }
       }
     }

@@ -56,7 +56,7 @@ class LrmListService(private val associationService: AssociationService, private
 
   fun deleteByOwner(owner: String): LrmListDeleteResponse {
     try {
-      val lists = findByOwnerIncludeItems(owner = owner)
+      val lists = findByOwner(owner = owner)
       if (lists.isNotEmpty()) {
         lists.filter { it.items.orEmpty().isNotEmpty() }.forEach {
           associationService.deleteByListOwnerAndListId(listId = it.id, listOwner = owner)
@@ -91,7 +91,7 @@ class LrmListService(private val associationService: AssociationService, private
     removeItemAssociations: Boolean,
   ): LrmListDeleteResponse {
     try {
-      val list = findByOwnerAndIdIncludeItems(id = id, owner = owner)
+      val list = findByOwnerAndId(id = id, owner = owner)
       val lrmListDeleteResponse = LrmListDeleteResponse(
         listNames = listOf(list.name),
         associatedItemNames = list.items.orEmpty().map { it.name }.sorted(),
@@ -154,17 +154,6 @@ class LrmListService(private val associationService: AssociationService, private
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
-        message = "Lists could not be retrieved.",
-      )
-    }
-  }
-
-  fun findByOwnerIncludeItems(owner: String): List<LrmList> {
-    try {
-      return lrmListRepository.findByOwnerIncludeItems(owner = owner)
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
         message = "Lists (including associated items) could not be retrieved.",
       )
     }
@@ -173,18 +162,6 @@ class LrmListService(private val associationService: AssociationService, private
   fun findByOwnerAndId(id: UUID, owner: String): LrmList {
     val list = try {
       lrmListRepository.findByOwnerAndIdOrNull(id = id, owner = owner)
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "List id $id could not be retrieved.",
-      )
-    }
-    return list ?: throw ListNotFoundException(id)
-  }
-
-  fun findByOwnerAndIdIncludeItems(id: UUID, owner: String): LrmList {
-    val list = try {
-      lrmListRepository.findByOwnerAndIdOrNullIncludeItems(id = id, owner = owner)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
@@ -207,6 +184,45 @@ class LrmListService(private val associationService: AssociationService, private
     return lrmLists
   }
 
+  fun findByPublic(): List<LrmList> {
+    try {
+      return lrmListRepository.findByPublic()
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Public lists (including associated items) could not be retrieved.",
+      )
+    }
+  }
+
+  // TODO: 1) Move to REST API specific service layer 2) Strip LrmItems from each LrmList
+  fun findByOwnerExcludeItems(owner: String): List<LrmList> {
+    try {
+      return lrmListRepository.findByOwner(owner = owner)
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Lists could not be retrieved.",
+      )
+    }
+  }
+
+  // TODO: 1) Move to REST API specific service layer 2) Strip LrmItems from each LrmList
+  fun findByOwnerAndIdExcludeItems(id: UUID, owner: String): LrmList {
+    val list = try {
+      lrmListRepository.findByOwnerAndIdOrNull(id = id, owner = owner)
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "List id $id could not be retrieved.",
+      )
+    }
+    return list ?: throw ListNotFoundException(id)
+  }
+
+  // TODO: 1) Move to REST API specific service layer
+  // TODO: 2) REST API must specify only core list properties can be patch, not Items
+  // TODO: 3) Simplify this method
   @Suppress("kotlin:S3776")
   fun patchByOwnerAndId(
     id: UUID,
@@ -214,7 +230,7 @@ class LrmListService(private val associationService: AssociationService, private
     patchRequest: Map<String, Any>,
   ): Pair<LrmList, Boolean> {
     var patched = false
-    var lrmList = findByOwnerAndId(id = id, owner = owner)
+    var lrmList = findByOwnerAndIdExcludeItems(id = id, owner = owner)
     var newName = lrmList.name
     var newDescription = lrmList.description
     var newIsPublic = lrmList.public
@@ -273,30 +289,20 @@ class LrmListService(private val associationService: AssociationService, private
           responseMessage = "List id ${lrmList.id} could not be updated. $updatedCount records would have been updated rather than 1.",
         )
       } else {
-        lrmList = findByOwnerAndId(id = id, owner = owner)
+        lrmList = findByOwnerAndIdExcludeItems(id = id, owner = owner)
       }
     }
     return Pair(lrmList, patched)
   }
 
-  fun findByPublic(): List<LrmList> {
+  // TODO: 1) Move to REST API specific service layer 2) Strip LrmItems from each LrmList
+  fun findByPublicExcludeItems(): List<LrmList> {
     try {
       return lrmListRepository.findByPublic()
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
         message = "Public lists could not be retrieved.",
-      )
-    }
-  }
-
-  fun findByPublicIncludeItems(): List<LrmList> {
-    try {
-      return lrmListRepository.findByPublicIncludeItems()
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "Public lists (including associated items) could not be retrieved.",
       )
     }
   }

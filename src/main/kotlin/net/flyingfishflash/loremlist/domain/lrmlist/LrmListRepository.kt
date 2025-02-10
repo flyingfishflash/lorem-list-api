@@ -3,15 +3,9 @@ package net.flyingfishflash.loremlist.domain.lrmlist
 import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
-import net.flyingfishflash.loremlist.domain.LrmListTable.created
-import net.flyingfishflash.loremlist.domain.LrmListTable.createdBy
-import net.flyingfishflash.loremlist.domain.LrmListTable.description
-import net.flyingfishflash.loremlist.domain.LrmListTable.name
-import net.flyingfishflash.loremlist.domain.LrmListTable.public
-import net.flyingfishflash.loremlist.domain.LrmListTable.updated
-import net.flyingfishflash.loremlist.domain.LrmListTable.updatedBy
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
+import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
@@ -28,167 +22,115 @@ import java.util.UUID
 
 @Repository
 class LrmListRepository {
+
   private val repositoryTable = LrmListTable
 
   fun countByOwner(owner: String): Long {
-    val idCount = repositoryTable.id.count()
-    val count = repositoryTable.select(idCount).where { repositoryTable.createdBy eq owner }.first()[idCount]
-    return count
+    return repositoryTable
+      .select(repositoryTable.id.count())
+      .byOwner(owner)
+      .first()[repositoryTable.id.count()]
   }
 
   fun delete(): Int = repositoryTable.deleteAll()
 
   fun deleteById(ids: Set<UUID>): Int = repositoryTable.deleteWhere { repositoryTable.id inList ids }
 
-  fun deleteByOwnerAndId(id: UUID, owner: String): Int = repositoryTable.deleteWhere {
-    repositoryTable.id eq id and (repositoryTable.createdBy eq owner)
-  }
-
-  fun findByOwner(owner: String): List<LrmList> = repositoryTable.selectAll()
-    .where { repositoryTable.createdBy eq owner }
-    .map { it.toLrmList() }.toList()
-
-  fun findByOwnerIncludeItems(owner: String): List<LrmList> {
-    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable).selectAll()
-      .where { repositoryTable.createdBy eq owner }
-      .toList()
-
-    val listItemsByList = resultRows
-      .filter {
-        @Suppress("SENSELESS_COMPARISON")
-        it[LrmListItemTable.id] != null
-      }
-      .groupBy(
-        keySelector = { it[repositoryTable.id] },
-        valueTransform = { it.toLrmItem() },
-      )
-
-    val listsAndItems = resultRows
-      .map { it.toLrmList() }
-      .distinct()
-      .map { it.copy(items = listItemsByList[it.id]?.sortedBy { item -> item.name }?.toSet() ?: setOf()) }
-
-    return listsAndItems
-  }
-
-  fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmList? = repositoryTable
-    .selectAll()
-    .where { repositoryTable.id eq id }
-    .andWhere { repositoryTable.createdBy eq owner }
-    .firstOrNull()?.let {
-      LrmList(
-        id = it[repositoryTable.id],
-        name = it[name],
-        description = it[description],
-        public = it[public],
-        created = it[created],
-        createdBy = it[createdBy],
-        updated = it[updated],
-        updatedBy = it[updatedBy],
-      )
+  fun deleteByOwnerAndId(id: UUID, owner: String): Int = repositoryTable
+    .deleteWhere {
+      repositoryTable.id eq id and (repositoryTable.createdBy eq owner)
     }
 
-  fun findByOwnerAndIdOrNullIncludeItems(id: UUID, owner: String): LrmList? {
-    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
+  fun findByOwner(owner: String): List<LrmList> = fetchLrmListsIncludeItems(
+    (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .selectAll()
-      .where { repositoryTable.id eq id }
-      .andWhere { repositoryTable.createdBy eq owner }
-      .toList()
+      .byOwner(owner),
+  )
 
-    val listItems = resultRows
-      .asSequence()
-      .filter {
-        @Suppress("SENSELESS_COMPARISON")
-        it[LrmListItemTable.id] != null
-      }.map { it.toLrmItem() }.sortedBy { item -> item.name }.toSet()
-
-    val listWithItems = resultRows
-      .map { it.toLrmList() }
-      .distinct()
-      .map { it.copy(items = listItems) }
-      .firstOrNull()
-    return listWithItems
+  fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmList? {
+    val lrmLists = fetchLrmListsIncludeItems(
+      (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
+        .selectAll()
+        .byOwnerAndId(owner, id),
+    ).distinct()
+    check(lrmLists.size <= 1) { "This query should return only one distinct list." }
+    return lrmLists.firstOrNull()
   }
 
-  fun findByOwnerAndHavingNoItemAssociations(owner: String): List<LrmList> {
-    val result = (repositoryTable leftJoin LrmListsItemsTable)
+  fun findByOwnerAndHavingNoItemAssociations(owner: String): List<LrmList> = (repositoryTable leftJoin LrmListsItemsTable)
+    .selectAll()
+    .byOwner(owner)
+    .andWhere { LrmListsItemsTable.list.isNull() }
+    .map { it.toLrmList() }
+
+  fun findByPublic(): List<LrmList> = fetchLrmListsIncludeItems(
+    (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .selectAll()
-      .where { repositoryTable.createdBy eq owner }
-      .andWhere { LrmListsItemsTable.list.isNull() }
-      .map { it.toLrmList() }
-    return result
-  }
+      .where { repositoryTable.public eq true },
+  )
 
-  fun findByPublic(): List<LrmList> = repositoryTable.selectAll().where { repositoryTable.public.eq(true) }.map { it.toLrmList() }.toList()
-
-  fun findByPublicIncludeItems(): List<LrmList> {
-    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
-      .selectAll()
-      .where { repositoryTable.public.eq(true) }
-      .toList()
-
-    val listItemsByList = resultRows
-      .filter {
-        @Suppress("SENSELESS_COMPARISON")
-        it[LrmListItemTable.id] != null
-      }
-      .groupBy(
-        keySelector = { it[repositoryTable.id] },
-        valueTransform = { it.toLrmItem() },
-      )
-
-    val listsAndItems = resultRows
-      .map { it.toLrmList() }
-      .distinct()
-      .map { it.copy(items = listItemsByList[it.id]?.sortedBy { item -> item.name }?.toSet() ?: setOf()) }
-
-    return listsAndItems
-  }
-
-  fun findIdsByOwnerAndIds(listIdCollection: List<UUID>, owner: String): List<UUID> {
-    val resultIdCollection = repositoryTable
-      .select(repositoryTable.id)
-      .where { repositoryTable.id inList (listIdCollection) }
-      .andWhere { repositoryTable.createdBy eq owner }
-      .map { row -> row[repositoryTable.id] }.toList()
-    return resultIdCollection
-  }
+  fun findIdsByOwnerAndIds(listIdCollection: List<UUID>, owner: String): List<UUID> = repositoryTable
+    .select(repositoryTable.id)
+    .byOwner(owner)
+    .andWhere { repositoryTable.id inList listIdCollection }
+    .map { it[repositoryTable.id] }
 
   fun notFoundByOwnerAndId(listIdCollection: List<UUID>, owner: String): Set<UUID> {
-    val resultIdCollection = findIdsByOwnerAndIds(listIdCollection = listIdCollection, owner = owner)
-    val notFoundListIdCollection = (listIdCollection subtract resultIdCollection.toSet())
-    return notFoundListIdCollection
+    val foundIds = findIdsByOwnerAndIds(listIdCollection, owner)
+    return listIdCollection.toSet() - foundIds.toSet()
   }
 
   fun insert(lrmList: LrmList, subject: String): UUID {
-    repositoryTable
-      .insert {
-        it[id] = lrmList.id
-        it[name] = lrmList.name
-        it[description] = lrmList.description
-        it[public] = lrmList.public
-        it[created] = lrmList.created
-        it[createdBy] = lrmList.createdBy
-        it[updated] = lrmList.updated
-        it[updatedBy] = lrmList.updatedBy
-      }
-
+    repositoryTable.insert {
+      it[id] = lrmList.id
+      it[name] = lrmList.name
+      it[description] = lrmList.description
+      it[public] = lrmList.public
+      it[created] = lrmList.created
+      it[createdBy] = lrmList.createdBy
+      it[updated] = lrmList.updated
+      it[updatedBy] = lrmList.updatedBy
+    }
     return lrmList.id
   }
 
   fun update(lrmList: LrmList): Int {
-    val updatedCount =
-      repositoryTable.update({ repositoryTable.id eq lrmList.id }) {
-        it[name] = lrmList.name
-        it[description] = lrmList.description
-        it[public] = lrmList.public
-        it[updated] = now()
-      }
-
-    return updatedCount
+    return repositoryTable.update({ repositoryTable.id eq lrmList.id }) {
+      it[name] = lrmList.name
+      it[description] = lrmList.description
+      it[public] = lrmList.public
+      it[updated] = now()
+    }
   }
 
-  private fun ResultRow.toLrmList(): LrmList {
+  private fun Query.byOwner(owner: String): Query {
+    return this.where { repositoryTable.createdBy eq owner }
+  }
+
+  private fun Query.byOwnerAndId(owner: String, id: UUID): Query {
+    return this.byOwner(owner).andWhere { repositoryTable.id eq id }
+  }
+
+  private fun fetchLrmListsIncludeItems(query: Query): List<LrmList> {
+    val resultRows = query.toList()
+
+    @Suppress("SENSELESS_COMPARISON")
+    val listItemsByList = resultRows
+      .filter { it.fieldIndex.containsKey(LrmListItemTable.id) }
+      .filterNot { it[LrmListItemTable.id] == null }
+      .groupBy { it[repositoryTable.id] }
+      .mapValues { it.value.map { row -> row.toLrmItem() }.sortedBy { item -> item.name }.toSet() }
+
+    return resultRows
+      .asSequence()
+      .map { row ->
+        row.toLrmList(listItemsByList[row[repositoryTable.id]] ?: emptySet())
+      }
+      .distinctBy { it.id } // distinct by the list id, eliminating duplicates
+      .toList()
+  }
+
+  private fun ResultRow.toLrmList(lrmItems: Set<LrmItem> = emptySet()): LrmList {
     return LrmList(
       id = this[repositoryTable.id],
       name = this[repositoryTable.name],
@@ -198,6 +140,7 @@ class LrmListRepository {
       createdBy = this[repositoryTable.createdBy],
       updated = this[repositoryTable.updated],
       updatedBy = this[repositoryTable.updatedBy],
+      items = lrmItems,
     )
   }
 
@@ -211,7 +154,7 @@ class LrmListRepository {
       updated = this[LrmListItemTable.updated],
       createdBy = this[LrmListItemTable.createdBy],
       updatedBy = this[LrmListItemTable.updatedBy],
-      lists = null,
+      lists = null, // Assuming the `lists` field will be populated later
     )
   }
 }

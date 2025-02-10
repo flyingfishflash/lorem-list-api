@@ -143,7 +143,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("get") {
         it("lists are found") {
           val mockReturn = listOf(lrmList())
-          every { mockLrmListService.findByOwner(ofType(String::class)) } returns mockReturn
+          every { mockLrmListService.findByOwnerExcludeItems(ofType(String::class)) } returns mockReturn
           val instance = "/lists"
           mockMvc.get(instance) {
             with(jwt())
@@ -164,12 +164,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findByOwner(ofType(String::class)) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerExcludeItems(ofType(String::class)) }
         }
 
         it("lists are found ?includeItems=false") {
           val mockReturn = listOf(lrmList())
-          every { mockLrmListService.findByOwner(ofType(String::class)) } returns mockReturn
+          every { mockLrmListService.findByOwnerExcludeItems(ofType(String::class)) } returns mockReturn
           val instance = "/lists?includeItems=false"
           mockMvc.get(instance) {
             with(jwt())
@@ -189,12 +189,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findByOwner(ofType(String::class)) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerExcludeItems(ofType(String::class)) }
         }
 
         it("lists are found ?includeItems=true") {
           val mockReturn = listOf(lrmListWithEmptyItems())
-          every { mockLrmListService.findByOwnerIncludeItems(ofType(String::class)) } returns mockReturn
+          every { mockLrmListService.findByOwner(ofType(String::class)) } returns mockReturn
           val instance = "/lists?includeItems=true"
           mockMvc.get(instance) {
             with(jwt())
@@ -215,7 +215,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               isEmpty()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findByOwnerIncludeItems(ofType(String::class)) }
+          verify(exactly = 1) { mockLrmListService.findByOwner(ofType(String::class)) }
         }
       }
 
@@ -404,7 +404,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
       describe("get") {
         it("list is found") {
-          every { mockLrmListService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns lrmList()
+          every { mockLrmListService.findByOwnerAndIdExcludeItems(id = id1, owner = ofType(String::class)) } returns lrmList()
           val instance = "/lists/$id1"
           mockMvc.get(instance) {
             with(jwt())
@@ -419,11 +419,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.description") { value(lrmList().description) }
             jsonPath("$.content.name") { value(lrmList().name) }
           }
-          verify(exactly = 1) { mockLrmListService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerAndIdExcludeItems(id = ofType(UUID::class), owner = ofType(String::class)) }
         }
 
         it("list is found ?includeItems=true") {
-          every { mockLrmListService.findByOwnerAndIdIncludeItems(id = id1, owner = ofType(String::class)) } returns lrmListWithEmptyItems()
+          every { mockLrmListService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns lrmListWithEmptyItems()
           val instance = "/lists/$id1?includeItems=true"
           mockMvc.get(instance) {
             with(jwt())
@@ -442,11 +442,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               isEmpty()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findByOwnerAndIdIncludeItems(id = ofType(UUID::class), owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
         }
 
         it("list is found ?includeItems=false") {
-          every { mockLrmListService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns lrmList()
+          every { mockLrmListService.findByOwnerAndIdExcludeItems(id = id1, owner = ofType(String::class)) } returns lrmList()
           val instance = "/lists/$id1?includeItems=false"
           mockMvc.get(instance) {
             with(jwt())
@@ -464,11 +464,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmListService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerAndIdExcludeItems(id = ofType(UUID::class), owner = ofType(String::class)) }
         }
 
         it("list is not found") {
-          every { mockLrmListService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } throws ListNotFoundException(id1)
+          every { mockLrmListService.findByOwnerAndIdExcludeItems(id = id1, owner = ofType(String::class)) } throws
+            ListNotFoundException(id1)
           val instance = "/lists/$id1"
           mockMvc.get(instance) {
             with(jwt())
@@ -482,7 +483,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
-          verify(exactly = 1) { mockLrmListService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmListService.findByOwnerAndIdExcludeItems(id = ofType(UUID::class), owner = ofType(String::class)) }
         }
       }
 

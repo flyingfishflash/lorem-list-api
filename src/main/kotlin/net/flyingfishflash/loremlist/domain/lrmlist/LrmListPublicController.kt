@@ -25,7 +25,7 @@ class LrmListPublicController(val lrmListService: LrmListService) {
     @RequestParam(defaultValue = false.toString()) includeItems: Boolean,
     request: HttpServletRequest,
   ): ResponseEntity<ResponseSuccess<List<LrmListResponse>>> {
-    val responseContent = if (includeItems) lrmListService.findByPublicIncludeItems() else lrmListService.findByPublic()
+    val responseContent = if (includeItems) lrmListService.findByPublic() else lrmListService.findByPublicExcludeItems()
     val responseContentDto = responseContent.map { it.toDto() }
     val response = ResponseSuccess(responseContentDto, "retrieved all public lists", request)
     logger.info { Json.encodeToString(response) }
