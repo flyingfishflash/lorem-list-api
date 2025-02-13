@@ -17,6 +17,7 @@ import java.util.UUID
 @Service
 @Transactional
 class LrmItemService(private val associationService: AssociationService, private val lrmItemRepository: LrmItemRepository) {
+
   fun countByOwner(owner: String): Long {
     try {
       val count = lrmItemRepository.countByOwner(owner = owner)
@@ -55,7 +56,7 @@ class LrmItemService(private val associationService: AssociationService, private
 
   fun deleteByOwner(owner: String): LrmItemDeleteResponse {
     try {
-      val items = findByOwnerIncludeLists(owner = owner)
+      val items = findByOwner(owner = owner)
       if (items.isNotEmpty()) {
         items.filter { it.lists.orEmpty().isNotEmpty() }.forEach {
           associationService.deleteByItemOwnerAndItemId(itemId = it.id, itemOwner = owner)
@@ -90,7 +91,7 @@ class LrmItemService(private val associationService: AssociationService, private
     removeListAssociations: Boolean,
   ): LrmItemDeleteResponse {
     try {
-      val item = findByOwnerAndIdIncludeLists(id = id, owner = owner)
+      val item = findByOwnerAndId(id = id, owner = owner)
       val lrmItemDeleteResponse = LrmItemDeleteResponse(
         itemNames = listOf(item.name),
         associatedListNames = item.lists.orEmpty().map { it.name }.sorted(),
@@ -150,17 +151,6 @@ class LrmItemService(private val associationService: AssociationService, private
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
-        message = "Items could not be retrieved.",
-      )
-    }
-  }
-
-  fun findByOwnerIncludeLists(owner: String): List<LrmItem> {
-    try {
-      return lrmItemRepository.findByOwnerIncludeLists(owner = owner)
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
         message = "Items (including associated lists) could not be retrieved.",
       )
     }
@@ -169,18 +159,6 @@ class LrmItemService(private val associationService: AssociationService, private
   fun findByOwnerAndId(id: UUID, owner: String): LrmItem {
     val item = try {
       lrmItemRepository.findByOwnerAndIdOrNull(id = id, owner = owner)
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "Item id $id could not be retrieved.",
-      )
-    }
-    return item ?: throw ItemNotFoundException(id = id)
-  }
-
-  fun findByOwnerAndIdIncludeLists(id: UUID, owner: String): LrmItem {
-    val item = try {
-      lrmItemRepository.findByOwnerAndIdOrNullIncludeLists(id = id, owner = owner)
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
@@ -269,5 +247,32 @@ class LrmItemService(private val associationService: AssociationService, private
       }
     }
     return Pair(lrmItem, patched)
+  }
+
+  // TODO: move to rest API service layer
+  // TODO: strip lists from lrmItem
+  fun findByOwnerExcludeLists(owner: String): List<LrmItem> {
+    try {
+      return lrmItemRepository.findByOwner(owner = owner)
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Items could not be retrieved.",
+      )
+    }
+  }
+
+  // TODO: move to rest API service layer
+  // TODO: strip lists from lrmItem
+  fun findByOwnerAndIdExcludeLists(id: UUID, owner: String): LrmItem {
+    val item = try {
+      lrmItemRepository.findByOwnerAndIdOrNull(id = id, owner = owner)
+    } catch (cause: Exception) {
+      throw ApiException(
+        cause = cause,
+        message = "Item id $id could not be retrieved.",
+      )
+    }
+    return item ?: throw ItemNotFoundException(id = id)
   }
 }

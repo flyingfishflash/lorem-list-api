@@ -150,11 +150,11 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
       "retrieved all items"
     }
     val responseContent = if (includeLists) {
-      lrmItemService.findByOwnerIncludeLists(
+      lrmItemService.findByOwner(
         owner = principal.subject,
       )
     } else {
-      lrmItemService.findByOwner(owner = principal.subject)
+      lrmItemService.findByOwnerExcludeLists(owner = principal.subject)
     }
     val responseContentDto = responseContent.map { it.toDto() }
     val response = ResponseSuccess(responseContentDto, responseMessage, request)
@@ -182,12 +182,12 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     val responseStatus = HttpStatus.OK
     val responseMessage = if (includeLists) "retrieved item id $itemId and it's associated lists" else "retrieved item id $itemId"
     val responseContent = if (includeLists) {
-      lrmItemService.findByOwnerAndIdIncludeLists(
+      lrmItemService.findByOwnerAndId(
         itemId,
         owner = principal.subject,
       )
     } else {
-      lrmItemService.findByOwnerAndId(itemId, owner = principal.subject)
+      lrmItemService.findByOwnerAndIdExcludeLists(itemId, owner = principal.subject)
     }
     val response = ResponseSuccess(responseContent.toDto(), responseMessage, request)
     logger.info { json.encodeToString(response) }

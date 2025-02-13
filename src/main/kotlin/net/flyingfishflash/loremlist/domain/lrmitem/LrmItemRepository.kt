@@ -5,6 +5,7 @@ import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
+import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
@@ -25,8 +26,7 @@ class LrmItemRepository {
 
   fun countByOwner(owner: String): Long {
     val idCount = repositoryTable.id.count()
-    val count = repositoryTable.select(idCount).where { repositoryTable.createdBy eq owner }.first()[idCount]
-    return count
+    return repositoryTable.select(idCount).where { repositoryTable.createdBy eq owner }.first()[idCount]
   }
 
   fun delete(): Int = repositoryTable.deleteAll()
@@ -37,71 +37,22 @@ class LrmItemRepository {
     repositoryTable.id eq id and (repositoryTable.createdBy eq owner)
   }
 
-  fun findByOwner(owner: String): List<LrmItem> = repositoryTable
-    .selectAll()
-    .where { repositoryTable.createdBy eq owner }
-    .map { it.toLrmItem() }
-    .toList()
-
-  fun findByOwnerIncludeLists(owner: String): List<LrmItem> {
-    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
-      .selectAll()
-      .where { repositoryTable.createdBy eq owner }
-      .toList()
-
-    val listsByItems = resultRows
-      .filter {
-        @Suppress("SENSELESS_COMPARISON")
-        it[LrmListTable.id] != null
-      }
-      .groupBy(
-        keySelector = { it[repositoryTable.id] },
-        valueTransform = {
-          LrmListSuccinct(
-            id = it[LrmListTable.id],
-            name = it[LrmListTable.name],
-          )
-        },
-      )
-
-    val itemsAndLists = resultRows.map {
-      it.toLrmItem()
-    }.distinct().map {
-      it.copy(lists = listsByItems[it.id]?.sortedBy { succinctList -> succinctList.name }?.toSet() ?: setOf())
-    }
-
-    return itemsAndLists
+  fun findByOwner(owner: String): List<LrmItem> {
+    return mapQueryResultToLrmItems(
+      ((repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable))
+        .selectAll()
+        .byOwner(owner),
+    )
   }
 
-  fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmItem? = repositoryTable.selectAll()
-    .where { repositoryTable.id eq id }
-    .andWhere { repositoryTable.createdBy eq owner }
-    .map { it.toLrmItem() }
-    .firstOrNull()
-
-  fun findByOwnerAndIdOrNullIncludeLists(id: UUID, owner: String): LrmItem? {
-    val resultRows = (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
-      .selectAll()
-      .where { repositoryTable.id eq id }
-      .andWhere { repositoryTable.createdBy eq owner }
-      .toList()
-
-    if (resultRows.isEmpty()) return null
-
-    val listsByItems = resultRows
-      .filter {
-        @Suppress("SENSELESS_COMPARISON")
-        it[LrmListTable.id] != null
-      }.map {
-        LrmListSuccinct(
-          id = it[LrmListTable.id],
-          name = it[LrmListTable.name],
-        )
-      }
-
-    val itemAndLists = resultRows.first().toLrmItem().copy(lists = listsByItems.sortedBy { succinctList -> succinctList.name }.toSet())
-
-    return itemAndLists
+  fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmItem? {
+    val lrmItems = mapQueryResultToLrmItems(
+      ((repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable))
+        .selectAll()
+        .byOwnerAndId(owner, id),
+    ).distinct()
+    check(lrmItems.size <= 1) { "This query result should consist of only one record." }
+    return lrmItems.firstOrNull()
   }
 
   fun findByOwnerAndHavingNoListAssociations(owner: String): List<LrmItem> {
@@ -114,17 +65,16 @@ class LrmItemRepository {
   }
 
   fun findIdsByOwnerAndIds(itemIdCollection: List<UUID>, owner: String): List<UUID> {
-    val resultIdCollection = repositoryTable.select(repositoryTable.id)
-      .where { repositoryTable.id inList (itemIdCollection) }
+    return repositoryTable.select(repositoryTable.id)
+      .where { repositoryTable.id inList itemIdCollection }
       .andWhere { repositoryTable.createdBy eq owner }
-      .map { row -> row[repositoryTable.id] }.toList()
-    return resultIdCollection
+      .map { it[repositoryTable.id] }
+      .toList()
   }
 
   fun notFoundByOwnerAndId(itemIdCollection: List<UUID>, owner: String): Set<UUID> {
     val resultIdCollection = findIdsByOwnerAndIds(itemIdCollection = itemIdCollection, owner = owner)
-    val notFoundItemUuidCollection = (itemIdCollection subtract resultIdCollection.toSet())
-    return notFoundItemUuidCollection
+    return (itemIdCollection subtract resultIdCollection.toSet())
   }
 
   fun insert(lrmItem: LrmItem): UUID {
@@ -138,20 +88,49 @@ class LrmItemRepository {
       it[updated] = lrmItem.updated
       it[updatedBy] = lrmItem.updatedBy
     }
-
     return lrmItem.id
   }
 
   fun update(lrmItem: LrmItem): Int {
-    val updatedCount =
-      repositoryTable.update({ repositoryTable.id eq lrmItem.id }) {
-        it[repositoryTable.name] = lrmItem.name
-        it[repositoryTable.description] = lrmItem.description
-        it[repositoryTable.quantity] = lrmItem.quantity
-        it[repositoryTable.updated] = now()
-      }
+    return repositoryTable.update({ repositoryTable.id eq lrmItem.id }) {
+      it[repositoryTable.name] = lrmItem.name
+      it[repositoryTable.description] = lrmItem.description
+      it[repositoryTable.quantity] = lrmItem.quantity
+      it[repositoryTable.updated] = now()
+    }
+  }
 
-    return updatedCount
+  private fun Query.byOwner(owner: String): Query {
+    return this.where { repositoryTable.createdBy eq owner }
+  }
+
+  private fun Query.byOwnerAndId(owner: String, id: UUID): Query {
+    return this.byOwner(owner).andWhere { repositoryTable.id eq id }
+  }
+
+  private fun mapQueryResultToLrmItems(query: Query): List<LrmItem> {
+    val resultRows = query.toList()
+
+    @Suppress("SENSELESS_COMPARISON")
+    val listsByItems = resultRows
+      .filter { it[LrmListTable.id] != null }
+      .groupBy(
+        keySelector = { it[repositoryTable.id] },
+        valueTransform = {
+          LrmListSuccinct(
+            id = it[LrmListTable.id],
+            name = it[LrmListTable.name],
+          )
+        },
+      )
+
+    return resultRows
+      .distinctBy { it[repositoryTable.id] }
+      .map {
+        it.toLrmItem().copy(
+          lists = listsByItems[it[repositoryTable.id]]?.sortedBy { list -> list.name }?.toSet() ?: emptySet(),
+        )
+      }
   }
 
   fun ResultRow.toLrmItem(): LrmItem {
