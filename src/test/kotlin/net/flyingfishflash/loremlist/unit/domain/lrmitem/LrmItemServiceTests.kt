@@ -51,7 +51,6 @@ class LrmItemServiceTests : DescribeSpec({
     createdBy = "Lorem Ipsum Created By",
     updated = now,
     updatedBy = "Lorem Ipsum Updated By",
-    lists = null
   )
 
   fun lrmItemWithLists() = lrmItem().copy(

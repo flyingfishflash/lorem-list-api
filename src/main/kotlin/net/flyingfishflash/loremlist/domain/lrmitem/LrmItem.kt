@@ -15,7 +15,7 @@ data class LrmItem(
   var createdBy: String,
   var updated: Instant,
   var updatedBy: String,
-  val lists: Set<LrmListSuccinct>? = null,
+  val lists: Set<LrmListSuccinct> = emptySet(),
 )
 
 fun LrmItem.succinct() = LrmItemSuccinct(id = this.id, name = this.name)

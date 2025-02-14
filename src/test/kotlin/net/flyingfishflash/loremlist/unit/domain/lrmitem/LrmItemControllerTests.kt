@@ -73,7 +73,6 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       createdBy = "Lorem Ipsum Created By",
       updated = now,
       updatedBy = "Lorem Ipsum Updated By",
-      lists = null,
 
     )
     fun lrmItemWithEmptyLists() = lrmItem().copy(lists = setOf())
@@ -86,7 +85,6 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       createdBy = "Lorem Ipsum Created By",
       updated = now,
       updatedBy = "Lorem Ipsum Updated By",
-      lists = null,
     )
     fun lrmList2(): LrmList = LrmList(
       id = id2,
@@ -361,7 +359,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.description") { value(lrmItem().description) }
             jsonPath("$.content.name") { value(lrmItem().name) }
-            jsonPath("$.content.lists") { doesNotExist() }
+            jsonPath("$.content.lists") { isEmpty() }
           }
           verify(exactly = 1) { mockLrmItemService.findByOwnerAndId(id = id1, owner = ofType(String::class)) }
         }

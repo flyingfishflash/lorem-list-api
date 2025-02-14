@@ -53,7 +53,7 @@ class AssociationServiceTests :
       createdBy = "Lorem Ipsum Created By",
       updated = now,
       updatedBy = "Lorem Ipsum Updated By",
-      lists = null,
+//      lists = null,
     )
     fun lrmItem2(): LrmItem = LrmItem(
       id = id2,
@@ -64,7 +64,7 @@ class AssociationServiceTests :
       createdBy = "Lorem Ipsum Created By",
       updated = now,
       updatedBy = "Lorem Ipsum Updated By",
-      lists = null,
+//      lists = null,
     )
     fun lrmItem3(): LrmItem = LrmItem(
       id = id3,
@@ -75,7 +75,7 @@ class AssociationServiceTests :
       createdBy = "Lorem Ipsum Created By",
       updated = now,
       updatedBy = "Lorem Ipsum Updated By",
-      lists = null,
+//      lists = null,
     )
     fun lrmList1(): LrmList = LrmList(
       id = id1,

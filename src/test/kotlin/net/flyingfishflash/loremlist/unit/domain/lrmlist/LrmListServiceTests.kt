@@ -70,7 +70,6 @@ class LrmListServiceTests : DescribeSpec({
       createdBy = "Lorem Ipsum Created By",
       updated = now,
       updatedBy = "Lorem Ipsum Updated By",
-      lists = null
     )),
   )
 

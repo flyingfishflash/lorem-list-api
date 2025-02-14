@@ -154,7 +154,7 @@ class LrmListRepository {
       updated = this[LrmListItemTable.updated],
       createdBy = this[LrmListItemTable.createdBy],
       updatedBy = this[LrmListItemTable.updatedBy],
-      lists = null,
+//      lists = null,
     )
   }
 }

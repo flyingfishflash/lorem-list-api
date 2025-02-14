@@ -99,7 +99,6 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       createdBy = "Lorem Ipsum Created By",
       updated = now,
       updatedBy = "Lorem Ipsum Updated By",
-      lists = null,
     )
     fun lrmItem3(): LrmItem = LrmItem(
       id = id3,
@@ -110,7 +109,6 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       createdBy = "Lorem Ipsum Created By",
       updated = now,
       updatedBy = "Lorem Ipsum Updated By",
-      lists = null,
     )
 
     afterEach { clearAllMocks() }
