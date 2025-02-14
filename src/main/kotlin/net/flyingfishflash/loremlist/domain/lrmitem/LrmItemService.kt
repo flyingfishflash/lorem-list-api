@@ -151,7 +151,7 @@ class LrmItemService(private val associationService: AssociationService, private
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
-        message = "Items (including associated lists) could not be retrieved.",
+        message = "Items could not be retrieved.",
       )
     }
   }
@@ -162,7 +162,7 @@ class LrmItemService(private val associationService: AssociationService, private
     } catch (cause: Exception) {
       throw ApiException(
         cause = cause,
-        message = "Item id $id (including associated lists) could not be retrieved.",
+        message = "Item id $id could not be retrieved.",
       )
     }
     return item ?: throw ItemNotFoundException(id = id)
@@ -247,32 +247,5 @@ class LrmItemService(private val associationService: AssociationService, private
       }
     }
     return Pair(lrmItem, patched)
-  }
-
-  // TODO: move to rest API service layer
-  // TODO: strip lists from lrmItem
-  fun findByOwnerExcludeLists(owner: String): List<LrmItem> {
-    try {
-      return lrmItemRepository.findByOwner(owner = owner)
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "Items could not be retrieved.",
-      )
-    }
-  }
-
-  // TODO: move to rest API service layer
-  // TODO: strip lists from lrmItem
-  fun findByOwnerAndIdExcludeLists(id: UUID, owner: String): LrmItem {
-    val item = try {
-      lrmItemRepository.findByOwnerAndIdOrNull(id = id, owner = owner)
-    } catch (cause: Exception) {
-      throw ApiException(
-        cause = cause,
-        message = "Item id $id could not be retrieved.",
-      )
-    }
-    return item ?: throw ItemNotFoundException(id = id)
   }
 }

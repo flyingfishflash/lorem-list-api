@@ -173,7 +173,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
               content { contentType(MediaType.APPLICATION_JSON) }
               jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
               jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-              jsonPath("$.message") { value("retrieved item id ${itemIds[index]}") }
+              jsonPath("$.message") { value("retrieved item id ${itemIds[index]}.") }
               jsonPath("$.instance") { value(instance) }
               jsonPath("$.size") { value(1) }
               jsonPath("$.content.length()") { value(9) }
@@ -779,7 +779,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 1 is associated with lists 0 and 1") {
-        val instance = "/items/${itemIds[1]}?includeLists=true"
+        val instance = "/items/${itemIds[1]}"
         mockMvc.get(instance) {
           with(jwt())
           contentType = MediaType.APPLICATION_JSON
@@ -788,8 +788,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved item id ${itemIds[1]} and it's associated lists") }
-          jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
+          jsonPath("$.message") { value("retrieved item id ${itemIds[1]}.") }
+          jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.id") { value("${itemIds[1]}") }
           jsonPath("$.content.name") { value(updateLrmItemTwoRequest().name) }
@@ -807,7 +807,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("list 1 includes items 0 and 1") {
-        val instance = "/lists/${listIds[1]}?includeItems=true"
+        val instance = "/lists/${listIds[1]}"
         mockMvc.get(instance) {
           with(jwt())
           contentType = MediaType.APPLICATION_JSON
@@ -817,7 +817,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
           jsonPath("$.message") { value("retrieved list id ${listIds[1]}") }
-          jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
+          jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.id") { value("${listIds[1]}") }
           jsonPath("$.content.name") { value(updateLrmListTwoRequest().name) }
@@ -837,7 +837,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
       }
 
       it("item 0 is associated with only list 1") {
-        val instance = "/items/${itemIds[0]}?includeLists=true"
+        val instance = "/items/${itemIds[0]}"
         mockMvc.get(instance) {
           with(jwt())
           contentType = MediaType.APPLICATION_JSON
@@ -846,8 +846,8 @@ class LrmListFunctionalTests(mockMvc: MockMvc) : DescribeSpec({
           content { contentType(MediaType.APPLICATION_JSON) }
           jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
           jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-          jsonPath("$.message") { value("retrieved item id ${itemIds[0]} and it's associated lists") }
-          jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
+          jsonPath("$.message") { value("retrieved item id ${itemIds[0]}.") }
+          jsonPath("$.instance") { value(instance) }
           jsonPath("$.size") { value(1) }
           jsonPath("$.content.id") { value("${itemIds[0]}") }
           jsonPath("$.content.name") { value(updateLrmItemOneRequest().name) }

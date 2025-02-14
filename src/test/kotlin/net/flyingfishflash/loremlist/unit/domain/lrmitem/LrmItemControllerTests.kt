@@ -142,7 +142,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("get") {
         it("items are found") {
           val mockReturn = listOf(lrmItem())
-          every { mockLrmItemService.findByOwnerExcludeLists(owner = ofType(String::class)) } returns mockReturn
+          every { mockLrmItemService.findByOwner(owner = ofType(String::class)) } returns mockReturn
           val instance = "/items"
           mockMvc.get(instance) {
             with(jwt())
@@ -161,57 +161,6 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.[0].description") { value(mockReturn[0].description) }
             jsonPath("$.content.[0].items") {
               doesNotExist()
-            }
-          }
-          verify(exactly = 1) { mockLrmItemService.findByOwnerExcludeLists(owner = ofType(String::class)) }
-        }
-
-        it("items are found ?includeLists=false") {
-          val mockReturn = listOf(lrmItem())
-          every { mockLrmItemService.findByOwnerExcludeLists(owner = ofType(String::class)) } returns mockReturn
-          val instance = "/items?includeLists=false"
-          mockMvc.get(instance) {
-            with(jwt())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value("retrieved all items") }
-            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
-            jsonPath("$.size") { value(mockReturn.size) }
-            jsonPath("$.content") { isArray() }
-            jsonPath("$.content.[0].name") { value(mockReturn[0].name) }
-            jsonPath("$.content.[0].description") { value(mockReturn[0].description) }
-            jsonPath("$.content.[0].lists") {
-              doesNotExist()
-            }
-          }
-          verify(exactly = 1) { mockLrmItemService.findByOwnerExcludeLists(owner = ofType(String::class)) }
-        }
-
-        it("items are found ?includeLists=true") {
-          val mockReturn = listOf(lrmItemWithEmptyLists())
-          every { mockLrmItemService.findByOwner(owner = ofType(String::class)) } returns mockReturn
-          val instance = "/items?includeLists=true"
-          mockMvc.get(instance) {
-            with(jwt())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value("retrieved all items and the lists each item is associated with.") }
-            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
-            jsonPath("$.size") { value(mockReturn.size) }
-            jsonPath("$.content") { isArray() }
-            jsonPath("$.content.[0].name") { value(mockReturn[0].name) }
-            jsonPath("$.content.[0].description") { value(mockReturn[0].description) }
-            jsonPath("$.content.[0].lists") {
-              isArray()
-              isEmpty()
             }
           }
           verify(exactly = 1) { mockLrmItemService.findByOwner(owner = ofType(String::class)) }
@@ -398,7 +347,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
       describe("get") {
         it("item is found") {
-          every { mockLrmItemService.findByOwnerAndIdExcludeLists(id = id1, owner = ofType(String::class)) } returns lrmItem()
+          every { mockLrmItemService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns lrmItem()
           val instance = "/items/$id1"
           mockMvc.get(instance) {
             with(jwt())
@@ -407,61 +356,18 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             content { contentType(MediaType.APPLICATION_JSON) }
             jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
             jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value("retrieved item id $id1") }
+            jsonPath("$.message") { value("retrieved item id $id1.") }
             jsonPath("$.instance") { value(instance) }
             jsonPath("$.size") { value(1) }
             jsonPath("$.content.description") { value(lrmItem().description) }
             jsonPath("$.content.name") { value(lrmItem().name) }
             jsonPath("$.content.lists") { doesNotExist() }
           }
-          verify(exactly = 1) { mockLrmItemService.findByOwnerAndIdExcludeLists(id = id1, owner = ofType(String::class)) }
-        }
-
-        it("item is found ?includeLists=false") {
-          every { mockLrmItemService.findByOwnerAndIdExcludeLists(id = id1, owner = ofType(String::class)) } returns lrmItem()
-          val instance = "/items/$id1?includeLists=false"
-          mockMvc.get(instance) {
-            with(jwt())
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value("retrieved item id $id1") }
-            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.description") { value(lrmItem().description) }
-            jsonPath("$.content.name") { value(lrmItem().name) }
-            jsonPath("$.content.lists") { doesNotExist() }
-          }
-          verify(exactly = 1) { mockLrmItemService.findByOwnerAndIdExcludeLists(id = ofType(UUID::class), owner = ofType(String::class)) }
-        }
-
-        it("item is found ?includeLists=true") {
-          every { mockLrmItemService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns lrmItemWithEmptyLists()
-          val instance = "/items/$id1?includeLists=true"
-          mockMvc.get(instance) {
-            with(jwt())
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value("retrieved item id $id1 and it's associated lists") }
-            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.description") { value(lrmItemWithEmptyLists().description) }
-            jsonPath("$.content.name") { value(lrmItemWithEmptyLists().name) }
-            jsonPath("$.content.lists") {
-              isArray()
-              isEmpty()
-            }
-          }
-          verify(exactly = 1) { mockLrmItemService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmItemService.findByOwnerAndId(id = id1, owner = ofType(String::class)) }
         }
 
         it("item is not found") {
-          every { mockLrmItemService.findByOwnerAndIdExcludeLists(id = id1, owner = ofType(String::class)) } throws
+          every { mockLrmItemService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } throws
             ItemNotFoundException(id1)
           val expectedMessage = ItemNotFoundException.defaultMessage()
           val instance = "/items/$id1"
@@ -479,7 +385,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
             jsonPath("$.content.detail") { value(expectedMessage) }
           }
-          verify(exactly = 1) { mockLrmItemService.findByOwnerAndIdExcludeLists(id = ofType(UUID::class), owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmItemService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
         }
       }
 

@@ -136,33 +136,22 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Retrieve all items, optionally including the id and name of each associated list.")
+  @Operation(summary = "Retrieve all items.")
   @GetMapping
   fun findWhereOwnerIsPrincipal(
-    @RequestParam(defaultValue = false.toString()) includeLists: Boolean,
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<List<LrmItemResponse>>> {
     val responseStatus = HttpStatus.OK
-    val responseMessage = if (includeLists) {
-      "retrieved all items and the lists each item is associated with."
-    } else {
-      "retrieved all items"
-    }
-    val responseContent = if (includeLists) {
-      lrmItemService.findByOwner(
-        owner = principal.subject,
-      )
-    } else {
-      lrmItemService.findByOwnerExcludeLists(owner = principal.subject)
-    }
+    val responseMessage = "retrieved all items"
+    val responseContent = lrmItemService.findByOwner(owner = principal.subject)
     val responseContentDto = responseContent.map { it.toDto() }
     val response = ResponseSuccess(responseContentDto, responseMessage, request)
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Retrieve a single item, optionally including the id and name of each associated list.")
+  @Operation(summary = "Retrieve a single item.")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -175,20 +164,12 @@ class LrmItemController(val associationService: AssociationService, val lrmItemS
   @GetMapping("/{item-id}")
   fun findByIdWhereOwnerIsPrincipal(
     @PathVariable("item-id") @ValidUuid itemId: UUID,
-    @RequestParam(defaultValue = false.toString()) includeLists: Boolean,
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<LrmItemResponse>> {
     val responseStatus = HttpStatus.OK
-    val responseMessage = if (includeLists) "retrieved item id $itemId and it's associated lists" else "retrieved item id $itemId"
-    val responseContent = if (includeLists) {
-      lrmItemService.findByOwnerAndId(
-        itemId,
-        owner = principal.subject,
-      )
-    } else {
-      lrmItemService.findByOwnerAndIdExcludeLists(itemId, owner = principal.subject)
-    }
+    val responseMessage = "retrieved item id $itemId."
+    val responseContent = lrmItemService.findByOwnerAndId(itemId, owner = principal.subject)
     val response = ResponseSuccess(responseContent.toDto(), responseMessage, request)
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)

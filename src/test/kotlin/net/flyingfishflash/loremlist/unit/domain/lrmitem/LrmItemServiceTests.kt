@@ -140,7 +140,7 @@ class LrmItemServiceTests : DescribeSpec({
       every { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) } throws (Exception("Lorem Ipsum"))
       val apiException = shouldThrow<ApiException> { lrmItemService.deleteByOwner(owner = "lorem ipsum") }
       apiException.message.shouldContain("No items were deleted")
-      apiException.message.shouldContain("Items (including associated lists) could not be retrieved")
+      apiException.message.shouldContain("Items could not be retrieved")
       verify(exactly = 1) { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) }
     }
   }
@@ -276,23 +276,6 @@ class LrmItemServiceTests : DescribeSpec({
   describe("findAllByOwner()") {
     it("all are returned") {
       every { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) } returns listOf(lrmItem())
-      lrmItemService.findByOwnerExcludeLists(owner = "lorem ipsum")
-      verify(exactly = 1) { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) }
-    }
-
-    it("item repository throws exception") {
-      every { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.findByOwnerExcludeLists(owner = "lorem ipsum") }
-      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
-      exception.cause.shouldBeInstanceOf<Exception>()
-      exception.message.shouldBe("Items could not be retrieved.")
-      exception.responseMessage.shouldBe("Items could not be retrieved.")
-    }
-  }
-
-  describe("findAllByOwnerIncludeLists()") {
-    it("all and lists are returned") {
-      every { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) } returns listOf(lrmItem())
       lrmItemService.findByOwner(owner = "lorem ipsum")
       verify(exactly = 1) { mockLrmItemRepository.findByOwner(owner = ofType(String::class)) }
     }
@@ -302,38 +285,12 @@ class LrmItemServiceTests : DescribeSpec({
       val exception = shouldThrow<ApiException> { lrmItemService.findByOwner(owner = "lorem ipsum") }
       exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.cause.shouldBeInstanceOf<Exception>()
-      exception.message.shouldBe("Items (including associated lists) could not be retrieved.")
-      exception.responseMessage.shouldBe("Items (including associated lists) could not be retrieved.")
+      exception.message.shouldBe("Items could not be retrieved.")
+      exception.responseMessage.shouldBe("Items could not be retrieved.")
     }
   }
 
-  describe("findByIdAndOwner()") {
-    it("item is returned") {
-      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
-      lrmItemService.findByOwnerAndIdExcludeLists(id = id1, owner = "lorem ipsum")
-      verify(exactly = 1) { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) }
-    }
-
-    it("item is not returned") {
-      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns null
-      shouldThrow<ItemNotFoundException> { lrmItemService.findByOwnerAndIdExcludeLists(id = id1, owner = "lorem ipsum") }
-    }
-
-    it("item repository throws exception") {
-      every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } throws Exception("Lorem Ipsum")
-      val exception = shouldThrow<ApiException> { lrmItemService.findByOwnerAndIdExcludeLists(id = id1, owner = "lorem ipsum") }
-      exception.httpStatus.shouldBeEqual(HttpStatus.INTERNAL_SERVER_ERROR)
-      exception.cause.shouldBeInstanceOf<Exception>()
-      exception.message
-        .shouldContainIgnoringCase("$id1")
-        .shouldContainIgnoringCase("could not be retrieved")
-      exception.responseMessage
-        .shouldContainIgnoringCase("$id1")
-        .shouldContainIgnoringCase("could not be retrieved")
-    }
-  }
-
-  describe("findByIdAndOwnerIncludeLists()") {
+  describe("findByIdAndOwner") {
     it("item and lists are returned") {
       every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
       lrmItemService.findByOwnerAndId(id = id1, owner = "lorem ipsum")
@@ -357,11 +314,9 @@ class LrmItemServiceTests : DescribeSpec({
       exception.cause.shouldBeInstanceOf<Exception>()
       exception.message
         .shouldContainIgnoringCase("$id1")
-        .shouldContainIgnoringCase("including associated lists")
         .shouldContainIgnoringCase("could not be retrieved")
       exception.responseMessage
         .shouldContainIgnoringCase("$id1")
-        .shouldContainIgnoringCase("including associated lists")
         .shouldContainIgnoringCase("could not be retrieved")
     }
   }
