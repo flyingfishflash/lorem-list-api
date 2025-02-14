@@ -41,14 +41,14 @@ class LrmListRepository {
       repositoryTable.id eq id and (repositoryTable.createdBy eq owner)
     }
 
-  fun findByOwner(owner: String): List<LrmList> = fetchLrmListsIncludeItems(
+  fun findByOwner(owner: String): List<LrmList> = mapQueryResultToLrmLists(
     (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .selectAll()
       .byOwner(owner),
   )
 
   fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmList? {
-    val lrmLists = fetchLrmListsIncludeItems(
+    val lrmLists = mapQueryResultToLrmLists(
       (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
         .selectAll()
         .byOwnerAndId(owner, id),
@@ -63,7 +63,7 @@ class LrmListRepository {
     .andWhere { LrmListsItemsTable.list.isNull() }
     .map { it.toLrmList() }
 
-  fun findByPublic(): List<LrmList> = fetchLrmListsIncludeItems(
+  fun findByPublic(): List<LrmList> = mapQueryResultToLrmLists(
     (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
       .selectAll()
       .where { repositoryTable.public eq true },
@@ -111,7 +111,7 @@ class LrmListRepository {
     return this.byOwner(owner).andWhere { repositoryTable.id eq id }
   }
 
-  private fun fetchLrmListsIncludeItems(query: Query): List<LrmList> {
+  private fun mapQueryResultToLrmLists(query: Query): List<LrmList> {
     val resultRows = query.toList()
 
     @Suppress("SENSELESS_COMPARISON")
@@ -154,7 +154,7 @@ class LrmListRepository {
       updated = this[LrmListItemTable.updated],
       createdBy = this[LrmListItemTable.createdBy],
       updatedBy = this[LrmListItemTable.updatedBy],
-      lists = null, // Assuming the `lists` field will be populated later
+      lists = null,
     )
   }
 }

@@ -18,6 +18,7 @@ import java.util.UUID
 @Service
 @Transactional
 class LrmListService(private val associationService: AssociationService, private val lrmListRepository: LrmListRepository) {
+
   fun countByOwner(owner: String): Long {
     try {
       val count = lrmListRepository.countByOwner(owner = owner)
