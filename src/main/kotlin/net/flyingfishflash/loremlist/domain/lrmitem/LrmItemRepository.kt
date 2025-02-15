@@ -4,7 +4,7 @@ import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.LrmListItemTable
 import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListSuccinct
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -39,7 +40,7 @@ class LrmItemRepository {
 
   fun findByOwner(owner: String): List<LrmItem> {
     return mapQueryResultToLrmItems(
-      ((repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable))
+      (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
         .selectAll()
         .byOwner(owner),
     )
@@ -47,11 +48,11 @@ class LrmItemRepository {
 
   fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmItem? {
     val lrmItems = mapQueryResultToLrmItems(
-      ((repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable))
+      (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
         .selectAll()
         .byOwnerAndId(owner, id),
     ).distinct()
-    check(lrmItems.size <= 1) { "This query result should consist of only one record." }
+    check(lrmItems.size <= 1) { "This query should return no more than one record." }
     return lrmItems.firstOrNull()
   }
 
@@ -91,11 +92,21 @@ class LrmItemRepository {
     return lrmItem.id
   }
 
-  fun update(lrmItem: LrmItem): Int {
+  fun update(lrmItem: LrmItem): Int = updateItem(lrmItem) {
+    it[repositoryTable.name] = lrmItem.name
+    it[repositoryTable.description] = lrmItem.description
+    it[repositoryTable.quantity] = lrmItem.quantity
+  }
+
+  fun updateName(lrmItem: LrmItem): Int = updateItem(lrmItem) { it[repositoryTable.name] = lrmItem.name }
+
+  fun updateDescription(lrmItem: LrmItem): Int = updateItem(lrmItem) { it[repositoryTable.description] = lrmItem.description }
+
+  fun updateQuantity(lrmItem: LrmItem): Int = updateItem(lrmItem) { it[repositoryTable.quantity] = lrmItem.quantity }
+
+  private fun updateItem(lrmItem: LrmItem, updateAction: (UpdateStatement) -> Unit): Int {
     return repositoryTable.update({ repositoryTable.id eq lrmItem.id }) {
-      it[repositoryTable.name] = lrmItem.name
-      it[repositoryTable.description] = lrmItem.description
-      it[repositoryTable.quantity] = lrmItem.quantity
+      updateAction(it)
       it[repositoryTable.updated] = now()
     }
   }

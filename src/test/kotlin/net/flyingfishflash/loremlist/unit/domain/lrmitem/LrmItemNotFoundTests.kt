@@ -11,7 +11,7 @@ class LrmItemNotFoundTests :
       it("primary constructor: default message") {
         val id = UUID.randomUUID()
         val itemNotFoundException = ItemNotFoundException(id = id)
-        itemNotFoundException.message.shouldBe(ItemNotFoundException.defaultMessage())
+        itemNotFoundException.message.shouldBe("Item could not be found.")
       }
 
       it("primary constructor: non-default message") {
@@ -22,13 +22,13 @@ class LrmItemNotFoundTests :
       it("secondary constructor: default message, set size = 1") {
         val ids = setOf(UUID.randomUUID())
         val itemNotFoundException = ItemNotFoundException(idCollection = ids)
-        itemNotFoundException.message.shouldBe(ItemNotFoundException.defaultMessage(ids))
+        itemNotFoundException.message.shouldBe("Item could not be found.")
       }
 
       it("secondary constructor: default message, set size > 1") {
         val ids = setOf(UUID.randomUUID(), UUID.randomUUID())
         val itemNotFoundException = ItemNotFoundException(idCollection = ids)
-        itemNotFoundException.message.shouldBe(ItemNotFoundException.defaultMessage(ids))
+        itemNotFoundException.message.shouldBe("Items (2) could not be found.")
       }
 
       it("secondary constructor: non-default message") {

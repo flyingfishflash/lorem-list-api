@@ -1,24 +1,14 @@
 package net.flyingfishflash.loremlist.domain.lrmlist
 
-import net.flyingfishflash.loremlist.core.exceptions.ApiException
-import net.flyingfishflash.loremlist.toJsonElement
-import org.springframework.http.HttpStatus
-import java.util.*
+import net.flyingfishflash.loremlist.domain.LrmComponentType
+import net.flyingfishflash.loremlist.domain.exceptions.EntityNotFoundException
+import java.util.UUID
 
-class ListNotFoundException : ApiException {
+class ListNotFoundException(idCollection: Set<UUID> = emptySet(), message: String? = null) :
+  EntityNotFoundException(
+    idCollection = idCollection,
+    message = message,
+    lrmComponentType = LrmComponentType.List,
+  ) {
   constructor(id: UUID, message: String? = null) : this(setOf(id), message = message)
-
-  constructor(idCollection: Set<UUID>, message: String? = null) : super(
-    httpStatus = HTTP_STATUS,
-    title = "ListNotFoundException",
-    message = message ?: defaultMessage(idCollection),
-    supplemental = mapOf("notFound" to idCollection.map { it.toString() }.toJsonElement()),
-  )
-
-  companion object {
-    val HTTP_STATUS = HttpStatus.NOT_FOUND
-    fun defaultMessage() = "List could not be found."
-    fun defaultMessage(idCollection: Set<UUID>) =
-      if (idCollection.size > 1) "Lists (${idCollection.size}) could not be found." else defaultMessage()
-  }
 }

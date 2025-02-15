@@ -1,6 +1,7 @@
 package net.flyingfishflash.loremlist.domain
 
 enum class LrmComponentType {
+  Association,
   Item,
   List,
   ;
@@ -15,6 +16,7 @@ enum class LrmComponentType {
     init {
       Item.opposite = List
       List.opposite = Item
+      Association.opposite = Association
     }
   }
 }

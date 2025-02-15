@@ -5,8 +5,9 @@ import net.flyingfishflash.loremlist.domain.LrmListTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable.item
 import net.flyingfishflash.loremlist.domain.LrmListsItemsTable.list
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemSuccinct
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemSuccinct
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListSuccinct
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.andWhere
@@ -112,6 +113,14 @@ class AssociationRepository {
         itemId = it[repositoryTable.item],
       )
     }
+  }
+
+  fun findListsByItem(lrmItem: LrmItem): Set<LrmListSuccinct> {
+    return (repositoryTable innerJoin LrmListTable)
+      .select(LrmListTable.id, LrmListTable.name)
+      .where { repositoryTable.item eq lrmItem.id }
+      .map { LrmListSuccinct(it[LrmListTable.id], it[LrmListTable.name]) }
+      .toSet()
   }
 
   fun update(association: Association): Int {

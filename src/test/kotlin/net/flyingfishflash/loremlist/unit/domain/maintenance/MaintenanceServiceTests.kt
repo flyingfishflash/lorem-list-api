@@ -7,8 +7,8 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
-import net.flyingfishflash.loremlist.core.exceptions.ApiException
 import net.flyingfishflash.loremlist.domain.association.AssociationRepository
+import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
 import net.flyingfishflash.loremlist.domain.maintenance.MaintenanceService
@@ -30,14 +30,14 @@ class MaintenanceServiceTests :
         every { mockLrmItemRepository.delete() } returns 998
         every { mockLrmListRepository.delete() } returns 999
         val serviceResponse = maintenanceService.purge()
-        serviceResponse.associationDeletedCount.shouldBe(997)
-        serviceResponse.itemDeletedCount.shouldBe(998)
-        serviceResponse.listDeletedCount.shouldBe(999)
+        serviceResponse.content.associationDeletedCount.shouldBe(997)
+        serviceResponse.content.itemDeletedCount.shouldBe(998)
+        serviceResponse.content.listDeletedCount.shouldBe(999)
       }
 
       it("domain is not purged (repository exception") {
         every { mockAssociationRepository.delete() } throws RuntimeException("Lorem Ipsum")
-        val exception = shouldThrow<ApiException> { maintenanceService.purge() }
+        val exception = shouldThrow<DomainException> { maintenanceService.purge() }
         exception.message.shouldBe("Items, Lists, and Associations could not be purged.")
       }
     }

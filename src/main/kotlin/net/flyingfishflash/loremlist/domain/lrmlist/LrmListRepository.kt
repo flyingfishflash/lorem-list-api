@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -94,12 +95,22 @@ class LrmListRepository {
     return lrmList.id
   }
 
-  fun update(lrmList: LrmList): Int {
+  fun update(lrmList: LrmList): Int = updateList(lrmList) {
+    it[repositoryTable.name] = lrmList.name
+    it[repositoryTable.description] = lrmList.description
+    it[repositoryTable.public] = lrmList.public
+  }
+
+  fun updateName(lrmList: LrmList): Int = updateList(lrmList) { it[repositoryTable.name] = lrmList.name }
+
+  fun updateDescription(lrmList: LrmList): Int = updateList(lrmList) { it[repositoryTable.description] = lrmList.description }
+
+  fun updateIsPublic(lrmList: LrmList): Int = updateList(lrmList) { it[repositoryTable.public] = lrmList.public }
+
+  private fun updateList(lrmList: LrmList, updateAction: (UpdateStatement) -> Unit): Int {
     return repositoryTable.update({ repositoryTable.id eq lrmList.id }) {
-      it[name] = lrmList.name
-      it[description] = lrmList.description
-      it[public] = lrmList.public
-      it[updated] = now()
+      updateAction(it)
+      it[repositoryTable.updated] = now()
     }
   }
 

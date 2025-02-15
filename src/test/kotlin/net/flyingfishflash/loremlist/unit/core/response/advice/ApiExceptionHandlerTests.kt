@@ -11,8 +11,8 @@ import io.mockk.mockk
 import io.mockk.unmockkAll
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
-import net.flyingfishflash.loremlist.core.exceptions.ApiException
-import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler
+import net.flyingfishflash.loremlist.core.exceptions.CoreException
+import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpHeaders
@@ -34,9 +34,9 @@ class ApiExceptionHandlerTests :
         val mockEnvironment = mockk<Environment>(relaxed = true)
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "never"
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiException = ApiException()
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
+        val apiException = CoreException()
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, apiException)
         responseEntity.body?.content?.cause.shouldBeNull()
         responseEntity.body?.content?.stackTrace.shouldBeNull()
         responseEntity.body?.content?.validationErrors.shouldBeNull()
@@ -46,9 +46,9 @@ class ApiExceptionHandlerTests :
         val mockEnvironment = mockk<Environment>(relaxed = true)
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "never"
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiException = ApiException(cause = RuntimeException())
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
+        val apiException = CoreException(cause = RuntimeException())
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, apiException)
         responseEntity.body?.content?.cause.shouldNotBeNull()
         responseEntity.body?.content?.stackTrace.shouldBeNull()
         responseEntity.body?.content?.validationErrors.shouldBeNull()
@@ -58,9 +58,9 @@ class ApiExceptionHandlerTests :
         val mockEnvironment = mockk<Environment>(relaxed = true)
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiException = ApiException()
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
+        val apiException = CoreException()
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, apiException)
         responseEntity.body?.content?.cause.shouldBeNull()
         responseEntity.body?.content?.stackTrace.shouldNotBeNull()
         responseEntity.body?.content?.validationErrors.shouldBeNull()
@@ -70,9 +70,9 @@ class ApiExceptionHandlerTests :
         val mockEnvironment = mockk<Environment>(relaxed = true)
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiException = ApiException(cause = RuntimeException())
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, apiException)
+        val apiException = CoreException(cause = RuntimeException())
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, apiException)
         responseEntity.body?.content?.cause.shouldNotBeNull()
         responseEntity.body?.content?.stackTrace.shouldNotBeNull()
         responseEntity.body?.content?.validationErrors.shouldBeNull()
@@ -87,9 +87,9 @@ class ApiExceptionHandlerTests :
         val rootCause = IllegalArgumentException("Root cause exception")
         val intermediateCause = IllegalStateException("Intermediate cause exception")
         intermediateCause.initCause(rootCause)
-        val topLevelException = ApiException(message = "Top level exception", cause = intermediateCause)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleAbstractApiException(mockHttpServletRequest, topLevelException)
+        val topLevelException = CoreException(message = "Top level exception", cause = intermediateCause)
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, topLevelException)
         responseEntity.body?.content?.supplemental?.shouldNotBeNull()
         responseEntity.body?.content?.cause?.name.shouldBe("IllegalArgumentException")
         responseEntity.body?.content?.cause?.message.shouldBe("Root cause exception")
@@ -104,8 +104,8 @@ class ApiExceptionHandlerTests :
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
         val exception = Exception()
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleException(mockHttpServletRequest, exception)
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleException(mockHttpServletRequest, exception)
         responseEntity.body?.content?.validationErrors.shouldBeNull()
         responseEntity.body?.content?.stackTrace.shouldNotBeNull()
       }
@@ -115,8 +115,8 @@ class ApiExceptionHandlerTests :
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns null
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
         val exception = Exception()
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleException(mockHttpServletRequest, exception)
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleException(mockHttpServletRequest, exception)
         responseEntity.body?.content?.validationErrors.shouldBeNull()
         responseEntity.body?.content?.stackTrace.shouldBeNull()
       }
@@ -126,8 +126,8 @@ class ApiExceptionHandlerTests :
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns null
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
         val exception = Exception("Lorem Ipsum")
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleException(mockHttpServletRequest, exception)
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleException(mockHttpServletRequest, exception)
         responseEntity.body?.content?.detail.shouldBe("Lorem Ipsum")
       }
     }
@@ -139,8 +139,8 @@ class ApiExceptionHandlerTests :
         val mockHttpMessageNotReadableException = mockk<HttpMessageNotReadableException>(relaxed = true)
         val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
         val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleHttpMessageNotReadable(
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleHttpMessageNotReadable(
           mockHttpMessageNotReadableException,
           mockHttpHeaders,
           HttpStatus.I_AM_A_TEAPOT,
@@ -156,8 +156,8 @@ class ApiExceptionHandlerTests :
         val mockHttpMessageNotReadableException = mockk<HttpMessageNotReadableException>(relaxed = true)
         val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
         val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleHttpMessageNotReadable(
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleHttpMessageNotReadable(
           mockHttpMessageNotReadableException,
           mockHttpHeaders,
           HttpStatus.I_AM_A_TEAPOT,
@@ -174,15 +174,15 @@ class ApiExceptionHandlerTests :
         every { mockHttpMessageNotReadableException.message } returns null
         val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
         val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleHttpMessageNotReadable(
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleHttpMessageNotReadable(
           mockHttpMessageNotReadableException,
           mockHttpHeaders,
           HttpStatus.I_AM_A_TEAPOT,
           mockWebRequest,
         )
         responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.detail.shouldBe(
-          ApiExceptionHandler.EXCEPTION_MESSAGE_NOT_PRESENT,
+          CoreExceptionHandler.EXCEPTION_MESSAGE_NOT_PRESENT,
         )
         responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.stackTrace.shouldBeNull()
         responseEntity.body?.shouldNotBeNull().shouldBeInstanceOf<ResponseProblem>().content.validationErrors.shouldBeNull()
@@ -196,8 +196,8 @@ class ApiExceptionHandlerTests :
         val mockHandlerMethodValidationException = mockk<HandlerMethodValidationException>(relaxed = true)
         val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
         val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleHandlerMethodValidationException(
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleHandlerMethodValidationException(
           mockHandlerMethodValidationException,
           mockHttpHeaders,
           HttpStatus.I_AM_A_TEAPOT,
@@ -213,8 +213,8 @@ class ApiExceptionHandlerTests :
         val mockHandlerMethodValidationException = mockk<HandlerMethodValidationException>(relaxed = true)
         val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
         val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleHandlerMethodValidationException(
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleHandlerMethodValidationException(
           mockHandlerMethodValidationException,
           mockHttpHeaders,
           HttpStatus.I_AM_A_TEAPOT,
@@ -232,8 +232,8 @@ class ApiExceptionHandlerTests :
         val mockConstraintViolationException = mockk<ConstraintViolationException>(relaxed = true)
         every { mockConstraintViolationException.cause } returns Exception("Constraint Violation Cause")
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleConstraintViolationException(
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleConstraintViolationException(
           mockHttpServletRequest,
           mockConstraintViolationException,
         )
@@ -247,8 +247,8 @@ class ApiExceptionHandlerTests :
         val mockConstraintViolationException = mockk<ConstraintViolationException>(relaxed = true)
         every { mockConstraintViolationException.cause } returns Exception("Constraint Violation Cause")
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleConstraintViolationException(
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleConstraintViolationException(
           mockHttpServletRequest,
           mockConstraintViolationException,
         )
@@ -264,8 +264,8 @@ class ApiExceptionHandlerTests :
         val mockMethodArgumentNotValidException = mockk<MethodArgumentNotValidException>(relaxed = true)
         val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
         val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleMethodArgumentNotValid(
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleMethodArgumentNotValid(
           mockMethodArgumentNotValidException,
           mockHttpHeaders,
           HttpStatus.I_AM_A_TEAPOT,
@@ -281,8 +281,8 @@ class ApiExceptionHandlerTests :
         val mockMethodArgumentNotValidException = mockk<MethodArgumentNotValidException>(relaxed = true)
         val mockHttpHeaders = mockk<HttpHeaders>(relaxed = true)
         val mockWebRequest = mockk<ServletWebRequest>(relaxed = true)
-        val apiExceptionHandler = ApiExceptionHandler(mockEnvironment)
-        val responseEntity = apiExceptionHandler.handleMethodArgumentNotValid(
+        val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
+        val responseEntity = coreExceptionHandler.handleMethodArgumentNotValid(
           mockMethodArgumentNotValidException,
           mockHttpHeaders,
           HttpStatus.I_AM_A_TEAPOT,

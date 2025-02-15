@@ -14,8 +14,8 @@ import net.flyingfishflash.loremlist.core.response.structure.ApiProblemDetail
 import net.flyingfishflash.loremlist.core.response.structure.IgnoreResponseBinding
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
-import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemService
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemServiceDefault
+import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemCreate
 import org.springdoc.webmvc.api.OpenApiWebMvcResource
 import org.springdoc.webmvc.ui.SwaggerConfigResource
 import org.springframework.core.MethodParameter
@@ -216,7 +216,7 @@ class CustomResponseBodyAdviceTests :
 
         it("is null") {
           val customResponseBodyAdvice = CustomResponseBodyAdvice()
-          val method = ClassUtils.getMethod(LrmItemService::class.java, "create", LrmItemRequest::class.java, String::class.java)
+          val method = ClassUtils.getMethod(LrmItemServiceDefault::class.java, "create", LrmItemCreate::class.java, String::class.java)
           val returnType = MethodParameter(method, -1)
           val body =
             customResponseBodyAdvice.beforeBodyWrite(

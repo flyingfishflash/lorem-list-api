@@ -12,7 +12,7 @@ class LrmListNotFoundTests :
       it("primary constructor: default message") {
         val id = UUID.randomUUID()
         val listNotFoundException = ListNotFoundException(id = id)
-        listNotFoundException.message.shouldBe(ListNotFoundException.defaultMessage())
+        listNotFoundException.message.shouldBe("List could not be found.")
       }
 
       it("primary constructor: non-default message") {
@@ -23,13 +23,13 @@ class LrmListNotFoundTests :
       it("secondary constructor: default message, set size = 1") {
         val ids = setOf(UUID.randomUUID())
         val listNotFoundException = ListNotFoundException(idCollection = ids)
-        listNotFoundException.message.shouldBe(ListNotFoundException.defaultMessage(ids))
+        listNotFoundException.message.shouldBe("List could not be found.")
       }
 
       it("secondary constructor: default message, set size > 1") {
         val ids = setOf(UUID.randomUUID(), UUID.randomUUID())
         val listNotFoundException = ListNotFoundException(idCollection = ids)
-        listNotFoundException.message.shouldBe(ListNotFoundException.defaultMessage(ids))
+        listNotFoundException.message.shouldBe("Lists (2) could not be found.")
       }
 
       it("secondary constructor: non-default message") {

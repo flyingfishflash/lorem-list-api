@@ -3,12 +3,12 @@ package net.flyingfishflash.loremlist.integration.domain
 import io.kotest.core.spec.style.DescribeSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.flyingfishflash.loremlist.core.response.advice.ApiExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
+import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
+import net.flyingfishflash.loremlist.api.data.response.LrmItemResponse
+import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemRequest
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemResponse
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
@@ -52,15 +52,11 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
       UUID.fromString("00000000-0000-4000-a000-000000000001"),
     )
 
-    fun createLrmItemOneRequest(): LrmItemRequest = LrmItemRequest("Lorem Item One Name", "Lorem Item One Description", 0)
+    fun createLrmItemOneRequest(): LrmItemCreateRequest = LrmItemCreateRequest("Lorem Item One Name", "Lorem Item One Description", 0)
 
     val itemUuids: MutableMap<Int, UUID> = HashMap()
 
-    fun buildMvc(
-      httpMethod: HttpMethod,
-      instance: String,
-      dsl: MockHttpServletRequestDsl.() -> Unit = {},
-    ): ResultActionsDsl {
+    fun buildMvc(httpMethod: HttpMethod, instance: String, dsl: MockHttpServletRequestDsl.() -> Unit = {}): ResultActionsDsl {
       val methodUnsupported = "$httpMethod is not supported by MockMvc"
       require(
         httpMethod != HttpMethod.TRACE &&
@@ -215,14 +211,6 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
               requestContent = "{ \"name\": \" \" }",
               responseMessage = "$VALIDATION_FAILURE_MESSAGE name.",
             ),
-          "(patch) description is empty" to
-            ValidationTest(
-              expectedErrorCount = 2,
-              httpMethod = HttpMethod.PATCH,
-              instance = "/items/${itemUuids[0]}",
-              requestContent = "{ \"description\": \"\" }",
-              responseMessage = "$VALIDATION_FAILURE_MESSAGE description.",
-            ),
           "(patch) quantity is less than 0" to
             ValidationTest(
               expectedErrorCount = 1,
@@ -231,13 +219,14 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
               requestContent = "{ \"quantity\": -1 }",
               responseMessage = "$VALIDATION_FAILURE_MESSAGE quantity.",
             ),
+          // only first field to be patched is validated and fails, exiting patch process. description is never validated
           "(patch) name is only whitespace, description is empty" to
             ValidationTest(
-              expectedErrorCount = 3,
+              expectedErrorCount = 1,
               httpMethod = HttpMethod.PATCH,
               instance = "/items/${itemUuids[0]}",
-              requestContent = "{ \"name\": \" \", \"description\": \"\" }",
-              responseMessage = "$VALIDATION_FAILURE_MESSAGE description, name.",
+              requestContent = "{ \"name\": \" \", \"description\": \" \" }",
+              responseMessage = "$VALIDATION_FAILURE_MESSAGE name.",
             ),
         )
 

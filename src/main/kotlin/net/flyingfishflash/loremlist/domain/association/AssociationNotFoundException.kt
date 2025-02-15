@@ -1,23 +1,14 @@
 package net.flyingfishflash.loremlist.domain.association
 
-import net.flyingfishflash.loremlist.core.exceptions.ApiException
-import org.springframework.http.HttpStatus
+import net.flyingfishflash.loremlist.domain.LrmComponentType
+import net.flyingfishflash.loremlist.domain.exceptions.EntityNotFoundException
 import java.util.UUID
 
-class AssociationNotFoundException(id: UUID? = null, message: String? = null) :
-  ApiException(
-    httpStatus = HTTP_STATUS,
-    title = "AssociationNotFoundException",
-    message = message ?: defaultMessage(id),
+class AssociationNotFoundException(idCollection: Set<UUID> = emptySet(), message: String? = null) :
+  EntityNotFoundException(
+    idCollection = idCollection,
+    message = message,
+    lrmComponentType = LrmComponentType.Association,
   ) {
-  companion object {
-    val HTTP_STATUS = HttpStatus.NOT_FOUND
-    fun defaultMessage(id: UUID?): String {
-      return if (id == null) {
-        "Association not found."
-      } else {
-        "Association id $id not found."
-      }
-    }
-  }
+  constructor(id: UUID, message: String? = null) : this(setOf(id), message = message)
 }

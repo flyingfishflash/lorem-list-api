@@ -5,8 +5,8 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import net.flyingfishflash.loremlist.domain.SuccinctLrmComponent
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemSuccinct
-import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListSuccinct
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemSuccinct
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListSuccinct
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.json.KotlinSerializationJsonHttpMessageConverter

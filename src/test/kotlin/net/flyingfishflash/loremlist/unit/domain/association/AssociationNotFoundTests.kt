@@ -11,13 +11,13 @@ class AssociationNotFoundTests :
     describe("AssociationNotFoundException()") {
       it("id is null") {
         val exception = AssociationNotFoundException()
-        exception.responseMessage.shouldBe("Association not found.")
+        exception.responseMessage.shouldBe("Association could not be found.")
       }
 
       it("id is not null") {
         val id = UUID.randomUUID()
         val exception = AssociationNotFoundException(id = id)
-        exception.responseMessage.shouldBe("Association id $id not found.")
+        exception.responseMessage.shouldBe("Association could not be found.")
       }
 
       it("custom message") {
