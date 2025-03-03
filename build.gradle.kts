@@ -123,7 +123,8 @@ sonarqube {
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/data/LrmItemDeleteResponse.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/LrmList.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/data/LrmListRequest.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/data/LrmListSuccinct.kt,",
+        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/data/LrmListSuccinct.kt," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/persistence/**,",
     )
   }
 }

@@ -18,7 +18,6 @@ import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
-import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListServiceDefault
 import net.flyingfishflash.loremlist.toJsonElement
 import org.jetbrains.exposed.exceptions.ExposedSQLException
@@ -31,6 +30,7 @@ import java.util.UUID
 import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.domain.ServiceResponse
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreate
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleted
 

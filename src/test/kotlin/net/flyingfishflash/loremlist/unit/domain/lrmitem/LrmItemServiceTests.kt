@@ -17,7 +17,6 @@ import jakarta.validation.ConstraintViolationException
 import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
-import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemServiceDefault
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListSuccinct
 import org.jetbrains.exposed.exceptions.ExposedSQLException
@@ -29,6 +28,7 @@ import java.util.UUID
 import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.domain.ServiceResponse
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemCreate
 
 class LrmItemServiceTests : DescribeSpec({

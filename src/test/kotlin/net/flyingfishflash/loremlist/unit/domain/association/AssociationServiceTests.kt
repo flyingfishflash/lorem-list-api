@@ -15,9 +15,7 @@ import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.domain.LrmComponentType
 import net.flyingfishflash.loremlist.domain.association.Association
 import net.flyingfishflash.loremlist.domain.association.AssociationNotFoundException
-import net.flyingfishflash.loremlist.domain.association.AssociationRepository
 import net.flyingfishflash.loremlist.domain.association.AssociationService
-import net.flyingfishflash.loremlist.domain.association.SuccinctLrmComponentPair
 import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.domain.lrmitem.ItemNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
@@ -28,13 +26,15 @@ import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListSuccinct
+import net.flyingfishflash.loremlist.persistence.AssociationRepositoryRdbms
+import net.flyingfishflash.loremlist.persistence.SuccinctLrmComponentPair
 import org.springframework.http.HttpStatus
 import java.sql.SQLException
 import java.util.UUID
 
 class AssociationServiceTests :
   DescribeSpec({
-    val mockAssociationRepository = mockk<AssociationRepository>()
+    val mockAssociationRepository = mockk<AssociationRepositoryRdbms>()
     val mockLrmItemRepository = mockk<LrmItemRepository>()
     val mockLrmListRepository = mockk<LrmListRepository>()
     val associationService = AssociationService(mockAssociationRepository, mockLrmItemRepository, mockLrmListRepository)

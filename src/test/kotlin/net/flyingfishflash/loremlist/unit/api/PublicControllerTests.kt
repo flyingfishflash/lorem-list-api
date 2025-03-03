@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.unit.domain
+package net.flyingfishflash.loremlist.unit.api
 
 import com.ninjasquad.springmockk.MockkBean
 import io.kotest.core.spec.style.DescribeSpec

@@ -1,4 +1,4 @@
-package net.flyingfishflash.loremlist.domain
+package net.flyingfishflash.loremlist.persistence
 
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.dao.id.UUIDTable
