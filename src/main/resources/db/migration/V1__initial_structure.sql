@@ -5,10 +5,11 @@ create table item (
   name varchar(64) not null,
   description varchar(2048),
   quantity bigint,
+  owner varchar(64) not null,
   created timestamp with time zone not null,
-  created_by varchar(64) not null,
+  creator varchar(64) not null,
   updated timestamp with time zone not null,
-  updated_by varchar(64) not null,
+  updater varchar(64) not null,
   primary key (id)
 );
 
@@ -17,10 +18,11 @@ create table list (
   name varchar(64) not null,
   description varchar(2048),
   public boolean not null,
+  owner varchar(64) not null,
   created timestamp with time zone not null,
-  created_by varchar(64) not null,
+  creator varchar(64) not null,
   updated timestamp with time zone not null,
-  updated_by varchar(64) not null,
+  updater varchar(64) not null,
   primary key (id)
 );
 

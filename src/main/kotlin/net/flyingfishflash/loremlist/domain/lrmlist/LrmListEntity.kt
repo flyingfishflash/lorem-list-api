@@ -36,9 +36,9 @@ data class LrmListEntity(
         description = lrmList.description,
         public = lrmList.public,
         created = lrmList.created,
-        createdBy = lrmList.createdBy,
+        createdBy = lrmList.creator,
         updated = lrmList.updated,
-        updatedBy = lrmList.updatedBy,
+        updatedBy = lrmList.updater,
         items = lrmList.items.map { LrmItemEntity.fromLrmItem(it) }.toSet(),
       )
     }

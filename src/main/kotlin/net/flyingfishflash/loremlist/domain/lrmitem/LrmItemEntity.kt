@@ -38,9 +38,9 @@ data class LrmItemEntity(
         description = lrmItem.description,
         quantity = lrmItem.quantity,
         created = lrmItem.created,
-        createdBy = lrmItem.createdBy,
+        createdBy = lrmItem.creator,
         updated = lrmItem.updated,
-        updatedBy = lrmItem.updatedBy,
+        updatedBy = lrmItem.updater,
         lists = lrmItem.lists,
       )
     }

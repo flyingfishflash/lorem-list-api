@@ -17,10 +17,11 @@ data class LrmItemResponse(
   val name: String,
   val description: String? = null,
   @EncodeDefault val quantity: Int = 0,
+  val owner: String,
   val created: Instant,
-  val createdBy: String,
+  val creator: String,
   val updated: Instant,
-  val updatedBy: String,
+  val updater: String,
   val lists: Set<LrmListSuccinct>,
 ) {
   companion object {
@@ -30,10 +31,11 @@ data class LrmItemResponse(
         name = lrmItem.name,
         description = lrmItem.description,
         quantity = lrmItem.quantity,
+        owner = lrmItem.owner,
         created = lrmItem.created,
-        createdBy = lrmItem.createdBy,
+        creator = lrmItem.creator,
         updated = lrmItem.updated,
-        updatedBy = lrmItem.updatedBy,
+        updater = lrmItem.updater,
         lists = lrmItem.lists,
       )
     }

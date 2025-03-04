@@ -38,7 +38,7 @@ class LrmListRepositoryRdbms : LrmListRepository {
 
   override fun deleteByOwnerAndId(id: UUID, owner: String): Int = repositoryTable
     .deleteWhere {
-      repositoryTable.id eq id and (repositoryTable.createdBy eq owner)
+      repositoryTable.id eq id and (repositoryTable.owner eq owner)
     }
 
   override fun findByOwner(owner: String): List<LrmList> = mapQueryResultToLrmLists(
@@ -80,16 +80,17 @@ class LrmListRepositoryRdbms : LrmListRepository {
     return listIdCollection.toSet() - foundIds.toSet()
   }
 
-  override fun insert(lrmList: LrmList, subject: String): UUID {
+  override fun insert(lrmList: LrmList): UUID {
     repositoryTable.insert {
       it[id] = lrmList.id
       it[name] = lrmList.name
       it[description] = lrmList.description
       it[public] = lrmList.public
+      it[owner] = lrmList.owner
       it[created] = lrmList.created
-      it[createdBy] = lrmList.createdBy
+      it[creator] = lrmList.creator
       it[updated] = lrmList.updated
-      it[updatedBy] = lrmList.updatedBy
+      it[updater] = lrmList.updater
     }
     return lrmList.id
   }
@@ -114,7 +115,7 @@ class LrmListRepositoryRdbms : LrmListRepository {
   }
 
   private fun Query.byOwner(owner: String): Query {
-    return this.where { repositoryTable.createdBy eq owner }
+    return this.where { repositoryTable.owner eq owner }
   }
 
   private fun Query.byOwnerAndId(owner: String, id: UUID): Query {
@@ -146,10 +147,11 @@ class LrmListRepositoryRdbms : LrmListRepository {
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
       public = this[repositoryTable.public],
+      owner = this[repositoryTable.owner],
       created = this[repositoryTable.created],
-      createdBy = this[repositoryTable.createdBy],
+      creator = this[repositoryTable.creator],
       updated = this[repositoryTable.updated],
-      updatedBy = this[repositoryTable.updatedBy],
+      updater = this[repositoryTable.updater],
       items = lrmItems,
     )
   }
@@ -160,10 +162,11 @@ class LrmListRepositoryRdbms : LrmListRepository {
       name = this[LrmListItemTable.name],
       description = this[LrmListItemTable.description],
       quantity = this[LrmListItemTable.quantity],
+      owner = this[LrmListItemTable.owner],
       created = this[LrmListItemTable.created],
       updated = this[LrmListItemTable.updated],
-      createdBy = this[LrmListItemTable.createdBy],
-      updatedBy = this[LrmListItemTable.updatedBy],
+      creator = this[LrmListItemTable.creator],
+      updater = this[LrmListItemTable.updater],
 //      lists = null,
     )
   }

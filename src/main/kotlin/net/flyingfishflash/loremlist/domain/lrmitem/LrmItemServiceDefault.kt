@@ -30,7 +30,7 @@ class LrmItemServiceDefault(private val associationService: AssociationService, 
     }
   }
 
-  override fun create(lrmItemCreate: LrmItemCreate, owner: String): ServiceResponse<LrmItem> {
+  override fun create(lrmItemCreate: LrmItemCreate, creator: String): ServiceResponse<LrmItem> {
     return runCatching {
       val now = now()
       val lrmItem = LrmItem(
@@ -39,12 +39,13 @@ class LrmItemServiceDefault(private val associationService: AssociationService, 
         description = lrmItemCreate.description,
         quantity = lrmItemCreate.quantity,
         created = now,
-        createdBy = owner,
+        owner = creator,
+        creator = creator,
         updated = now,
-        updatedBy = owner,
+        updater = creator,
       )
       val id = lrmItemRepository.insert(lrmItem)
-      val newLrmItem = findByOwnerAndId(id = id, owner = owner).content
+      val newLrmItem = findByOwnerAndId(id = id, owner = creator).content
       return@runCatching ServiceResponse(content = newLrmItem, message = "Created item '${newLrmItem.name}'")
     }.getOrElse { cause -> throw DomainException(cause = cause, message = "Item could not be created.") }
   }

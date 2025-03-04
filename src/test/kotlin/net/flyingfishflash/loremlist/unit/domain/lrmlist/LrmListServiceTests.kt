@@ -52,10 +52,11 @@ class LrmListServiceTests : DescribeSpec({
     name = lrmListCreate.name,
     description = lrmListCreate.description,
     public = lrmListCreate.public,
+    owner = "Lorem Ipsum Owner",
     created = now,
-    createdBy = "Lorem Ipsum Created By",
+    creator = "Lorem Ipsum Created By",
     updated = now,
-    updatedBy = "Lorem Ipsum Updated By",
+    updater = "Lorem Ipsum Updated By",
   )
 
   fun lrmListWithItems() = lrmList().copy(
@@ -64,10 +65,11 @@ class LrmListServiceTests : DescribeSpec({
       name = "Lorem Item Name",
       description = "Lorem Ipsum Description",
       quantity = 0,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )),
   )
 
@@ -99,17 +101,17 @@ class LrmListServiceTests : DescribeSpec({
 
   describe("create()") {
     it("list repository returns inserted list id") {
-      every { mockLrmListRepository.insert(ofType(LrmList::class), ofType(String::class)) } returns id1
+      every { mockLrmListRepository.insert(ofType(LrmList::class)) } returns id1
       every { mockLrmListRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmList()
       val serviceResponse = lrmListService.create(lrmListCreate, mockUserName)
       serviceResponse.content shouldBe lrmList()
       serviceResponse.message shouldBe "Created list '${lrmList().name}'"
-      verify { mockLrmListRepository.insert(ofType(LrmList::class), ofType(String::class)) }
+      verify { mockLrmListRepository.insert(ofType(LrmList::class)) }
       verify { mockLrmListRepository.findByOwnerAndIdOrNull(id = ofType(UUID::class), owner = ofType(String::class)) }
     }
 
     it("list repository throws exposed sql exception") {
-      every { mockLrmListRepository.insert(ofType(LrmList::class), ofType(String::class)) } throws exposedSQLExceptionGeneric()
+      every { mockLrmListRepository.insert(ofType(LrmList::class)) } throws exposedSQLExceptionGeneric()
       val exception = shouldThrow<DomainException> { lrmListService.create(lrmListCreate, mockUserName) }
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)

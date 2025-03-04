@@ -13,7 +13,7 @@ interface LrmListRepository {
   fun findByPublic(): List<LrmList>
   fun findIdsByOwnerAndIds(listIdCollection: List<UUID>, owner: String): List<UUID>
   fun notFoundByOwnerAndId(listIdCollection: List<UUID>, owner: String): Set<UUID>
-  fun insert(lrmList: LrmList, subject: String): UUID
+  fun insert(lrmList: LrmList): UUID
   fun update(lrmList: LrmList): Int
   fun updateName(lrmList: LrmList): Int
   fun updateDescription(lrmList: LrmList): Int

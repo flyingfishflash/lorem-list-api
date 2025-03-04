@@ -127,7 +127,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) :
                 jsonPath("$.message") { value("Created item '${itemRequest.name}'") }
                 jsonPath("$.instance") { value(instance) }
                 jsonPath("$.size") { value(1) }
-                jsonPath("$.content.length()") { value(9) }
+                jsonPath("$.content.length()") { value(10) }
                 jsonPath("$.content.id") { isNotEmpty() }
                 jsonPath("$.content.name") { value(itemRequest.name) }
                 jsonPath("$.content.description") { value(itemRequest.description) }
@@ -180,7 +180,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) :
                 jsonPath("$.message") { value("Retrieved item '${itemRequest.name}'") }
                 jsonPath("$.instance") { value(instance) }
                 jsonPath("$.size") { value(1) }
-                jsonPath("$.content.length()") { value(9) }
+                jsonPath("$.content.length()") { value(10) }
                 jsonPath("$.content.id") { isNotEmpty() }
                 jsonPath("$.content.name") { value(itemRequest.name) }
                 jsonPath("$.content.description") { value(itemRequest.description) }
@@ -238,7 +238,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) :
                 jsonPath("$.message") { value("Item '${itemRequest.name}' updated. Fields changed: name, description, quantity.") }
                 jsonPath("$.instance") { value(instance) }
                 jsonPath("$.size") { value(1) }
-                jsonPath("$.content.length()") { value(9) }
+                jsonPath("$.content.length()") { value(10) }
                 jsonPath("$.content.id") { value("${itemIds[index]}") }
                 jsonPath("$.content.description") { value(itemRequest.description) }
                 jsonPath("$.content.name") { value(itemRequest.name) }
@@ -352,7 +352,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) :
                 jsonPath("$.message") { isNotEmpty() }
                 jsonPath("$.instance") { value(instance) }
                 jsonPath("$.size") { value(1) }
-                jsonPath("$.content.length()") { value(9) }
+                jsonPath("$.content.length()") { value(10) }
                 jsonPath("$.content.id") { isNotEmpty() }
                 jsonPath("$.content.name") { value(listRequest.name) }
                 jsonPath("$.content.description") { value(listRequest.description) }
@@ -405,7 +405,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) :
                 jsonPath("$.message") { isNotEmpty() }
                 jsonPath("$.instance") { value(instance) }
                 jsonPath("$.size") { value(1) }
-                jsonPath("$.content.length()") { value(9) }
+                jsonPath("$.content.length()") { value(10) }
                 jsonPath("$.content.id") { isNotEmpty() }
                 jsonPath("$.content.name") { value(listRequest.name) }
                 jsonPath("$.content.description") { value(listRequest.description) }
@@ -461,7 +461,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) :
                 jsonPath("$.message") { isNotEmpty() }
                 jsonPath("$.instance") { value(instance) }
                 jsonPath("$.size") { value(1) }
-                jsonPath("$.content.length()") { value(9) }
+                jsonPath("$.content.length()") { value(10) }
                 jsonPath("$.content.id") { value("${listIds[index]}") }
                 jsonPath("$.content.name") { value(listRequest.name) }
                 jsonPath("$.content.description") { value(listRequest.description) }
@@ -487,7 +487,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) :
                 jsonPath("$.message") { isNotEmpty() }
                 jsonPath("$.instance") { value(instance) }
                 jsonPath("$.size") { value(1) }
-                jsonPath("$.content.length()") { value(9) }
+                jsonPath("$.content.length()") { value(10) }
                 jsonPath("$.content.id") { value("${listIds[index]}") }
                 jsonPath("$.content.name") { value(listRequest.name) }
                 jsonPath("$.content.description") { value(listRequest.description) }
@@ -742,7 +742,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) :
             jsonPath("$.content.created") { isNotEmpty() }
             jsonPath("$.content.updated") { isNotEmpty() }
             jsonPath("$.content.items.length()") { value(1) }
-            jsonPath("$.content.items.[0].length()") { value(9) }
+            jsonPath("$.content.items.[0].length()") { value(10) }
             jsonPath("$.content.items.[0].id") { value("${itemIds[1]}") }
             jsonPath("$.content.items.[0].name") { value(updateLrmItemTwoRequest().name) }
             jsonPath("$.content.items.[0].description") { value(updateLrmItemTwoRequest().description) }
@@ -822,7 +822,7 @@ class LrmListFunctionalTests(mockMvc: MockMvc) :
             jsonPath("$.content.created") { isNotEmpty() }
             jsonPath("$.content.updated") { isNotEmpty() }
             jsonPath("$.content.items.length()") { value(2) }
-            jsonPath("$.content.items.[0].length()") { value(9) }
+            jsonPath("$.content.items.[0].length()") { value(10) }
             jsonPath("$.content.items.[0].id") { value("${itemIds[0]}") }
             jsonPath("$.content.items.[0].name") { value(updateLrmItemOneRequest().name) }
             jsonPath("$.content.items.[0].description") { value(updateLrmItemOneRequest().description) }

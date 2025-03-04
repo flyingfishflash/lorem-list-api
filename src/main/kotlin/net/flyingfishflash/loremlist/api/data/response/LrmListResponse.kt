@@ -16,10 +16,11 @@ data class LrmListResponse(
   val name: String,
   val description: String? = null,
   @EncodeDefault val public: Boolean = false,
+  val owner: String,
   val created: Instant? = null,
-  val createdBy: String? = null,
+  val creator: String? = null,
   val updated: Instant? = null,
-  val updatedBy: String? = null,
+  val updater: String? = null,
   val items: Set<LrmItemResponse>,
 ) {
   companion object {
@@ -29,10 +30,11 @@ data class LrmListResponse(
         name = lrmList.name,
         description = lrmList.description,
         public = lrmList.public,
+        owner = lrmList.owner,
         created = lrmList.created,
-        createdBy = lrmList.createdBy,
+        creator = lrmList.creator,
         updated = lrmList.updated,
-        updatedBy = lrmList.updatedBy,
+        updater = lrmList.updater,
         // TODO: address warning about useless null-safe operator
         items = lrmList.items?.map { LrmItemResponse.fromLrmItem(it) }?.toSet() ?: emptySet(),
       )

@@ -9,9 +9,10 @@ data class LrmList(
   val name: String,
   val description: String? = null,
   val public: Boolean = false,
+  val owner: String,
   val created: Instant,
-  val createdBy: String,
+  val creator: String,
   val updated: Instant,
-  val updatedBy: String,
+  val updater: String,
   val items: Set<LrmItem> = emptySet(),
 )

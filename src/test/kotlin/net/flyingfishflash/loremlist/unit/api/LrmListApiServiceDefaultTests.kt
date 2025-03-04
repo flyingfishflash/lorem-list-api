@@ -47,10 +47,11 @@ class LrmListApiServiceDefaultTests :
       name = "Lorem Item Name",
       description = "Lorem Item Description",
       quantity = 0,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
 
     fun lrmList(): LrmList = LrmList(
@@ -59,10 +60,11 @@ class LrmListApiServiceDefaultTests :
       description = lrmListCreateRequest.description,
       public = lrmListCreateRequest.public,
       items = setOf(lrmItem()),
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
 
     afterEach { clearAllMocks() }

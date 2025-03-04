@@ -30,7 +30,7 @@ class AssociationRepositoryRdbms : AssociationRepository {
     val unEqualListAndItemOwner = (LrmListTable innerJoin LrmListItemTable)
       .select(LrmListTable.id)
       .where { LrmListTable.id eq listId }
-      .andWhere { LrmListTable.createdBy neq LrmListItemTable.createdBy }.toList()
+      .andWhere { LrmListTable.owner neq LrmListItemTable.owner }.toList()
     return unEqualListAndItemOwner.isEmpty()
   }
 
@@ -44,14 +44,14 @@ class AssociationRepositoryRdbms : AssociationRepository {
     val itemCount = item.count()
     return (repositoryTable leftJoin LrmListItemTable).select(itemCount)
       .where { repositoryTable.item eq itemId }
-      .andWhere { LrmListItemTable.createdBy eq itemOwner }.map { it[itemCount] }.first()
+      .andWhere { LrmListItemTable.owner eq itemOwner }.map { it[itemCount] }.first()
   }
 
   override fun countListToItemByIdandListOwner(listId: UUID, listOwner: String): Long {
     val listCount = list.count()
     return (repositoryTable leftJoin LrmListTable).select(listCount)
       .where { repositoryTable.list eq listId }
-      .andWhere { LrmListTable.createdBy eq listOwner }.map { it[listCount] }.first()
+      .andWhere { LrmListTable.owner eq listOwner }.map { it[listCount] }.first()
   }
 
   override fun create(associationCollection: Set<Pair<UUID, UUID>>): List<SuccinctLrmComponentPair> {

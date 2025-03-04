@@ -71,10 +71,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       name = lrmItemCreateRequest.name,
       description = lrmItemCreateRequest.description,
       quantity = 0,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
 
     )
     fun lrmItem1(): LrmItem = LrmItem(
@@ -82,30 +83,33 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       name = lrmItemCreateRequest.name,
       description = lrmItemCreateRequest.description,
       quantity = 0,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
     fun lrmList2(): LrmList = LrmList(
       id = id2,
       name = "Lorem List Name (id2)",
       description = "Lorem List Description",
       public = true,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
     fun lrmList3(): LrmList = LrmList(
       id = id3,
       name = "Lorem List Name (id3)",
       description = "Lorem List Description",
       public = true,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
 
     afterEach { clearAllMocks() }

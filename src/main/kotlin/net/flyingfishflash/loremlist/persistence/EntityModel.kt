@@ -13,10 +13,11 @@ object LrmListTable : Table("list") {
   val name: Column<String> = varchar(name = "name", length = 64)
   val description: Column<String?> = varchar(name = "description", length = 2048).nullable()
   val public: Column<Boolean> = bool("public")
+  val owner: Column<String> = varchar("owner", length = 64)
   val created: Column<Instant> = timestamp(name = "created")
-  val createdBy: Column<String> = varchar(name = "created_by", length = 64)
+  val creator: Column<String> = varchar(name = "creator", length = 64)
   val updated: Column<Instant> = timestamp(name = "updated")
-  val updatedBy: Column<String> = varchar(name = "updated_by", length = 64)
+  val updater: Column<String> = varchar(name = "updater", length = 64)
   override val primaryKey = PrimaryKey(id, name = "list_pk")
 }
 
@@ -25,10 +26,11 @@ object LrmListItemTable : Table("item") {
   val name: Column<String> = varchar("name", length = 64)
   val description: Column<String?> = varchar("description", length = 2048).nullable()
   val quantity: Column<Int> = integer("quantity")
+  val owner: Column<String> = varchar(name = "owner", length = 64)
   val created: Column<Instant> = timestamp(name = "created")
-  val createdBy: Column<String> = varchar(name = "created_by", length = 64)
+  val creator: Column<String> = varchar(name = "creator", length = 64)
   val updated: Column<Instant> = timestamp(name = "updated")
-  val updatedBy: Column<String> = varchar(name = "updated_by", length = 64)
+  val updater: Column<String> = varchar(name = "updater", length = 64)
   override val primaryKey = PrimaryKey(id, name = "item_pk")
 }
 

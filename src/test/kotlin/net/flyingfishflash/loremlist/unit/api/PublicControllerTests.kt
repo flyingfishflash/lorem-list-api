@@ -46,10 +46,11 @@ class PublicControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       name = lrmListCreateRequest.name,
       description = lrmListCreateRequest.description,
       public = lrmListCreateRequest.public,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorum Ipsum Created By",
+      creator = "Lorum Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
 
     fun lrmListWithEmptyItems(): LrmList = lrmList().copy()

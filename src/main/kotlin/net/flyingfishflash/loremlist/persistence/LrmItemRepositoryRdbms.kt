@@ -26,7 +26,7 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
 
   override fun countByOwner(owner: String): Long {
     val idCount = repositoryTable.id.count()
-    return repositoryTable.select(idCount).where { repositoryTable.createdBy eq owner }.first()[idCount]
+    return repositoryTable.select(idCount).where { repositoryTable.owner eq owner }.first()[idCount]
   }
 
   override fun delete(): Int = repositoryTable.deleteAll()
@@ -34,7 +34,7 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
   override fun deleteById(ids: Set<UUID>): Int = repositoryTable.deleteWhere { repositoryTable.id inList ids }
 
   override fun deleteByOwnerAndId(id: UUID, owner: String): Int = repositoryTable.deleteWhere {
-    repositoryTable.id eq id and (repositoryTable.createdBy eq owner)
+    repositoryTable.id eq id and (repositoryTable.owner eq owner)
   }
 
   override fun findByOwner(owner: String): List<LrmItem> {
@@ -58,7 +58,7 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
   override fun findByOwnerAndHavingNoListAssociations(owner: String): List<LrmItem> {
     val result = (repositoryTable leftJoin LrmListsItemsTable)
       .selectAll()
-      .where { repositoryTable.createdBy eq owner }
+      .where { repositoryTable.owner eq owner }
       .andWhere { LrmListsItemsTable.item.isNull() }
       .map { it.toLrmItem() }
     return result
@@ -67,7 +67,7 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
   override fun findIdsByOwnerAndIds(itemIdCollection: List<UUID>, owner: String): List<UUID> {
     return repositoryTable.select(repositoryTable.id)
       .where { repositoryTable.id inList itemIdCollection }
-      .andWhere { repositoryTable.createdBy eq owner }
+      .andWhere { repositoryTable.owner eq owner }
       .map { it[repositoryTable.id] }
       .toList()
   }
@@ -83,10 +83,11 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
       it[name] = lrmItem.name
       it[description] = lrmItem.description
       it[quantity] = lrmItem.quantity
+      it[owner] = lrmItem.owner
       it[created] = lrmItem.created
-      it[createdBy] = lrmItem.createdBy
+      it[creator] = lrmItem.creator
       it[updated] = lrmItem.updated
-      it[updatedBy] = lrmItem.updatedBy
+      it[updater] = lrmItem.updater
     }
     return lrmItem.id
   }
@@ -111,7 +112,7 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
   }
 
   private fun Query.byOwner(owner: String): Query {
-    return this.where { repositoryTable.createdBy eq owner }
+    return this.where { repositoryTable.owner eq owner }
   }
 
   private fun Query.byOwnerAndId(owner: String, id: UUID): Query {
@@ -149,10 +150,11 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
       quantity = this[repositoryTable.quantity],
+      owner = this[repositoryTable.owner],
       created = this[repositoryTable.created],
-      createdBy = this[repositoryTable.createdBy],
+      creator = this[repositoryTable.creator],
       updated = this[repositoryTable.updated],
-      updatedBy = this[repositoryTable.updatedBy],
+      updater = this[repositoryTable.updater],
     )
   }
 }

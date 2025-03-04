@@ -31,7 +31,7 @@ class LrmListServiceDefault(private val associationService: AssociationService, 
     }
   }
 
-  override fun create(lrmListCreate: LrmListCreate, owner: String): ServiceResponse<LrmList> {
+  override fun create(lrmListCreate: LrmListCreate, creator: String): ServiceResponse<LrmList> {
     return runCatching {
       val now = now()
       val lrmList = LrmList(
@@ -39,14 +39,15 @@ class LrmListServiceDefault(private val associationService: AssociationService, 
         name = lrmListCreate.name,
         description = lrmListCreate.description,
         public = lrmListCreate.public,
+        owner = creator,
         created = now,
-        createdBy = owner,
+        creator = creator,
         updated = now,
-        updatedBy = owner,
+        updater = creator,
         items = emptySet(),
       )
-      val id = lrmListRepository.insert(lrmList, owner)
-      val createdLrmList = findByOwnerAndId(id = id, owner = owner).content
+      val id = lrmListRepository.insert(lrmList)
+      val createdLrmList = findByOwnerAndId(id = id, owner = creator).content
       return@runCatching ServiceResponse(content = createdLrmList, message = "Created list '${createdLrmList.name}'")
     }.getOrElse { cause ->
       throw DomainException(

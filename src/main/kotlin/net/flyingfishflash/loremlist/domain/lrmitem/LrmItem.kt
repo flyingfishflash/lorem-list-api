@@ -10,9 +10,10 @@ data class LrmItem(
   val name: String,
   val description: String? = null,
   val quantity: Int = 0,
+  val owner: String,
   val created: Instant,
-  val createdBy: String,
+  val creator: String,
   val updated: Instant,
-  val updatedBy: String,
+  val updater: String,
   val lists: Set<LrmListSuccinct> = emptySet(),
 )

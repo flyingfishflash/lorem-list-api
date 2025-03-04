@@ -47,10 +47,11 @@ class LrmItemServiceTests : DescribeSpec({
     name = lrmItemCreate.name,
     description = lrmItemCreate.description,
     quantity = 0,
+    owner = "Lorem Ipsum Owner",
     created = now,
-    createdBy = "Lorem Ipsum Created By",
+    creator = "Lorem Ipsum Created By",
     updated = now,
-    updatedBy = "Lorem Ipsum Updated By",
+    updater = "Lorem Ipsum Updated By",
   )
 
   fun lrmItemWithLists() = lrmItem().copy(
@@ -85,7 +86,7 @@ class LrmItemServiceTests : DescribeSpec({
     it("item is created") {
       every { mockLrmItemRepository.insert(ofType(LrmItem::class)) } returns id1
       every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = id1, owner = ofType(String::class)) } returns lrmItem()
-      val serviceResponse = lrmItemService.create(lrmItemCreate, owner = "lorem ipsum")
+      val serviceResponse = lrmItemService.create(lrmItemCreate, creator = "lorem ipsum")
       serviceResponse.content shouldBe lrmItem()
       serviceResponse.message shouldBe "Created item '${lrmItem().name}'"
       verify { mockLrmItemRepository.insert(lrmItem = ofType(LrmItem::class)) }
@@ -94,7 +95,7 @@ class LrmItemServiceTests : DescribeSpec({
 
     it("item repository throws exposed sql exception") {
       every { mockLrmItemRepository.insert(ofType(LrmItem::class)) } throws exposedSQLExceptionGeneric()
-      val exception = shouldThrow<DomainException> { lrmItemService.create(lrmItemCreate, owner = "lorem ipsum") }
+      val exception = shouldThrow<DomainException> { lrmItemService.create(lrmItemCreate, creator = "lorem ipsum") }
       exception.cause.shouldBeInstanceOf<ExposedSQLException>()
       exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
       exception.message.shouldNotBeNull().shouldBeEqual("Item could not be created.")

@@ -49,10 +49,11 @@ class AssociationServiceTests :
       name = lrmItemCreate.name,
       description = lrmItemCreate.description,
       quantity = 0,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
 //      lists = null,
     )
     fun lrmItem2(): LrmItem = LrmItem(
@@ -60,10 +61,11 @@ class AssociationServiceTests :
       name = "Lorem Item Name (id2)",
       description = "Lorem Item Description",
       quantity = 0,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
 //      lists = null,
     )
     fun lrmItem3(): LrmItem = LrmItem(
@@ -71,10 +73,11 @@ class AssociationServiceTests :
       name = "Lorem Item Name (id3)",
       description = "Lorem Item Description",
       quantity = 0,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
 //      lists = null,
     )
     fun lrmList1(): LrmList = LrmList(
@@ -82,30 +85,33 @@ class AssociationServiceTests :
       name = "Lorem List Name (id1)",
       description = "Lorem List Description",
       public = true,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
     fun lrmList2(): LrmList = LrmList(
       id = id2,
       name = "Lorem List Name (id2)",
       description = "Lorem List Description",
       public = true,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
     fun lrmList3(): LrmList = LrmList(
       id = id3,
       name = "Lorem List Name (id3)",
       description = "Lorem List Description",
       public = true,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
     fun associationItem1ListId2(): Association = Association(id = UUID.randomUUID(), itemId = lrmItem1().id, listId = id2)
 

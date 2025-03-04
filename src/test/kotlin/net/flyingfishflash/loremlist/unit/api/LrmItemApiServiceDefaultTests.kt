@@ -42,10 +42,11 @@ class LrmItemApiServiceDefaultTests :
       name = lrmItemCreateRequest.name,
       description = lrmItemCreateRequest.description,
       quantity = 0,
+      owner = "Lorem Ipsum Owner",
       created = now,
-      createdBy = "Lorem Ipsum Created By",
+      creator = "Lorem Ipsum Created By",
       updated = now,
-      updatedBy = "Lorem Ipsum Updated By",
+      updater = "Lorem Ipsum Updated By",
     )
 
     afterEach { clearAllMocks() }
