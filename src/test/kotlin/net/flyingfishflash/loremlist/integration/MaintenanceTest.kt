@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.integration
 
+import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest
 import org.springframework.http.HttpMethod
 import org.springframework.test.web.servlet.MockMvc
@@ -21,7 +22,7 @@ class MaintenanceTest(mockMvc: MockMvc) :
         performRequestAndVerifyResponse(
           method = HttpMethod.DELETE,
           instance = "/maintenance/purge",
-          expectSuccess = true,
+          expectedDisposition = DispositionOfSuccess.SUCCESS,
           additionalMatchers = arrayOf(
             jsonPath("$.content.length()").value(itemIds.size),
             jsonPath("$.content.associationDeletedCount").value(itemIds.size),

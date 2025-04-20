@@ -5,6 +5,8 @@ import io.kotest.matchers.should
 import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
 import net.flyingfishflash.loremlist.api.data.request.LrmListCreateRequest
 import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
+import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
+import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest.TestData.invalidUuids
@@ -55,14 +57,41 @@ class ListDeleteTest(mockMvc: MockMvc) :
       verifyContentValue(url = "/items/count", expectedValue = itemIdMapAlpha.size + itemIdMapBeta.size)
     }
 
-    describe("list deletion") {
-      context("single list operations") {
-        context("deleting lists with items") {
+    describe("list deletion ") {
+      context("deleting a list: /lists/{list-id}") {
+        it("fails when invalid uuid is provided for list id") {
+          performRequestAndVerifyResponse(
+            method = HttpMethod.DELETE,
+            instance = "/lists/${invalidUuids[0]}",
+            expectedDisposition = DispositionOfProblem.FAILURE,
+            statusMatcher = status().isBadRequest(),
+            additionalMatchers = arrayOf(
+              jsonPath("$.message").value("$VALIDATION_FAILURE_MESSAGE listId."),
+              jsonPath("$.content.validationErrors.length()").value(1),
+            ),
+          )
+        }
+
+        it("fails when list to delete is not found") {
+          val nonExistentId = UUID.randomUUID()
+          performRequestAndVerifyResponse(
+            method = HttpMethod.DELETE,
+            instance = "/lists/$nonExistentId",
+            expectedDisposition = DispositionOfProblem.FAILURE,
+            statusMatcher = status().isNotFound(),
+            additionalMatchers = arrayOf(
+              jsonPath("$.content.title").value(DomainException::class.java.simpleName),
+              jsonPath("$.content.status").value("404"),
+            ),
+          )
+        }
+
+        context("deleting a list with items") {
           it("fails when ?removeItemAssociations is omitted") {
             performRequestAndVerifyResponse(
               method = HttpMethod.DELETE,
               instance = "/lists/$listWithItemsAlpha",
-              expectSuccess = false,
+              expectedDisposition = DispositionOfProblem.FAILURE,
               statusMatcher = status().isUnprocessableEntity,
               additionalMatchers = arrayOf(
                 jsonPath("$.message").exists(),
@@ -77,7 +106,7 @@ class ListDeleteTest(mockMvc: MockMvc) :
             performRequestAndVerifyResponse(
               method = HttpMethod.DELETE,
               instance = "/lists/$listWithItemsAlpha?removeItemAssociations=false",
-              expectSuccess = false,
+              expectedDisposition = DispositionOfProblem.FAILURE,
               statusMatcher = status().isUnprocessableEntity,
               additionalMatchers = arrayOf(
                 jsonPath("$.message").exists(),
@@ -92,7 +121,7 @@ class ListDeleteTest(mockMvc: MockMvc) :
             performRequestAndVerifyResponse(
               method = HttpMethod.DELETE,
               instance = "/lists/$listWithItemsAlpha?removeItemAssociations=true",
-              expectSuccess = true,
+              expectedDisposition = DispositionOfSuccess.SUCCESS,
               additionalMatchers = arrayOf(
                 jsonPath("$.message").exists(),
                 jsonPath("$.content.associatedItemNames.length()").value(itemIdMapAlpha.size),
@@ -103,7 +132,7 @@ class ListDeleteTest(mockMvc: MockMvc) :
             itemIdMapAlpha.keys.forEach { itemId -> verifyContentListsLength(itemId = itemId, expectedListsCount = 0) }
           }
         }
-        context("deleting lists without items") {
+        context("deleting a list without items") {
           val emptyList0 = emptyListsBeta.keys.elementAt(0)
           val emptyList1 = emptyListsBeta.keys.elementAt(1)
           val emptyList2 = emptyListsBeta.keys.elementAt(2)
@@ -112,7 +141,7 @@ class ListDeleteTest(mockMvc: MockMvc) :
             performRequestAndVerifyResponse(
               method = HttpMethod.DELETE,
               instance = "/lists/$emptyList0",
-              expectSuccess = true,
+              expectedDisposition = DispositionOfSuccess.SUCCESS,
               additionalMatchers = arrayOf(
                 jsonPath("$.content").exists(),
               ),
@@ -125,7 +154,7 @@ class ListDeleteTest(mockMvc: MockMvc) :
             performRequestAndVerifyResponse(
               method = HttpMethod.DELETE,
               instance = "/lists/$emptyList1?removeItemAssociations=true",
-              expectSuccess = true,
+              expectedDisposition = DispositionOfSuccess.SUCCESS,
               additionalMatchers = arrayOf(
                 jsonPath("$.content.associatedItemNames.length()").value(0),
               ),
@@ -138,7 +167,7 @@ class ListDeleteTest(mockMvc: MockMvc) :
             performRequestAndVerifyResponse(
               method = HttpMethod.DELETE,
               instance = "/lists/$emptyList2?removeItemAssociations=false",
-              expectSuccess = true,
+              expectedDisposition = DispositionOfSuccess.SUCCESS,
               additionalMatchers = arrayOf(
                 jsonPath("$.content.associatedItemNames.length()").value(0),
               ),
@@ -147,50 +176,21 @@ class ListDeleteTest(mockMvc: MockMvc) :
             verifyListIsNotFound(emptyList2)
           }
         }
-
-        it("fails when list to delete is not found") {
-          val nonExistentId = UUID.randomUUID()
-          performRequestAndVerifyResponse(
-            method = HttpMethod.DELETE,
-            instance = "/lists/$nonExistentId",
-            expectSuccess = false,
-            statusMatcher = status().isNotFound(),
-            additionalMatchers = arrayOf(
-              jsonPath("$.content.title").value(DomainException::class.java.simpleName),
-              jsonPath("$.content.status").value("404"),
-            ),
-          )
-        }
       }
 
-      context("multi list operations") {
-        it("delete all remaining lists leaving all items remaining") {
+      context("deleting all lists") {
+        it("succeeds (all items remain)") {
           verifyContentValue(url = "/lists/count", expectedValue = 5)
           verifyContentValue(url = "/items/count", expectedValue = itemIdMapAlpha.size + itemIdMapBeta.size)
 
           performRequestAndVerifyResponse(
             method = HttpMethod.DELETE,
             instance = "/lists",
-            expectSuccess = true,
+            expectedDisposition = DispositionOfSuccess.SUCCESS,
           )
 
           verifyContentValue(url = "/lists/count", expectedValue = 0)
           verifyContentValue(url = "/items/count", expectedValue = itemIdMapAlpha.size + itemIdMapBeta.size)
-        }
-      }
-
-      context("path variable validation") {
-        it("fails when invalid uuid is provided for list id") {
-          performRequestAndVerifyResponse(
-            method = HttpMethod.DELETE,
-            instance = "/lists/${invalidUuids[0]}",
-            expectSuccess = false,
-            statusMatcher = status().isBadRequest(),
-            additionalMatchers = arrayOf(
-              jsonPath("$.message").value("$VALIDATION_FAILURE_MESSAGE listId."),
-              jsonPath("$.content.validationErrors.length()").value(1),
-            ),
-          )
         }
       }
     }

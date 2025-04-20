@@ -1,6 +1,7 @@
 package net.flyingfishflash.loremlist.integration.domain.list
 
 import io.kotest.datatest.withData
+import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest
 import org.springframework.http.HttpMethod
 import org.springframework.test.web.servlet.MockMvc
@@ -15,15 +16,7 @@ class ListCreateTest(mockMvc: MockMvc) :
     beforeSpec { purgeDomain() }
 
     describe("list creation") {
-      context("creating a list") {
-        TestData.listCreateRequests.forEach { listRequest ->
-          it("succeeds for '${listRequest.name}'") {
-            createAndVerifyList(listRequest = listRequest)
-          }
-        }
-      }
-
-      context("request body validation") {
+      context("creating a list: /lists") {
         withData(
           nameFn = { it.description },
           TestData.listCreateValidationScenarios,
@@ -32,7 +25,7 @@ class ListCreateTest(mockMvc: MockMvc) :
             method = HttpMethod.POST,
             instance = "/lists",
             requestBody = scenario.postContent,
-            expectSuccess = false,
+            expectedDisposition = DispositionOfProblem.FAILURE,
             statusMatcher = status().isBadRequest(),
             additionalMatchers = if (scenario.expectedErrorCount > 0) {
               arrayOf(
@@ -45,6 +38,12 @@ class ListCreateTest(mockMvc: MockMvc) :
               )
             },
           )
+        }
+
+        TestData.listCreateRequests.forEach { listRequest ->
+          it("succeeds for '${listRequest.name}'") {
+            createAndVerifyList(listRequest = listRequest)
+          }
         }
       }
     }

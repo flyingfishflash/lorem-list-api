@@ -5,6 +5,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.api.data.request.LrmListCreateRequest
 import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
+import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
+import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest.TestData.invalidUuids
@@ -38,7 +40,61 @@ class ListUpdateTest(mockMvc: MockMvc) :
     }
 
     describe("list modification") {
-      context("modifying a list") {
+      context("modifying a list: /lists/{list-id}") {
+        it("fails when invalid uuid is provided for list id") {
+          performRequestAndVerifyResponse(
+            method = HttpMethod.PATCH,
+            instance = "/lists/${invalidUuids[0]}",
+            requestBody = Json.encodeToString(listCreateUpdateRequestPairs.first().updateRequest),
+            expectedDisposition = DispositionOfProblem.FAILURE,
+            statusMatcher = status().isBadRequest(),
+            additionalMatchers = arrayOf(
+              jsonPath("$.message").value("$VALIDATION_FAILURE_MESSAGE listId."),
+              jsonPath("$.content.validationErrors.length()").value(1),
+            ),
+          )
+        }
+
+        it("fails when list to update is not found") {
+          val nonExistentUuid = UUID.randomUUID()
+          val sampleUpdate = listCreateUpdateRequestPairs.first().updateRequest
+
+          performRequestAndVerifyResponse(
+            method = HttpMethod.PATCH,
+            instance = "/lists/$nonExistentUuid",
+            requestBody = Json.encodeToString(sampleUpdate),
+            expectedDisposition = DispositionOfProblem.FAILURE,
+            statusMatcher = status().isNotFound(),
+            additionalMatchers = arrayOf(
+              jsonPath("$.content.title").value(ListNotFoundException::class.java.simpleName),
+              jsonPath("$.content.status").value("404"),
+            ),
+          )
+        }
+
+        withData(
+          nameFn = { it.description },
+          TestData.listUpdateValidationScenarios,
+        ) { scenario ->
+          performRequestAndVerifyResponse(
+            method = HttpMethod.PATCH,
+            instance = "/lists/${requestRecords[0].uuid}",
+            requestBody = scenario.postContent,
+            expectedDisposition = DispositionOfProblem.FAILURE,
+            statusMatcher = status().isBadRequest(),
+            additionalMatchers = if (scenario.expectedErrorCount > 0) {
+              arrayOf(
+                jsonPath("$.message").value(scenario.responseMessage),
+                jsonPath("$.content.validationErrors.length()").value(scenario.expectedErrorCount),
+              )
+            } else {
+              arrayOf(
+                jsonPath("$.message").value(scenario.responseMessage),
+              )
+            },
+          )
+        }
+
         withData(
           nameFn = { record -> "succeeds for all fields of '${record.createRequest.name}'" },
           requestRecords,
@@ -47,7 +103,7 @@ class ListUpdateTest(mockMvc: MockMvc) :
             method = HttpMethod.PATCH,
             instance = "/lists/${record.uuid}",
             requestBody = Json.encodeToString(record.updateRequest),
-            expectSuccess = true,
+            expectedDisposition = DispositionOfSuccess.SUCCESS,
             additionalMatchers = arrayOf(
               jsonPath("$.content.id").value(record.uuid.toString()),
               jsonPath("$.content.name").value(record.updateRequest.name),
@@ -62,69 +118,11 @@ class ListUpdateTest(mockMvc: MockMvc) :
           performRequestAndVerifyResponse(
             method = HttpMethod.GET,
             instance = "/lists/${record.uuid}",
-            expectSuccess = true,
+            expectedDisposition = DispositionOfSuccess.SUCCESS,
             additionalMatchers = arrayOf(
               jsonPath("$.content.name").value(record.updateRequest.name),
               jsonPath("$.content.description").value(record.updateRequest.description),
               jsonPath("$.content.public").value(record.updateRequest.public),
-            ),
-          )
-        }
-
-        it("fails when list to update is not found") {
-          val nonExistentUuid = UUID.randomUUID()
-          val sampleUpdate = listCreateUpdateRequestPairs.first().updateRequest
-
-          performRequestAndVerifyResponse(
-            method = HttpMethod.PATCH,
-            instance = "/lists/$nonExistentUuid",
-            requestBody = Json.encodeToString(sampleUpdate),
-            expectSuccess = false,
-            statusMatcher = status().isNotFound(),
-            additionalMatchers = arrayOf(
-              jsonPath("$.content.title").value(ListNotFoundException::class.java.simpleName),
-              jsonPath("$.content.status").value("404"),
-            ),
-          )
-        }
-      }
-
-      context("request body validation") {
-        withData(
-          nameFn = { it.description },
-          TestData.listUpdateValidationScenarios,
-        ) { scenario ->
-          performRequestAndVerifyResponse(
-            method = HttpMethod.PATCH,
-            instance = "/lists/${requestRecords[0].uuid}",
-            requestBody = scenario.postContent,
-            expectSuccess = false,
-            statusMatcher = status().isBadRequest(),
-            additionalMatchers = if (scenario.expectedErrorCount > 0) {
-              arrayOf(
-                jsonPath("$.message").value(scenario.responseMessage),
-                jsonPath("$.content.validationErrors.length()").value(scenario.expectedErrorCount),
-              )
-            } else {
-              arrayOf(
-                jsonPath("$.message").value(scenario.responseMessage),
-              )
-            },
-          )
-        }
-      }
-
-      context("path variable validation") {
-        it("fails when invalid uuid is provided for list id") {
-          performRequestAndVerifyResponse(
-            method = HttpMethod.PATCH,
-            instance = "/lists/${invalidUuids[0]}",
-            requestBody = Json.encodeToString(listCreateUpdateRequestPairs.first().updateRequest),
-            expectSuccess = false,
-            statusMatcher = status().isBadRequest(),
-            additionalMatchers = arrayOf(
-              jsonPath("$.message").value("$VALIDATION_FAILURE_MESSAGE listId."),
-              jsonPath("$.content.validationErrors.length()").value(1),
             ),
           )
         }

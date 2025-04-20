@@ -9,6 +9,7 @@ import net.flyingfishflash.loremlist.api.data.request.LrmListCreateRequest
 import net.flyingfishflash.loremlist.api.data.response.LrmListItemResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListResponse
 import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
+import net.flyingfishflash.loremlist.core.response.structure.Disposition
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
@@ -52,18 +53,18 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
     instance: String,
     method: HttpMethod,
     requestBody: String? = null,
-    expectSuccess: Boolean,
+    expectedDisposition: Disposition,
     statusMatcher: ResultMatcher = status().isOk(),
     contentTypeMatcher: ResultMatcher = content().contentType(MediaType.APPLICATION_JSON),
     expectedSize: Int = 1,
     additionalMatchers: Array<ResultMatcher> = emptyArray(),
   ): ResultActions {
-    val disposition = if (expectSuccess) DispositionOfSuccess.SUCCESS else DispositionOfProblem.FAILURE
+//    val disposition = if (expectedDisposition) DispositionOfSuccess.SUCCESS else DispositionOfProblem.FAILURE
     val result = performRequest(method = method, url = instance, content = requestBody)
     return result.andExpectAll(
       statusMatcher,
       contentTypeMatcher,
-      jsonPath("$.disposition").value(disposition.nameAsLowercase()),
+      jsonPath("$.disposition").value(expectedDisposition.nameAsLowercase()),
       jsonPath("$.method").value(method.name().lowercase()),
       jsonPath("$.instance").value(instance.substringBefore("?")),
       jsonPath("$.size").value(expectedSize),
@@ -77,7 +78,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
       instance = "/lists",
       method = HttpMethod.POST,
       requestBody = Json.encodeToString(listRequest),
-      expectSuccess = true,
+      expectedDisposition = DispositionOfSuccess.SUCCESS,
       additionalMatchers = arrayOf(
         jsonPath("$.content.id").isNotEmpty(),
         jsonPath("$.content.name").value(listRequest.name),
@@ -98,7 +99,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
       instance = "/lists/$listId/items",
       method = HttpMethod.POST,
       requestBody = Json.encodeToString(itemRequest),
-      expectSuccess = true,
+      expectedDisposition = DispositionOfSuccess.SUCCESS,
       additionalMatchers = arrayOf(
         jsonPath("$.content.id").isNotEmpty(),
         jsonPath("$.content.name").value(itemRequest.name),
@@ -119,7 +120,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
     performRequestAndVerifyResponse(
       method = HttpMethod.GET,
       instance = url,
-      expectSuccess = true,
+      expectedDisposition = DispositionOfSuccess.SUCCESS,
       expectedSize = expectedSize,
     )
   }
@@ -128,7 +129,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
     performRequestAndVerifyResponse(
       method = HttpMethod.GET,
       instance = url,
-      expectSuccess = true,
+      expectedDisposition = DispositionOfSuccess.SUCCESS,
       additionalMatchers = arrayOf(
         jsonPath("$.content.value").value(expectedValue),
       ),
@@ -139,7 +140,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
     performRequestAndVerifyResponse(
       method = HttpMethod.GET,
       instance = "/items/$itemId",
-      expectSuccess = true,
+      expectedDisposition = DispositionOfSuccess.SUCCESS,
       additionalMatchers = arrayOf(
         jsonPath("$.content.lists.length()").value(expectedListsCount),
       ),
@@ -150,7 +151,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
     performRequestAndVerifyResponse(
       method = HttpMethod.GET,
       instance = "/lists/$listId",
-      expectSuccess = true,
+      expectedDisposition = DispositionOfSuccess.SUCCESS,
       additionalMatchers = arrayOf(
         jsonPath("$.content.items.length()").value(expectedItemsCount),
       ),
@@ -161,7 +162,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
     performRequestAndVerifyResponse(
       method = HttpMethod.GET,
       instance = "/lists/$listId",
-      expectSuccess = true,
+      expectedDisposition = DispositionOfSuccess.SUCCESS,
     )
   }
 
@@ -169,7 +170,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
     performRequestAndVerifyResponse(
       method = HttpMethod.GET,
       instance = "/lists/$listId",
-      expectSuccess = false,
+      expectedDisposition = DispositionOfProblem.FAILURE,
       statusMatcher = status().isNotFound(),
     )
   }
@@ -178,7 +179,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
     performRequestAndVerifyResponse(
       method = HttpMethod.GET,
       instance = "/items/$itemId",
-      expectSuccess = true,
+      expectedDisposition = DispositionOfSuccess.SUCCESS,
     )
   }
 
@@ -186,7 +187,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
     performRequestAndVerifyResponse(
       method = HttpMethod.DELETE,
       instance = "/maintenance/purge",
-      expectSuccess = true,
+      expectedDisposition = DispositionOfSuccess.SUCCESS,
       additionalMatchers = arrayOf(),
     )
   }
@@ -201,10 +202,9 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
 
     val listCreateRequests = (1..3).map { createListRequest(it) }
     private val listUpdateRequests = (1..3).map { createListRequest(it, updated = true) }
+
     val itemCreateRequestsAlpha = (1..3).map { createListItemRequest(it) }
     val itemCreateRequestsBeta = (1..10).map { createListItemRequest(it) }
-    val itemUpdateRequests = (1..3).map { createListItemRequest(it, updated = true) }
-
     val listCreateUpdateRequestPairs = listCreateRequests.zip(listUpdateRequests) { create, update -> ListCreateUpdateRequestPair(create, update) }
     val listCreateItemCreateRequestPairs = listCreateRequests.zip(itemCreateRequestsAlpha) { listCreate, itemCreate ->
       ListCreateItemCreateRequestPair(listCreate, itemCreate)
