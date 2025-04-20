@@ -30,7 +30,7 @@ val ciPlatform by extra { ciPlatform() }
 val ciPipelineId by extra { ciPipelineId() }
 
 val exposedVersion = "0.59.0"
-val flywayVersion = "11.3.4"
+val flywayVersion = "11.7.2"
 val jakartaValidationApiVersion = "3.1.1"
 val kotestVersion = "5.9.1"
 val kotestExtensionsSpringVersion = "1.3.0"
