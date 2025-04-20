@@ -4,11 +4,8 @@ import io.kotest.core.spec.style.DescribeSpec
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
-import net.flyingfishflash.loremlist.api.data.response.LrmItemResponse
 import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
-import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
-import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
@@ -95,14 +92,14 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
       }
     }
 
-    describe("/items") {
+    describe("/lists/{list-id}/items") {
       describe("invoke validation failures") {
         val conditions: Map<String, ValidationTest> = mapOf(
           "(post) name is null" to
             ValidationTest(
               expectedErrorCount = 0,
               httpMethod = HttpMethod.POST,
-              instance = "/items",
+              instance = "/lists/${validUuids[0]}/items",
               requestContent = "{ \"name\": null, \"description\": null, \"quantity\": 1073741824 }",
               responseMessage = "Failed to read request.",
             ),
@@ -110,24 +107,24 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
             ValidationTest(
               expectedErrorCount = 1,
               httpMethod = HttpMethod.POST,
-              instance = "/items",
-              requestContent = "{ \"name\": \" \", \"description\": \"bLLh|Rvz.x0@W2d9G:a\", \"quantity\": 1073741824 }",
+              instance = "/lists/${validUuids[0]}/items",
+              requestContent = Json.encodeToString(LrmItemCreateRequest(name = " ", description = "bLLh|Rvz.x0@W2d9G:a", quantity = 1073741824)),
               responseMessage = "$VALIDATION_FAILURE_MESSAGE name.",
             ),
           "(post) quantity is less than 0" to
             ValidationTest(
               expectedErrorCount = 1,
               httpMethod = HttpMethod.POST,
-              instance = "/items",
-              requestContent = "{ \"name\": \"Lorem Ipsum\", \"description\": \"bLLh|Rvz.x0@W2d9G:a\", \"quantity\": -101 }",
+              instance = "/lists/${validUuids[0]}/items",
+              requestContent = Json.encodeToString(LrmItemCreateRequest(name = "Lorem Ipsum", description = "bLLh|Rvz.x0@W2d9G:a", quantity = -1)),
               responseMessage = "$VALIDATION_FAILURE_MESSAGE quantity.",
             ),
           "(post) description is only whitespace, quantity is less than 0" to
             ValidationTest(
               expectedErrorCount = 2,
               httpMethod = HttpMethod.POST,
-              instance = "/items",
-              requestContent = "{ \"name\": \"Lorem Ipsum\", \"description\": \" \", \"quantity\": -101 }",
+              instance = "/lists/${validUuids[0]}/items",
+              requestContent = Json.encodeToString(LrmItemCreateRequest(name = "Lorem Ipsum", description = "  ", quantity = -1)),
               responseMessage = "$VALIDATION_FAILURE_MESSAGE description, quantity.",
             ),
         )
@@ -159,26 +156,10 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
             requestContent = "{ \"name\": \" \" }",
             responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
           ),
-          "uuid is invalid /items/{item-id}/lists (delete)" to ValidationTest(
-            httpMethod = HttpMethod.DELETE,
-            instance = "/items/${invalidUuids[0]}/lists",
-            requestContent = Json.encodeToString(UUIDSerializer, validUuids[0]),
-            responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
-          ),
-          "uuid is invalid /items/{item-id}/lists/{list-id} (delete)" to ValidationTest(
-            httpMethod = HttpMethod.DELETE,
-            instance = "/items/${invalidUuids[0]}/lists/${invalidUuids[1]}",
-            responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId, listId.",
-          ),
           "uuid is invalid /items/{item-id}/lists/count (get)" to ValidationTest(
             httpMethod = HttpMethod.GET,
             instance = "/items/${invalidUuids[0]}/lists/count",
             responseMessage = "$VALIDATION_FAILURE_MESSAGE itemId.",
-          ),
-          "uuid is invalid /items/{id}/lists/{current-list-id}/{destination-list-id} (patch)" to ValidationTest(
-            httpMethod = HttpMethod.PATCH,
-            instance = "/items/${invalidUuids[0]}/lists/${invalidUuids[1]}/${invalidUuids[2]}",
-            responseMessage = "$VALIDATION_FAILURE_MESSAGE currentListId, destinationListId, itemId.",
           ),
         )
 
@@ -190,24 +171,24 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
       }
 
       describe("invoke validation failures") {
-        it("item is created") {
-          val instance = "/items"
-          val response = mockMvc.post(instance) {
-            with(jwt())
-            with(csrf())
-            content = Json.encodeToString(createLrmItemOneRequest())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect { status { isOk() } }.andReturn().response.contentAsString
-          val id = Json.decodeFromString<ResponseSuccess<LrmItemResponse>>(response).content.id
-          itemUuids[0] = id
-        }
+//        it("item is created") {
+//          val instance = "/items"
+//          val response = mockMvc.post(instance) {
+//            with(jwt())
+//            with(csrf())
+//            content = Json.encodeToString(createLrmItemOneRequest())
+//            contentType = MediaType.APPLICATION_JSON
+//          }.andExpect { status { isOk() } }.andReturn().response.contentAsString
+//          val id = Json.decodeFromString<ResponseSuccess<LrmItemResponse>>(response).content.id
+//          itemUuids[0] = id
+//        }
 
         val conditions: Map<String, ValidationTest> = mapOf(
           "(patch) name is only whitespace" to
             ValidationTest(
               expectedErrorCount = 1,
               httpMethod = HttpMethod.PATCH,
-              instance = "/items/${itemUuids[0]}",
+              instance = "/items/${validUuids[0]}",
               requestContent = "{ \"name\": \" \" }",
               responseMessage = "$VALIDATION_FAILURE_MESSAGE name.",
             ),
@@ -230,22 +211,22 @@ class LrmListFunctionalValidationTests(mockMvc: MockMvc) :
             ),
         )
 
-        conditions.forEach { condition ->
-          it("-> ${condition.key}") {
-            doValidationTest(condition)
-          }
-        }
-
-        it("item is deleted") {
-          val instance = "/items/${itemUuids[0]}"
-          mockMvc.delete(instance) {
-            with(jwt())
-            with(csrf())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-          }
-        }
+//        conditions.forEach { condition ->
+//          it("-> ${condition.key}") {
+//            doValidationTest(condition)
+//          }
+//        }
+//
+//        it("item is deleted") {
+//          val instance = "/items/${itemUuids[0]}"
+//          mockMvc.delete(instance) {
+//            with(jwt())
+//            with(csrf())
+//            contentType = MediaType.APPLICATION_JSON
+//          }.andExpect {
+//            status { isOk() }
+//          }
+//        }
       }
     }
 

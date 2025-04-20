@@ -7,8 +7,4 @@ import kotlin.reflect.KClass
 @Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
 @Constraint(validatedBy = [UuidValidator::class])
-annotation class ValidUuid(
-  val message: String = "Must be a valid UUID",
-  val groups: Array<KClass<*>> = [],
-  val payload: Array<KClass<out Payload>> = [],
-)
+annotation class ValidUuid(val message: String = "Must be a valid UUID", val groups: Array<KClass<*>> = [], val payload: Array<KClass<out Payload>> = [])

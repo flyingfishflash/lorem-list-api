@@ -1,9 +1,9 @@
 package net.flyingfishflash.loremlist.persistence
 
 import kotlinx.datetime.Clock.System.now
-import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListRepository
+import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItem
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -42,14 +42,14 @@ class LrmListRepositoryRdbms : LrmListRepository {
     }
 
   override fun findByOwner(owner: String): List<LrmList> = mapQueryResultToLrmLists(
-    (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
+    (repositoryTable leftJoin LrmListItemsTable leftJoin LrmItemTable)
       .selectAll()
       .byOwner(owner),
   )
 
   override fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmList? {
     val lrmLists = mapQueryResultToLrmLists(
-      (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
+      (repositoryTable leftJoin LrmListItemsTable leftJoin LrmItemTable)
         .selectAll()
         .byOwnerAndId(owner, id),
     ).distinct()
@@ -57,14 +57,14 @@ class LrmListRepositoryRdbms : LrmListRepository {
     return lrmLists.firstOrNull()
   }
 
-  override fun findByOwnerAndHavingNoItemAssociations(owner: String): List<LrmList> = (repositoryTable leftJoin LrmListsItemsTable)
+  override fun findByOwnerAndHavingNoItemAssociations(owner: String): List<LrmList> = (repositoryTable leftJoin LrmListItemsTable)
     .selectAll()
     .byOwner(owner)
-    .andWhere { LrmListsItemsTable.list.isNull() }
+    .andWhere { LrmListItemsTable.list.isNull() }
     .map { it.toLrmList() }
 
   override fun findByPublic(): List<LrmList> = mapQueryResultToLrmLists(
-    (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListItemTable)
+    (repositoryTable leftJoin LrmListItemsTable leftJoin LrmItemTable)
       .selectAll()
       .where { repositoryTable.public eq true },
   )
@@ -127,10 +127,10 @@ class LrmListRepositoryRdbms : LrmListRepository {
 
     @Suppress("SENSELESS_COMPARISON")
     val listItemsByList = resultRows
-      .filter { it.fieldIndex.containsKey(LrmListItemTable.id) }
-      .filterNot { it[LrmListItemTable.id] == null }
+      .filter { it.fieldIndex.containsKey(LrmItemTable.id) }
+      .filterNot { it[LrmItemTable.id] == null }
       .groupBy { it[repositoryTable.id] }
-      .mapValues { it.value.map { row -> row.toLrmItem() }.sortedBy { item -> item.name }.toSet() }
+      .mapValues { it.value.map { row -> row.toLrmListItem() }.sortedBy { item -> item.name }.toSet() }
 
     return resultRows
       .asSequence()
@@ -141,7 +141,7 @@ class LrmListRepositoryRdbms : LrmListRepository {
       .toList()
   }
 
-  private fun ResultRow.toLrmList(lrmItems: Set<LrmItem> = emptySet()): LrmList {
+  private fun ResultRow.toLrmList(lrmItems: Set<LrmListItem> = emptySet()): LrmList {
     return LrmList(
       id = this[repositoryTable.id],
       name = this[repositoryTable.name],
@@ -156,18 +156,19 @@ class LrmListRepositoryRdbms : LrmListRepository {
     )
   }
 
-  private fun ResultRow.toLrmItem(): LrmItem {
-    return LrmItem(
-      id = this[LrmListItemTable.id],
-      name = this[LrmListItemTable.name],
-      description = this[LrmListItemTable.description],
-      quantity = this[LrmListItemTable.quantity],
-      owner = this[LrmListItemTable.owner],
-      created = this[LrmListItemTable.created],
-      updated = this[LrmListItemTable.updated],
-      creator = this[LrmListItemTable.creator],
-      updater = this[LrmListItemTable.updater],
-//      lists = null,
+  private fun ResultRow.toLrmListItem(): LrmListItem {
+    return LrmListItem(
+      id = this[LrmItemTable.id],
+      listId = this[LrmListItemsTable.list],
+      name = this[LrmItemTable.name],
+      description = this[LrmItemTable.description],
+      quantity = this[LrmListItemsTable.itemQuantity],
+      isSuppressed = this[LrmListItemsTable.itemIsSuppressed],
+      owner = this[LrmItemTable.owner],
+      created = this[LrmItemTable.created],
+      updated = this[LrmItemTable.updated],
+      creator = this[LrmItemTable.creator],
+      updater = this[LrmItemTable.updater],
     )
   }
 }

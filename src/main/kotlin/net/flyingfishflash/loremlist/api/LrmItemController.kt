@@ -8,20 +8,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.validation.Valid
-import jakarta.validation.constraints.Size
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
-import net.flyingfishflash.loremlist.api.data.response.AssociationCreatedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmItemDeletedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmItemResponse
-import net.flyingfishflash.loremlist.core.response.structure.ApiMessage
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
-import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
 import net.flyingfishflash.loremlist.core.validation.ValidUuid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -31,7 +24,6 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -62,25 +54,8 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
 
   @Operation(summary = "Count of all items.")
   @GetMapping("/count")
-  fun countWhereOwnerIsPrincipal(
-    request: HttpServletRequest,
-    @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
+  fun countWhereOwnerIsPrincipal(request: HttpServletRequest, @AuthenticationPrincipal principal: Jwt): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
     val apiServiceResponse = lrmItemApiService.countByOwner(owner = principal.subject)
-    val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
-    val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
-    return ResponseEntity(response, responseStatus)
-  }
-
-  @Operation(summary = "Create an item.")
-  @PostMapping
-  fun create(
-    @RequestBody @Valid lrmItemCreateRequest: LrmItemCreateRequest,
-    request: HttpServletRequest,
-    @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<LrmItemResponse>> {
-    val apiServiceResponse = lrmItemApiService.create(lrmItemCreateRequest, owner = principal.subject)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
     logger.info { json.encodeToString(response) }
@@ -131,10 +106,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
 
   @Operation(summary = "Retrieve all items.")
   @GetMapping
-  fun findWhereOwnerIsPrincipal(
-    request: HttpServletRequest,
-    @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<List<LrmItemResponse>>> {
+  fun findWhereOwnerIsPrincipal(request: HttpServletRequest, @AuthenticationPrincipal principal: Jwt): ResponseEntity<ResponseSuccess<List<LrmItemResponse>>> {
     val apiServiceResponse = lrmItemApiService.findByOwner(owner = principal.subject)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
@@ -142,7 +114,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     return ResponseEntity(response, responseStatus)
   }
 
-  @Operation(summary = "Retrieve a single item.")
+  @Operation(summary = "Retrieve an item.")
   @ApiResponses(
     value = [
       ApiResponse(
@@ -221,127 +193,6 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
   ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
     val apiServiceResponse = lrmItemApiService.countListAssociationsByItemIdAndItemOwner(itemId = itemId, itemOwner = principal.subject)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
-    val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
-    return ResponseEntity(response, responseStatus)
-  }
-
-  @Operation(summary = "Create an association with specified list or lists.")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "404",
-        description = "Item/List not found.",
-        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-      ),
-    ],
-  )
-  @PostMapping("/{item-id}/lists")
-  fun listAssociationsCreate(
-    @PathVariable("item-id") @ValidUuid itemId: UUID,
-    @RequestBody
-    @Size(min = 1, message = "List of UUID's must contain at least one element")
-    listIdCollection: Set<
-      @Serializable(UUIDSerializer::class)
-      UUID,
-      >,
-    request: HttpServletRequest,
-    @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<AssociationCreatedResponse>> {
-    val apiServiceResponse = lrmItemApiService.createListAssociations(
-      itemId = itemId,
-      listIdCollection = listIdCollection,
-      owner = principal.subject,
-    )
-    val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
-    val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
-    return ResponseEntity(response, responseStatus)
-  }
-
-  @Operation(summary = "Delete an association with a specified list.")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "404",
-        description = "Item/List/Association not found",
-        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-      ),
-    ],
-  )
-  @DeleteMapping("/{item-id}/lists/{list-id}")
-  fun listAssociationsDeleteByItemIdAndListIdWhereOwnerIsPrincipal(
-    @PathVariable("item-id") @ValidUuid itemId: UUID,
-    @PathVariable("list-id") @ValidUuid listId: UUID,
-    request: HttpServletRequest,
-    @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val apiServiceResponse = lrmItemApiService.deleteListAssociationByItemIdAndListIdAndItemOwner(
-      itemId = itemId,
-      listId = listId,
-      itemOwner = principal.subject,
-    )
-    val response = ResponseSuccess(ApiMessage(apiServiceResponse.message), apiServiceResponse.message, request)
-    val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
-    return ResponseEntity(response, responseStatus)
-  }
-
-  @Operation(summary = "Delete all of an item's list associations.")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "404",
-        description = "Item not found.",
-        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-      ),
-    ],
-  )
-  @DeleteMapping("/{item-id}/lists")
-  fun listAssociationsDeleteByItemIdWhereItemOwnerIsPrincipal(
-    @PathVariable("item-id") @ValidUuid itemId: UUID,
-    request: HttpServletRequest,
-    @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<ApiMessageNumeric>> {
-    val apiServiceResponse = lrmItemApiService.deleteListAssociationsByItemIdAndItemOwner(
-      itemId = itemId,
-      itemOwner = principal.subject,
-    )
-    val response = ResponseSuccess(
-      ApiMessageNumeric(apiServiceResponse.content.deletedAssociationsCount.toLong()),
-      apiServiceResponse.message,
-      request,
-    )
-    val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
-    return ResponseEntity(response, responseStatus)
-  }
-
-  @Operation(summary = "Update an association with a specified list (move).")
-  @ApiResponses(
-    value = [
-      ApiResponse(
-        responseCode = "404",
-        description = "Association not found.",
-        content = [Content(schema = Schema(implementation = ResponseProblem::class))],
-      ),
-    ],
-  )
-  @PatchMapping("/{item-id}/lists/{current-list-id}/{destination-list-id}")
-  fun listAssociationsUpdate(
-    @PathVariable("item-id") @ValidUuid itemId: UUID,
-    @PathVariable("current-list-id") @ValidUuid currentListId: UUID,
-    @PathVariable("destination-list-id") @ValidUuid destinationListId: UUID,
-    request: HttpServletRequest,
-    @AuthenticationPrincipal principal: Jwt,
-  ): ResponseEntity<ResponseSuccess<ApiMessage>> {
-    val apiServiceResponse = lrmItemApiService.updateListAssociation(
-      itemId = itemId,
-      currentListId = currentListId,
-      destinationListId = destinationListId,
-      owner = principal.subject,
-    )
-    val response = ResponseSuccess(ApiMessage(apiServiceResponse.message), apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)

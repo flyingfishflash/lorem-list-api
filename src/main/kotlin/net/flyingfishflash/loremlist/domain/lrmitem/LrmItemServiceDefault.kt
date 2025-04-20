@@ -2,13 +2,11 @@ package net.flyingfishflash.loremlist.domain.lrmitem
 
 import jakarta.validation.ConstraintViolationException
 import jakarta.validation.Validation
-import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.core.exceptions.CoreException
-import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.domain.ServiceResponse
-import net.flyingfishflash.loremlist.domain.association.AssociationService
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemCreate
+import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleted
+import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItemService
 import net.flyingfishflash.loremlist.toJsonElement
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -17,7 +15,7 @@ import java.util.UUID
 
 @Service
 @Transactional
-class LrmItemServiceDefault(private val associationService: AssociationService, private val lrmItemRepository: LrmItemRepository): LrmItemService {
+class LrmItemServiceDefault(private val lrmItemRepository: LrmItemRepository, private val lrmListItemService: LrmListItemService) : LrmItemService {
   private val validator = Validation.buildDefaultValidatorFactory().validator
 
   override fun countByOwner(owner: String): ServiceResponse<Long> {
@@ -30,32 +28,12 @@ class LrmItemServiceDefault(private val associationService: AssociationService, 
     }
   }
 
-  override fun create(lrmItemCreate: LrmItemCreate, creator: String): ServiceResponse<LrmItem> {
-    return runCatching {
-      val now = now()
-      val lrmItem = LrmItem(
-        id = UUID.randomUUID(),
-        name = lrmItemCreate.name,
-        description = lrmItemCreate.description,
-        quantity = lrmItemCreate.quantity,
-        created = now,
-        owner = creator,
-        creator = creator,
-        updated = now,
-        updater = creator,
-      )
-      val id = lrmItemRepository.insert(lrmItem)
-      val newLrmItem = findByOwnerAndId(id = id, owner = creator).content
-      return@runCatching ServiceResponse(content = newLrmItem, message = "Created item '${newLrmItem.name}'")
-    }.getOrElse { cause -> throw DomainException(cause = cause, message = "Item could not be created.") }
-  }
-
   override fun deleteByOwner(owner: String): ServiceResponse<LrmItemDeleted> {
     return runCatching {
       val items = findByOwner(owner = owner).content
       if (items.isNotEmpty()) {
         items.filter { it.lists.isNotEmpty() }.forEach {
-          associationService.deleteByItemOwnerAndItemId(itemId = it.id, itemOwner = owner)
+          lrmListItemService.removeByOwnerAndItemId(itemId = it.id, owner = owner)
         }
         lrmItemRepository.deleteById(ids = items.map { it.id }.toSet())
       }
@@ -65,7 +43,7 @@ class LrmItemServiceDefault(private val associationService: AssociationService, 
       )
       return@runCatching ServiceResponse(
         content = lrmItemDeleted,
-        message = "Deleted all (${lrmItemDeleted.itemNames.size}) of your items, and removed them from ${lrmItemDeleted.associatedListNames.size} lists."
+        message = "Deleted all (${lrmItemDeleted.itemNames.size}) of your items, and removed them from ${lrmItemDeleted.associatedListNames.size} lists.",
       )
     }.getOrElse { cause ->
       when (cause) {
@@ -86,17 +64,16 @@ class LrmItemServiceDefault(private val associationService: AssociationService, 
       val lrmItemDeleteResponse = createDeleteResponse(item)
       if (lrmItemDeleteResponse.associatedListNames.isNotEmpty()) {
         if (removeListAssociations) {
-          deleteListAssociations(id, owner)
+          lrmListItemService.removeByOwnerAndItemId(itemId = id, owner = owner)
         } else {
           throwListAssociationException(lrmItemDeleteResponse)
         }
-      } else {
-        doDeleteByOwnerAndId(id, owner)
       }
+      doDeleteByOwnerAndId(itemId = id, owner = owner)
       val noun = if (lrmItemDeleteResponse.associatedListNames.size == 1) "list" else "lists"
       return@runCatching ServiceResponse(
         content = lrmItemDeleteResponse,
-        message ="Deleted item '${lrmItemDeleteResponse.itemNames.first()}', and removed it from ${lrmItemDeleteResponse.associatedListNames.size} $noun."
+        message = "Deleted item '${lrmItemDeleteResponse.itemNames.first()}', and removed it from ${lrmItemDeleteResponse.associatedListNames.size} $noun.",
       )
     }.getOrElse { cause ->
       when (cause) {
@@ -118,14 +95,6 @@ class LrmItemServiceDefault(private val associationService: AssociationService, 
     )
   }
 
-  private fun deleteListAssociations(id: UUID, owner: String) {
-    associationService.deleteByItemOwnerAndItemId(itemId = id, itemOwner = owner)
-    val deletedCount = lrmItemRepository.deleteByOwnerAndId(id = id, owner = owner)
-    if (deletedCount != 1) {
-      handleInvalidAffectedRecordCount(deletedCount, id)
-    }
-  }
-
   private fun throwListAssociationException(lrmItemDeleteResponse: LrmItemDeleted) {
     val message = "Item '${lrmItemDeleteResponse.itemNames.first()}' " +
       "is associated with ${lrmItemDeleteResponse.associatedListNames.size} list(s). First remove the item from each list."
@@ -139,10 +108,10 @@ class LrmItemServiceDefault(private val associationService: AssociationService, 
     )
   }
 
-  private fun doDeleteByOwnerAndId(id: UUID, owner: String) {
-    val deletedCount = lrmItemRepository.deleteByOwnerAndId(id = id, owner = owner)
+  private fun doDeleteByOwnerAndId(itemId: UUID, owner: String) {
+    val deletedCount = lrmItemRepository.deleteByOwnerAndId(id = itemId, owner = owner)
     if (deletedCount != 1) {
-      handleInvalidAffectedRecordCount(deletedCount, id)
+      handleInvalidAffectedRecordCount(affectedRecordCount = deletedCount, id = itemId)
     }
   }
 
@@ -183,10 +152,6 @@ class LrmItemServiceDefault(private val associationService: AssociationService, 
     patchItem(patchedLrmItem) { lrmItemRepository.updateDescription(patchedLrmItem) }
   }
 
-  override fun patchQuantity(patchedLrmItem: LrmItem) {
-    patchItem(patchedLrmItem) { lrmItemRepository.updateQuantity(patchedLrmItem) }
-  }
-
   private fun patchItem(patchedLrmItem: LrmItem, updateAction: () -> Int) {
     validateItemEntity(patchedLrmItem)
     val updatedCount = updateAction()
@@ -204,7 +169,7 @@ class LrmItemServiceDefault(private val associationService: AssociationService, 
   }
 
   private fun validateItemEntity(lrmItem: LrmItem) {
-    val violations = validator.validate(LrmItemEntity.fromLrmItem(lrmItem))
+    val violations = validator.validate(lrmItem)
     if (violations.isNotEmpty()) {
       throw ConstraintViolationException(violations)
     }

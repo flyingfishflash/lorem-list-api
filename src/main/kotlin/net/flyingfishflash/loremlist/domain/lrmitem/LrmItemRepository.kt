@@ -16,5 +16,4 @@ interface LrmItemRepository {
   fun update(lrmItem: LrmItem): Int
   fun updateName(lrmItem: LrmItem): Int
   fun updateDescription(lrmItem: LrmItem): Int
-  fun updateQuantity(lrmItem: LrmItem): Int
 }

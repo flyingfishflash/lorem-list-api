@@ -22,7 +22,7 @@ import java.util.UUID
 
 @Repository
 class LrmItemRepositoryRdbms : LrmItemRepository {
-  private val repositoryTable = LrmListItemTable
+  private val repositoryTable = LrmItemTable
 
   override fun countByOwner(owner: String): Long {
     val idCount = repositoryTable.id.count()
@@ -39,7 +39,7 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
 
   override fun findByOwner(owner: String): List<LrmItem> {
     return mapQueryResultToLrmItems(
-      (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
+      (repositoryTable leftJoin LrmListItemsTable leftJoin LrmListTable)
         .selectAll()
         .byOwner(owner),
     )
@@ -47,7 +47,7 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
 
   override fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmItem? {
     val lrmItems = mapQueryResultToLrmItems(
-      (repositoryTable leftJoin LrmListsItemsTable leftJoin LrmListTable)
+      (repositoryTable leftJoin LrmListItemsTable leftJoin LrmListTable)
         .selectAll()
         .byOwnerAndId(owner, id),
     ).distinct()
@@ -56,10 +56,10 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
   }
 
   override fun findByOwnerAndHavingNoListAssociations(owner: String): List<LrmItem> {
-    val result = (repositoryTable leftJoin LrmListsItemsTable)
+    val result = (repositoryTable leftJoin LrmListItemsTable)
       .selectAll()
       .where { repositoryTable.owner eq owner }
-      .andWhere { LrmListsItemsTable.item.isNull() }
+      .andWhere { LrmListItemsTable.item.isNull() }
       .map { it.toLrmItem() }
     return result
   }
@@ -82,7 +82,7 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
       it[id] = lrmItem.id
       it[name] = lrmItem.name
       it[description] = lrmItem.description
-      it[quantity] = lrmItem.quantity
+//      it[quantity] = lrmItem.quantity
       it[owner] = lrmItem.owner
       it[created] = lrmItem.created
       it[creator] = lrmItem.creator
@@ -95,14 +95,12 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
   override fun update(lrmItem: LrmItem): Int = updateItem(lrmItem) {
     it[repositoryTable.name] = lrmItem.name
     it[repositoryTable.description] = lrmItem.description
-    it[repositoryTable.quantity] = lrmItem.quantity
+//    it[repositoryTable.quantity] = lrmItem.quantity
   }
 
   override fun updateName(lrmItem: LrmItem): Int = updateItem(lrmItem) { it[repositoryTable.name] = lrmItem.name }
 
   override fun updateDescription(lrmItem: LrmItem): Int = updateItem(lrmItem) { it[repositoryTable.description] = lrmItem.description }
-
-  override fun updateQuantity(lrmItem: LrmItem): Int = updateItem(lrmItem) { it[repositoryTable.quantity] = lrmItem.quantity }
 
   private fun updateItem(lrmItem: LrmItem, updateAction: (UpdateStatement) -> Unit): Int {
     return repositoryTable.update({ repositoryTable.id eq lrmItem.id }) {
@@ -149,7 +147,7 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
       id = this[repositoryTable.id],
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
-      quantity = this[repositoryTable.quantity],
+//      quantity = this[repositoryTable.quantity],
       owner = this[repositoryTable.owner],
       created = this[repositoryTable.created],
       creator = this[repositoryTable.creator],

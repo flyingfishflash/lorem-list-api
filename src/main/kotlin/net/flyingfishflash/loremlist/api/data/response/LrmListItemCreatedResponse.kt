@@ -4,4 +4,4 @@ import kotlinx.serialization.Serializable
 import net.flyingfishflash.loremlist.domain.SuccinctLrmComponent
 
 @Serializable
-data class AssociationCreatedResponse(val componentName: String, val associatedComponents: List<SuccinctLrmComponent>)
+data class LrmListItemCreatedResponse(val lrmListItem: LrmListItemResponse, val associatedComponents: List<SuccinctLrmComponent>)

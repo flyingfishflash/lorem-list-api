@@ -11,7 +11,9 @@ import java.util.*
  *
  * <p>Every response to a client must include exactly one Disposition.
  */
-interface Disposition
+interface Disposition {
+  fun nameAsLowercase(): String
+}
 
 @Serializable
 enum class DispositionOfSuccess : Disposition {
@@ -22,7 +24,7 @@ enum class DispositionOfSuccess : Disposition {
 
   /** Returns an enum constant name() in lowercase */
   @JsonValue
-  fun nameAsLowercase(): String {
+  override fun nameAsLowercase(): String {
     return name.lowercase(Locale.getDefault())
   }
 }
@@ -44,7 +46,7 @@ enum class DispositionOfProblem : Disposition {
 
   /** Returns an enum constant name() in lowercase */
   @JsonValue
-  fun nameAsLowercase(): String {
+  override fun nameAsLowercase(): String {
     return name.lowercase(Locale.getDefault())
   }
 

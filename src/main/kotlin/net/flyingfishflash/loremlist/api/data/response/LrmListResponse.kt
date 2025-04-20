@@ -4,14 +4,14 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
+import net.flyingfishflash.loremlist.core.serialization.UuidSerializer
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import java.util.UUID
 
 @Serializable
 @OptIn(ExperimentalSerializationApi::class)
 data class LrmListResponse(
-  @Serializable(with = UUIDSerializer::class)
+  @Serializable(with = UuidSerializer::class)
   val id: UUID,
   val name: String,
   val description: String? = null,
@@ -21,7 +21,7 @@ data class LrmListResponse(
   val creator: String? = null,
   val updated: Instant? = null,
   val updater: String? = null,
-  val items: Set<LrmItemResponse>,
+  val items: Set<LrmListItemResponse>,
 ) {
   companion object {
     fun fromLrmList(lrmList: LrmList): LrmListResponse {
@@ -36,7 +36,7 @@ data class LrmListResponse(
         updated = lrmList.updated,
         updater = lrmList.updater,
         // TODO: address warning about useless null-safe operator
-        items = lrmList.items?.map { LrmItemResponse.fromLrmItem(it) }?.toSet() ?: emptySet(),
+        items = lrmList.items?.map { LrmListItemResponse.fromLrmListItem(it) }?.toSet() ?: emptySet(),
       )
     }
   }

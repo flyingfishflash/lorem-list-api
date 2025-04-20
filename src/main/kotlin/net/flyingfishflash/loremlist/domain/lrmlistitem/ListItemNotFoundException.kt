@@ -1,14 +1,14 @@
-package net.flyingfishflash.loremlist.domain.association
+package net.flyingfishflash.loremlist.domain.lrmlistitem
 
 import net.flyingfishflash.loremlist.domain.LrmComponentType
 import net.flyingfishflash.loremlist.domain.exceptions.EntityNotFoundException
 import java.util.UUID
 
-class AssociationNotFoundException(idCollection: Set<UUID> = emptySet(), message: String? = null) :
+class ListItemNotFoundException(idCollection: Set<UUID> = emptySet(), message: String? = null) :
   EntityNotFoundException(
     idCollection = idCollection,
     message = message,
-    lrmComponentType = LrmComponentType.Association,
+    lrmComponentType = LrmComponentType.ListItem,
   ) {
   constructor(id: UUID, message: String? = null) : this(setOf(id), message = message)
 }

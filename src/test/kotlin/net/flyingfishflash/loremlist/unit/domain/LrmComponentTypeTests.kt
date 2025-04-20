@@ -18,9 +18,9 @@ class LrmComponentTypeTests :
         inverse.shouldBe(LrmComponentType.List)
       }
 
-      it("inverse of Association is Association") {
-        val inverse = LrmComponentType.Association.invert()
-        inverse.shouldBe(LrmComponentType.Association)
+      it("inverse of ListItem is ListItem") {
+        val inverse = LrmComponentType.ListItem.invert()
+        inverse.shouldBe(LrmComponentType.ListItem)
       }
     }
   })

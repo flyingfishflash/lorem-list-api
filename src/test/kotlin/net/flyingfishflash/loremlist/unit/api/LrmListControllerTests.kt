@@ -6,18 +6,21 @@ import io.kotest.extensions.spring.SpringExtension
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.unmockkAll
-import io.mockk.verify
 import kotlinx.datetime.Clock.System.now
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.api.LrmListApiService
 import net.flyingfishflash.loremlist.api.LrmListController
+import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
 import net.flyingfishflash.loremlist.api.data.request.LrmListCreateRequest
+import net.flyingfishflash.loremlist.api.data.request.LrmListItemAddRequest
 import net.flyingfishflash.loremlist.api.data.response.ApiServiceResponse
-import net.flyingfishflash.loremlist.api.data.response.AssociationCreatedResponse
 import net.flyingfishflash.loremlist.api.data.response.AssociationDeletedResponse
 import net.flyingfishflash.loremlist.api.data.response.AssociationsDeletedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListDeletedResponse
+import net.flyingfishflash.loremlist.api.data.response.LrmListItemAddedResponse
+import net.flyingfishflash.loremlist.api.data.response.LrmListItemMovedResponse
+import net.flyingfishflash.loremlist.api.data.response.LrmListItemResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListResponse
 import net.flyingfishflash.loremlist.core.configuration.SerializationConfig
 import net.flyingfishflash.loremlist.core.configuration.WebSecurityConfiguration
@@ -31,6 +34,8 @@ import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemSuccinct
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
+import net.flyingfishflash.loremlist.domain.lrmlistitem.ListItemNotFoundException
+import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItem
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpMethod
@@ -39,10 +44,11 @@ import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.delete
-import org.springframework.test.web.servlet.get
-import org.springframework.test.web.servlet.patch
-import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.ResultActions
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.web.bind.MethodArgumentNotValidException
 import java.util.UUID
 
@@ -59,28 +65,12 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
   init {
     val now = now()
-    val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
-    val id1 = UUID.fromString("00000000-0000-4000-a000-000000000001")
-    val id2 = UUID.fromString("00000000-0000-4000-a000-000000000002")
-    val id3 = UUID.fromString("00000000-0000-4000-a000-000000000003")
-    val lrmListCreateRequest = LrmListCreateRequest(name = "Lorem List Name", description = "Lorem List Description", public = true)
-    val irrelevantMessage = "ksADs8y96KRa1Zo4ipMdr5t8faudmFj4c564S02MjsNG6TXEO7yctC08Bb53bCB7"
+    val id = (0..3).map { UUID.fromString("00000000-0000-4000-a000-00000000000$it") }
+    val apiResponseMessage = "ksADs8y96KRa1Zo4ipMdr5t8faudmFj4c564S02MjsNG6TXEO7yctC08Bb53bCB7"
 
-    fun lrmList0(): LrmList = LrmList(
-      id = id0,
-      name = lrmListCreateRequest.name,
-      description = lrmListCreateRequest.description,
-      public = lrmListCreateRequest.public,
-      owner = "Lorem Ipsum Owner",
-      created = now,
-      creator = "Lorem Ipsum Created By",
-      updated = now,
-      updater = "Lorem Ipsum Updated By",
-    )
-
-    fun lrmList1(): LrmList = LrmList(
-      id = id1,
-      name = "Lorem List Name (id1)",
+    fun createLrmList(id: UUID, nameSuffix: String = "") = LrmList(
+      id = id,
+      name = "Lorem List Name${if (nameSuffix.isNotEmpty()) " ($nameSuffix)" else ""}",
       description = "Lorem List Description",
       public = true,
       owner = "Lorem Ipsum Owner",
@@ -89,805 +79,891 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       updated = now,
       updater = "Lorem Ipsum Updated By",
     )
-    fun lrmItem2(): LrmItem = LrmItem(
-      id = id2,
-      name = "Lorem Item Name (id2)",
+
+    fun createLrmItem(id: UUID, nameSuffix: String = "") = LrmItem(
+      id = id,
+      name = "Lorem Item Name${if (nameSuffix.isNotEmpty()) " ($nameSuffix)" else ""}",
       description = "Lorem Item Description",
-      quantity = 0,
       owner = "Lorem Ipsum Owner",
       created = now,
       creator = "Lorem Ipsum Created By",
       updated = now,
       updater = "Lorem Ipsum Updated By",
     )
-    fun lrmItem3(): LrmItem = LrmItem(
-      id = id3,
-      name = "Lorem Item Name (id3)",
-      description = "Lorem Item Description",
-      quantity = 0,
+
+    fun createLrmListItem(id: UUID, nameSuffix: String = "") = LrmListItem(
+      id = id,
+      listId = UUID.randomUUID(),
+      name = "Lorem List Item Name${if (nameSuffix.isNotEmpty()) " ($nameSuffix)" else ""}",
+      description = "Lorem List Item Description",
+      isSuppressed = false,
       owner = "Lorem Ipsum Owner",
       created = now,
       creator = "Lorem Ipsum Created By",
       updated = now,
       updater = "Lorem Ipsum Updated By",
     )
+
+    fun performRequest(method: HttpMethod, url: String, content: String? = null): ResultActions {
+      return mockMvc.perform(
+        request(method, url).apply {
+          with(jwt())
+          with(csrf())
+          contentType(MediaType.APPLICATION_JSON)
+          content?.let {
+            println("content: $it")
+            content(it)
+          }
+        },
+      )
+    }
 
     afterEach { clearAllMocks() }
     afterSpec { unmockkAll() }
 
     describe("/lists") {
-      describe("delete") {
+      context("delete") {
         it("lists are deleted") {
-          val mockReturn = LrmListDeletedResponse(listNames = listOf("Lorem List Name"), associatedItemNames = listOf("Lorem Item Name"))
-          every { mockLrmListApiService.deleteByOwner(ofType(String::class)) } returns
-            ApiServiceResponse(mockReturn, message = irrelevantMessage)
           val instance = "/lists"
-          mockMvc.delete(instance) {
-            with(jwt())
-            with(csrf())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.listNames[0]") { value(mockReturn.listNames[0]) }
-            jsonPath("$.content.associatedItemNames[0]") { value(mockReturn.associatedItemNames[0]) }
-          }
+          val content = LrmListDeletedResponse(
+            listNames = listOf("Lorem List Name"),
+            associatedItemNames = listOf("Lorem Item Name"),
+          )
+
+          every { mockLrmListApiService.deleteByOwner(ofType(String::class)) } returns
+            ApiServiceResponse(content = content, message = apiResponseMessage)
+
+          performRequest(HttpMethod.DELETE, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.DELETE.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.listNames[0]").value(content.listNames[0]),
+            jsonPath("$.content.associatedItemNames[0]").value(content.associatedItemNames[0]),
+          )
         }
       }
 
       describe("get") {
         it("lists are found") {
-          val mockReturn = listOf(LrmListResponse.fromLrmList(lrmList0()))
-          every { mockLrmListApiService.findByOwnerExcludeItems(ofType(String::class)) } returns
-            ApiServiceResponse(mockReturn, message = irrelevantMessage)
           val instance = "/lists"
-          mockMvc.get(instance) {
-            with(jwt())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(mockReturn.size) }
-            jsonPath("$.content") { exists() }
-            jsonPath("$.content") { isArray() }
-            jsonPath("$.content.[0].name") { value(lrmList0().name) }
-            jsonPath("$.content.[0].description") { value(lrmList0().description) }
-            jsonPath("$.content.[0].items") { isEmpty() }
-          }
-          verify(exactly = 1) { mockLrmListApiService.findByOwnerExcludeItems(ofType(String::class)) }
-        }
+          val content = listOf(LrmListResponse.fromLrmList(createLrmList(id[0])))
 
-        it("lists are found ?includeItems=false") {
-          val mockReturn = listOf(LrmListResponse.fromLrmList(lrmList0()))
           every { mockLrmListApiService.findByOwnerExcludeItems(ofType(String::class)) } returns
-            ApiServiceResponse(mockReturn, message = irrelevantMessage)
-          val instance = "/lists?includeItems=false"
-          mockMvc.get(instance) {
-            with(jwt())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
-            jsonPath("$.size") { value(mockReturn.size) }
-            jsonPath("$.content") { isArray() }
-            jsonPath("$.content.[0].name") { value(lrmList0().name) }
-            jsonPath("$.content.[0].description") { value(lrmList0().description) }
-            jsonPath("$.content.[0].items") { isEmpty() }
-          }
-          verify(exactly = 1) { mockLrmListApiService.findByOwnerExcludeItems(ofType(String::class)) }
+            ApiServiceResponse(content, message = apiResponseMessage)
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content").exists(),
+            jsonPath("$.content").isArray(),
+            jsonPath("$.content.[0].name").value(content[0].name),
+            jsonPath("$.content.[0].description").value(content[0].description),
+            jsonPath("$.content.[0].items").isEmpty(),
+          )
         }
 
         it("lists are found ?includeItems=true") {
-          val mockReturn = listOf(LrmListResponse.fromLrmList(lrmList0()))
-          every { mockLrmListApiService.findByOwner(ofType(String::class)) } returns
-            ApiServiceResponse(mockReturn, message = irrelevantMessage)
           val instance = "/lists?includeItems=true"
-          mockMvc.get(instance) {
-            with(jwt())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
-            jsonPath("$.size") { value(mockReturn.size) }
-            jsonPath("$.content") { isArray() }
-            jsonPath("$.content.[0].name") { value(lrmList0().name) }
-            jsonPath("$.content.[0].description") { value(lrmList0().description) }
-            jsonPath("$.content.[0].items") {
-              isArray()
-              isEmpty()
-            }
-          }
-          verify(exactly = 1) { mockLrmListApiService.findByOwner(ofType(String::class)) }
+          val content = listOf(LrmListResponse.fromLrmList(createLrmList(id[0])))
+          every { mockLrmListApiService.findByOwner(ofType(String::class)) } returns
+            ApiServiceResponse(content, message = apiResponseMessage)
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance.substringBeforeLast("?").removeSuffix(instance)),
+            jsonPath("$.size").value(content.size),
+            jsonPath("$.content").isArray(),
+            jsonPath("$.content.[0].name").value(createLrmList(id[0]).name),
+            jsonPath("$.content.[0].description").value(createLrmList(id[0]).description),
+          )
         }
       }
 
       describe("post") {
         it("list is created") {
-          println(Json.encodeToString(lrmListCreateRequest))
-          every { mockLrmListApiService.create(lrmListCreateRequest, ofType(String::class)) } returns
-            ApiServiceResponse(LrmListResponse.fromLrmList(lrmList0()), message = irrelevantMessage)
           val instance = "/lists"
-          mockMvc.post(instance) {
-            with(jwt())
-            with(csrf())
-            content = Json.encodeToString(lrmListCreateRequest)
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.description") { value(lrmList0().description) }
-            jsonPath("$.content.name") { value(lrmList0().name) }
-          }
-          verify(exactly = 1) { mockLrmListApiService.create(lrmListCreateRequest, ofType(String::class)) }
+          val lrmListCreateRequest = LrmListCreateRequest(
+            name = "Lorem List Name",
+            description = "Lorem List Description",
+            public = true,
+          )
+
+          every { mockLrmListApiService.create(lrmListCreateRequest, ofType(String::class)) } returns
+            ApiServiceResponse(LrmListResponse.fromLrmList(createLrmList(id[0])), message = apiResponseMessage)
+
+          performRequest(HttpMethod.POST, instance, content = Json.encodeToString(lrmListCreateRequest)).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.POST.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.description").value(createLrmList(id[0]).description),
+            jsonPath("$.content.name").value(createLrmList(id[0]).name),
+          )
         }
 
         it("requested list name is an empty string") {
           val instance = "/lists"
-          mockMvc.post(instance) {
-            with(jwt())
-            with(csrf())
-            content = Json.encodeToString(LrmListCreateRequest("", lrmList0().description, lrmList0().public))
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isBadRequest() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE name.") }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
-            jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
-          }
-          verify(exactly = 0) { mockLrmListApiService.create(ofType(LrmListCreateRequest::class), ofType(String::class)) }
+          val content = LrmListCreateRequest("", createLrmList(id[0]).description, createLrmList(id[0]).public)
+
+          performRequest(HttpMethod.POST, instance, content = Json.encodeToString(content)).andExpectAll(
+            status().isBadRequest(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.POST.name().lowercase()),
+            jsonPath("$.message").value("$VALIDATION_FAILURE_MESSAGE name."),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.title").value(MethodArgumentNotValidException::class.java.simpleName),
+            jsonPath("$.content.status").value(HttpStatus.BAD_REQUEST.value()),
+          )
         }
 
         it("requested list description is an empty string") {
           val instance = "/lists"
-          mockMvc.post(instance) {
-            with(jwt())
-            with(csrf())
-            content = Json.encodeToString(LrmListCreateRequest(lrmList0().name, "", lrmList0().public))
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isBadRequest() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value("$VALIDATION_FAILURE_MESSAGE description.") }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(MethodArgumentNotValidException::class.java.simpleName) }
-            jsonPath("$.content.status") { HttpStatus.BAD_REQUEST.value() }
-          }
-          verify(exactly = 0) { mockLrmListApiService.create(ofType(LrmListCreateRequest::class), ofType(String::class)) }
+          val content = LrmListCreateRequest(createLrmList(id[0]).name, "", createLrmList(id[0]).public)
+
+          performRequest(HttpMethod.POST, instance, content = Json.encodeToString(content)).andExpectAll(
+            status().isBadRequest(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.POST.name().lowercase()),
+            jsonPath("$.message").value("$VALIDATION_FAILURE_MESSAGE description."),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.title").value(MethodArgumentNotValidException::class.java.simpleName),
+            jsonPath("$.content.status").value(HttpStatus.BAD_REQUEST.value()),
+          )
         }
       }
     }
 
     describe("/lists/with-no-items") {
-      describe("get") {
+      context("get") {
         it("lists with no item association are found") {
-          val mockReturn = listOf(LrmListResponse.fromLrmList(lrmList0()))
-          every { mockLrmListApiService.findByOwnerAndHavingNoItemAssociations(owner = ofType(String::class)) } returns
-            ApiServiceResponse(content = mockReturn, message = irrelevantMessage)
           val instance = "/lists/with-no-items"
-          mockMvc.get(instance) {
-            with(jwt())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(mockReturn.size) }
-            jsonPath("$.content") { exists() }
-            jsonPath("$.content") { isArray() }
-            jsonPath("$.content.[0].name") { value(mockReturn[0].name) }
-            jsonPath("$.content.[0].description") { value(mockReturn[0].description) }
-          }
-          verify(exactly = 1) { mockLrmListApiService.findByOwnerAndHavingNoItemAssociations(owner = ofType(String::class)) }
+          val content = listOf(LrmListResponse.fromLrmList(createLrmList(id[0])))
+
+          every { mockLrmListApiService.findByOwnerAndHavingNoItemAssociations(owner = ofType(String::class)) } returns
+            ApiServiceResponse(content = content, message = apiResponseMessage)
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(content.size),
+            jsonPath("$.content").exists(),
+            jsonPath("$.content").isArray(),
+            jsonPath("$.content.[0].name").value(content[0].name),
+            jsonPath("$.content.[0].description").value(content[0].description),
+          )
         }
       }
     }
 
     describe("/lists/count") {
-      describe("get") {
+      context("get") {
         it("count of lists is returned") {
-          every { mockLrmListApiService.countByOwner(owner = ofType(String::class)) } returns
-            ApiServiceResponse(content = ApiMessageNumeric(999), message = irrelevantMessage)
           val instance = "/lists/count"
-          mockMvc.get(instance) {
-            with(jwt())
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.length()") { value(1) }
-            jsonPath("$.content.value") { value(999) }
-          }
+
+          every { mockLrmListApiService.countByOwner(owner = ofType(String::class)) } returns
+            ApiServiceResponse(content = ApiMessageNumeric(999), message = apiResponseMessage)
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.length()").value(1),
+            jsonPath("$.content.value").value(999),
+          )
         }
       }
     }
 
     describe("/lists/{list-id}") {
-      describe("delete") {
+      context("delete") {
         it("list is deleted") {
+          val instance = "/lists/${id[1]}"
+          val content =
+            LrmListDeletedResponse(listNames = listOf("dolor sit amet"), associatedItemNames = listOf("Lorem Ipsum"))
+
           // nonsensical conditioning of the delete response:
           // if the count of item to list associations is 0, then associatedListNames should be an empty list
           every {
-            mockLrmListApiService.deleteByOwnerAndId(id = id1, owner = ofType(String::class), removeItemAssociations = false)
-          } returns
-            ApiServiceResponse(
-              content = LrmListDeletedResponse(listNames = listOf("dolor sit amet"), associatedItemNames = listOf("Lorem Ipsum")),
-              message = irrelevantMessage,
-            )
-          val instance = "/lists/$id1"
-          mockMvc.delete(instance) {
-            with(jwt())
-            with(csrf())
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.listNames.length()") { value(1) }
-            jsonPath("$.content.listNames.[0]") { value("dolor sit amet") }
-            jsonPath("$.content.associatedItemNames.length()") { value(1) }
-            jsonPath("$.content.associatedItemNames.[0]") { value("Lorem Ipsum") }
-          }
-          verify(exactly = 1) {
             mockLrmListApiService.deleteByOwnerAndId(
-              id = ofType(UUID::class),
+              id = id[1],
               owner = ofType(String::class),
-              removeItemAssociations = ofType(Boolean::class),
+              removeItemAssociations = false,
             )
-          }
+          } returns ApiServiceResponse(content = content, message = apiResponseMessage)
+
+          performRequest(HttpMethod.DELETE, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.DELETE.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.listNames.length()").value(1),
+            jsonPath("$.content.listNames.[0]").value("dolor sit amet"),
+            jsonPath("$.content.associatedItemNames.length()").value(1),
+            jsonPath("$.content.associatedItemNames.[0]").value("Lorem Ipsum"),
+          )
         }
 
         it("list is not found") {
+          val instance = "/lists/${id[1]}"
+
           every {
-            mockLrmListApiService.deleteByOwnerAndId(id = id1, owner = ofType(String::class), removeItemAssociations = false)
-          } throws ListNotFoundException(id1)
-          val instance = "/lists/$id1"
-          mockMvc.delete(instance) {
-            with(jwt())
-            with(csrf())
-          }.andExpect {
-            status { isNotFound() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
-            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          }
-          verify(exactly = 1) {
             mockLrmListApiService.deleteByOwnerAndId(
-              id = ofType(UUID::class),
+              id = id[1],
               owner = ofType(String::class),
-              removeItemAssociations = ofType(Boolean::class),
+              removeItemAssociations = false,
             )
-          }
+          } throws ListNotFoundException(id[1])
+
+          performRequest(HttpMethod.DELETE, instance).andExpectAll(
+            status().isNotFound(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.DELETE.name().lowercase()),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.title").value(ListNotFoundException::class.java.simpleName),
+            jsonPath("$.content.status").value(HttpStatus.NOT_FOUND.value()),
+          )
         }
       }
 
       describe("get") {
         it("list is found") {
-          every { mockLrmListApiService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns
-            ApiServiceResponse((LrmListResponse.fromLrmList(lrmList0())), message = irrelevantMessage)
-          val instance = "/lists/$id1"
-          mockMvc.get(instance) {
-            with(jwt())
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.description") { value(lrmList0().description) }
-            jsonPath("$.content.name") { value(lrmList0().name) }
-          }
-          verify(exactly = 1) { mockLrmListApiService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
+          val instance = "/lists/${id[1]}"
+
+          every { mockLrmListApiService.findByOwnerAndId(id = id[1], owner = ofType(String::class)) } returns
+            ApiServiceResponse((LrmListResponse.fromLrmList(createLrmList(id[0]))), message = apiResponseMessage)
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.description").value(createLrmList(id[0]).description),
+            jsonPath("$.content.name").value(createLrmList(id[0]).name),
+          )
         }
 
         it("list is found ?includeItems=true") {
-          every { mockLrmListApiService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns
-            ApiServiceResponse(LrmListResponse.fromLrmList(lrmList0()), message = irrelevantMessage)
-          val instance = "/lists/$id1?includeItems=true"
-          mockMvc.get(instance) {
-            with(jwt())
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.description") { value(lrmList0().description) }
-            jsonPath("$.content.name") { value(lrmList0().name) }
-            jsonPath("$.content.items") {
-              isArray()
-              isEmpty()
-            }
-          }
-          verify(exactly = 1) { mockLrmListApiService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
+          val instance = "/lists/${id[1]}?includeItems=true"
+
+          every { mockLrmListApiService.findByOwnerAndId(id = id[1], owner = ofType(String::class)) } returns
+            ApiServiceResponse(LrmListResponse.fromLrmList(createLrmList(id[0])), message = apiResponseMessage)
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance.substringBeforeLast("?").removeSuffix(instance)),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.description").value(createLrmList(id[0]).description),
+            jsonPath("$.content.name").value(createLrmList(id[0]).name),
+            jsonPath("$.content.items").isArray(),
+          )
         }
 
         it("list is found ?includeItems=false") {
-          every { mockLrmListApiService.findByOwnerAndIdExcludeItems(id = id1, owner = ofType(String::class)) } returns
-            ApiServiceResponse(LrmListResponse.fromLrmList(lrmList0()), message = irrelevantMessage)
-          val instance = "/lists/$id1?includeItems=false"
-          mockMvc.get(instance) {
-            with(jwt())
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance.substringBeforeLast("?").removeSuffix(instance)) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.description") { value(lrmList0().description) }
-            jsonPath("$.content.name") { value(lrmList0().name) }
-            jsonPath("$.content.items") { isEmpty() }
-          }
-          verify(exactly = 1) {
-            mockLrmListApiService.findByOwnerAndIdExcludeItems(id = ofType(UUID::class), owner = ofType(String::class))
-          }
+          val instance = "/lists/${id[1]}?includeItems=false"
+
+          every {
+            mockLrmListApiService.findByOwnerAndIdExcludeItems(
+              id = id[1],
+              owner = ofType(String::class),
+            )
+          } returns
+            ApiServiceResponse(LrmListResponse.fromLrmList(createLrmList(id[0])), message = apiResponseMessage)
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance.substringBeforeLast("?").removeSuffix(instance)),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.description").value(createLrmList(id[0]).description),
+            jsonPath("$.content.name").value(createLrmList(id[0]).name),
+            jsonPath("$.content.items").isEmpty(),
+          )
         }
 
         it("list is not found") {
-          every { mockLrmListApiService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } throws
-            ListNotFoundException(id1)
-          val instance = "/lists/$id1"
-          mockMvc.get(instance) {
-            with(jwt())
-          }.andExpect {
-            status { isNotFound() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
-            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          }
-          verify(exactly = 1) { mockLrmListApiService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
+          val instance = "/lists/${id[1]}"
+
+          every { mockLrmListApiService.findByOwnerAndId(id = id[1], owner = ofType(String::class)) } throws
+            ListNotFoundException(id[1])
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isNotFound(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.title").value(ListNotFoundException::class.java.simpleName),
+            jsonPath("$.content.status").value(HttpStatus.NOT_FOUND.value()),
+          )
         }
       }
 
       describe("patch") {
         it("list is found and updated") {
-          every { mockLrmListApiService.patchByOwnerAndId(id = id1, owner = ofType(String::class), any()) } returns
-            ApiServiceResponse(content = LrmListResponse.fromLrmList(lrmList0()), message = irrelevantMessage)
-          val instance = "/lists/$id1"
-          mockMvc.patch(instance) {
-            with(jwt())
-            with(csrf())
-            content = Json.encodeToString(mapOf("name" to lrmList0().name))
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.description") { value(lrmList0().description) }
-            jsonPath("$.content.name") { value(lrmList0().name) }
-            jsonPath("$.content.items") { isEmpty() }
-          }
-          verify(exactly = 1) {
-            mockLrmListApiService.patchByOwnerAndId(
-              id = ofType(UUID::class),
-              owner = ofType(String::class),
-              patchRequest = mapOf("name" to lrmList0().name),
+          val instance = "/lists/${id[1]}"
+
+          every { mockLrmListApiService.patchByOwnerAndId(id = id[1], owner = ofType(String::class), any()) } returns
+            ApiServiceResponse(
+              content = LrmListResponse.fromLrmList(createLrmList(id[0])),
+              message = apiResponseMessage,
             )
-          }
+
+          performRequest(
+            HttpMethod.PATCH,
+            instance,
+            Json.encodeToString(mapOf("name" to createLrmList(id[0]).name)),
+          ).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PATCH.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.description").value(createLrmList(id[0]).description),
+            jsonPath("$.content.name").value(createLrmList(id[0]).name),
+            jsonPath("$.content.items").isEmpty(),
+          )
         }
 
         it("list is found and not updated") {
-          val expectedMessage = "api service response message must include the text 'not updated' to return 204"
-          every { mockLrmListApiService.patchByOwnerAndId(id = id1, owner = ofType(String::class), any()) } returns
-            ApiServiceResponse(content = LrmListResponse.fromLrmList(lrmList0()), message = expectedMessage)
-          val instance = "/lists/$id1"
-          mockMvc.patch(instance) {
-            with(jwt())
-            with(csrf())
-            content = Json.encodeToString(mapOf("name" to lrmList0().name))
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isNoContent() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-            jsonPath("$.message") { value(expectedMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.description") { value(lrmList0().description) }
-            jsonPath("$.content.name") { value(lrmList0().name) }
-            jsonPath("$.content.items") { isEmpty() }
-          }
-          verify(exactly = 1) {
-            mockLrmListApiService.patchByOwnerAndId(
-              id = ofType(UUID::class),
-              owner = ofType(String::class),
-              patchRequest = mapOf("name" to lrmList0().name),
-            )
-          }
-        }
+          val instance = "/lists/${id[1]}"
 
-        it("list is not found") {
-          every { mockLrmListApiService.patchByOwnerAndId(id = id1, owner = ofType(String::class), any()) } throws
-            ListNotFoundException(id1)
-          val instance = "/lists/$id1"
-          mockMvc.patch(instance) {
-            with(jwt())
-            with(csrf())
-            content = Json.encodeToString(mapOf("name" to lrmList0().name))
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isNotFound() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.PATCH.name().lowercase()) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
-            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          }
-          verify(exactly = 1) {
-            mockLrmListApiService.patchByOwnerAndId(
-              id = ofType(UUID::class),
-              owner = ofType(String::class),
-              patchRequest = mapOf("name" to lrmList0().name),
-            )
-          }
-        }
-      }
-    }
+          every { mockLrmListApiService.patchByOwnerAndId(id = id[1], owner = ofType(String::class), any()) } returns
+            ApiServiceResponse(content = LrmListResponse.fromLrmList(createLrmList(id[0])), message = "not updated")
 
-    describe("/lists/{list-id}/items/{item-id}") {
-      describe("delete") {
-        it("item is removed from list") {
-          val lrmItemName = "58cVf5N8rSstjC6L"
-          val lrmListName = "nxuS5LKlpP9TVhzV"
-          every {
-            mockLrmListApiService.deleteItemAssociationByItemIdAndListIdAndComponentsOwner(
-              itemId = id2,
-              listId = id1,
-              componentsOwner = ofType(String::class),
-            )
-          } returns
-            ApiServiceResponse(
-              content = AssociationDeletedResponse(itemName = lrmItemName, listName = lrmListName),
-              message = irrelevantMessage,
-            )
-          val instance = "/lists/$id1/items/$id2"
-          mockMvc.delete(instance) {
-            with(jwt())
-            with(csrf())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-          }
-          verify(exactly = 1) {
-            mockLrmListApiService.deleteItemAssociationByItemIdAndListIdAndComponentsOwner(
-              itemId = ofType(UUID::class),
-              listId = ofType(UUID::class),
-              componentsOwner = ofType(String::class),
-            )
-          }
-        }
-
-        it("item is not found") {
-          every {
-            mockLrmListApiService.deleteItemAssociationByItemIdAndListIdAndComponentsOwner(
-              itemId = id2,
-              listId = id1,
-              componentsOwner = ofType(String::class),
-            )
-          } throws ItemNotFoundException(id2)
-//          val expectedMessage = ItemNotFoundException.defaultMessage()
-          val instance = "/lists/$id1/items/$id2"
-          mockMvc.delete(instance) {
-            with(jwt())
-            with(csrf())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isNotFound() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
-            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          }
-          verify(exactly = 1) {
-            mockLrmListApiService.deleteItemAssociationByItemIdAndListIdAndComponentsOwner(
-              itemId = ofType(UUID::class),
-              listId = ofType(UUID::class),
-              componentsOwner = ofType(String::class),
-            )
-          }
-        }
-
-        it("list is not found") {
-          every {
-            mockLrmListApiService.deleteItemAssociationByItemIdAndListIdAndComponentsOwner(
-              itemId = id2,
-              listId = id1,
-              componentsOwner = ofType(String::class),
-            )
-          } throws ListNotFoundException(id1)
-          val instance = "/lists/$id1/items/$id2"
-          mockMvc.delete(instance) {
-            with(jwt())
-            with(csrf())
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isNotFound() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
-            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          }
-          verify(exactly = 1) {
-            mockLrmListApiService.deleteItemAssociationByItemIdAndListIdAndComponentsOwner(
-              itemId = ofType(UUID::class),
-              listId = ofType(UUID::class),
-              componentsOwner = ofType(String::class),
-            )
-          }
-        }
-      }
-
-      describe("post") {
-        it("item is added to list") {
-          val mockResponse = AssociationCreatedResponse(
-            componentName = lrmList1().name,
-            associatedComponents = listOf(LrmItemSuccinct.fromLrmItem(lrmItem2())),
+          performRequest(
+            HttpMethod.PATCH,
+            instance,
+            Json.encodeToString(mapOf("name" to createLrmList(id[0]).name)),
+          ).andExpectAll(
+            status().isNoContent(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PATCH.name().lowercase()),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.description").value(createLrmList(id[0]).description),
+            jsonPath("$.content.name").value(createLrmList(id[0]).name),
+            jsonPath("$.content.items").isEmpty(),
           )
-          every {
-            mockLrmListApiService.createItemAssociations(
-              listId = id1,
-              itemIdCollection = any(),
-              owner = ofType(String::class),
-            )
-          } returns ApiServiceResponse(content = mockResponse, message = irrelevantMessage)
-          val instance = "/lists/$id1/items"
-          mockMvc.post(instance) {
-            with(jwt())
-            with(csrf())
-            // posted content is irrelevant for this test
-            content = Json.encodeToString(setOf(UUID.randomUUID().toString()))
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.componentName") { value(mockResponse.componentName) }
-            jsonPath("$.content.associatedComponents.length()") { value(1) }
-            jsonPath("$.content.associatedComponents[0].type") { value("item") }
-            jsonPath("$.content.associatedComponents[0].id") { value(mockResponse.associatedComponents[0].id.toString()) }
-            jsonPath("$.content.associatedComponents[0].name") { value(mockResponse.associatedComponents[0].name) }
-          }
-        }
-
-        it("item is added to lists") {
-          val mockResponse = AssociationCreatedResponse(
-            componentName = lrmList1().name,
-            associatedComponents = listOf(LrmItemSuccinct.fromLrmItem(lrmItem2()), LrmItemSuccinct.fromLrmItem(lrmItem3())),
-          )
-          every {
-            mockLrmListApiService.createItemAssociations(
-              listId = id1,
-              itemIdCollection = any(),
-              owner = ofType(String::class),
-            )
-          } returns ApiServiceResponse(content = mockResponse, message = irrelevantMessage)
-          val instance = "/lists/$id1/items"
-          mockMvc.post(instance) {
-            with(jwt())
-            with(csrf())
-            // posted content is irrelevant for this test
-            content = Json.encodeToString(setOf(UUID.randomUUID().toString()))
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.componentName") { value(mockResponse.componentName) }
-            jsonPath("$.content.associatedComponents.length()") { value(2) }
-            jsonPath("$.content.associatedComponents[0].type") { value("item") }
-            jsonPath("$.content.associatedComponents[0].id") { value(mockResponse.associatedComponents[0].id.toString()) }
-            jsonPath("$.content.associatedComponents[0].name") { value(mockResponse.associatedComponents[0].name) }
-          }
         }
 
         it("list is not found") {
-          every {
-            mockLrmListApiService.createItemAssociations(
-              listId = id1,
-              itemIdCollection = any(),
-              owner = ofType(String::class),
-            )
-          } throws ListNotFoundException(id2)
-          val instance = "/lists/$id1/items"
-          mockMvc.post(instance) {
-            with(jwt())
-            with(csrf())
-            // posted content is irrelevant for this test
-            content = Json.encodeToString(setOf(UUID.randomUUID().toString()))
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isNotFound() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ListNotFoundException::class.java.simpleName) }
-            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          }
-        }
+          val instance = "/lists/${id[1]}"
 
-        it("item is not found") {
-          every {
-            mockLrmListApiService.createItemAssociations(
-              listId = id1,
-              itemIdCollection = any(),
-              owner = ofType(String::class),
-            )
-          } throws ItemNotFoundException(id2)
-//          val expectedMessage = ItemNotFoundException.defaultMessage()
-          val instance = "/lists/$id1/items"
-          mockMvc.post(instance) {
-            with(jwt())
-            with(csrf())
-            // posted content is irrelevant for this test
-            content = Json.encodeToString(setOf(UUID.randomUUID().toString()))
-            contentType = MediaType.APPLICATION_JSON
-          }.andExpect {
-            status { isNotFound() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.POST.name().lowercase()) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.title") { value(ItemNotFoundException::class.java.simpleName) }
-            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          }
-        }
-      }
-    }
+          every { mockLrmListApiService.patchByOwnerAndId(id = id[1], owner = ofType(String::class), any()) } throws
+            ListNotFoundException(id[1])
 
-    describe("/lists/{list-id}/items/count") {
-      describe("get") {
-        it("count of item associations is returned") {
-          every { mockLrmListApiService.countItemAssociationsByListIdAndListOwner(listId = id1, listOwner = ofType(String::class)) } returns
-            ApiServiceResponse(content = ApiMessageNumeric(999), message = irrelevantMessage)
-          val instance = "/lists/$id1/items/count"
-          mockMvc.get(instance) {
-            with(jwt())
-          }.andExpect {
-            status { isOk() }
-            content { contentType(MediaType.APPLICATION_JSON) }
-            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.message") { value(irrelevantMessage) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.length()") { value(1) }
-            jsonPath("$.content.value") { value(999) }
-          }
-          verify(exactly = 1) {
-            mockLrmListApiService.countItemAssociationsByListIdAndListOwner(listId = ofType(UUID::class), listOwner = ofType(String::class))
-          }
-        }
-
-        it("item is not found") {
-          every {
-            mockLrmListApiService.countItemAssociationsByListIdAndListOwner(listId = id1, listOwner = ofType(String::class))
-          } throws DomainException(httpStatus = HttpStatus.NOT_FOUND)
-          val instance = "/lists/$id1/items/count"
-          mockMvc.get(instance) {
-            with(jwt())
-          }.andExpect {
-            status { isNotFound() }
-            jsonPath("$.disposition") { value(DispositionOfProblem.FAILURE.nameAsLowercase()) }
-            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
-            jsonPath("$.instance") { value(instance) }
-            jsonPath("$.size") { value(1) }
-            jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
-          }
-          verify(exactly = 1) {
-            mockLrmListApiService.countItemAssociationsByListIdAndListOwner(listId = ofType(UUID::class), listOwner = ofType(String::class))
-          }
+          performRequest(
+            HttpMethod.PATCH,
+            instance,
+            Json.encodeToString(mapOf("name" to createLrmList(id[0]).name)),
+          ).andExpectAll(
+            status().isNotFound(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PATCH.name().lowercase()),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.title").value(ListNotFoundException::class.java.simpleName),
+            jsonPath("$.content.status").value(HttpStatus.NOT_FOUND.value()),
+          )
         }
       }
     }
 
     describe("/lists/{list-id}/items") {
-      it("all items are removed from a list") {
-        every {
-          mockLrmListApiService.deleteItemAssociationsByListIdAndListOwner(
-            listId = id1,
-            listOwner = ofType(String::class),
+      val instance = "/lists/${id[1]}/items"
+      context("delete") {
+        it("all items are removed from a list") {
+          every {
+            mockLrmListApiService.removeAllListItems(
+              listId = id[1],
+              listOwner = ofType(String::class),
+            )
+          } returns ApiServiceResponse(
+            AssociationsDeletedResponse(itemName = "irrelevant", 999),
+            message = apiResponseMessage,
           )
-        } returns ApiServiceResponse(AssociationsDeletedResponse(itemName = "irrelevant", 999), message = irrelevantMessage)
-        val instance = "/lists/$id1/items"
-        mockMvc.delete(instance) {
-          with(jwt())
-          with(csrf())
-          contentType = MediaType.APPLICATION_JSON
-        }.andExpect {
-          status { isOk() }
-          content { contentType(MediaType.APPLICATION_JSON) }
-          jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
-          jsonPath("$.method") { value(HttpMethod.DELETE.name().lowercase()) }
-          jsonPath("$.message") { value(irrelevantMessage) }
-          jsonPath("$.instance") { value(instance) }
-          jsonPath("$.size") { value(1) }
-          jsonPath("$.content.value") { value(999) }
+
+          performRequest(HttpMethod.DELETE, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.DELETE.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.value").value(999),
+          )
         }
-        verify(exactly = 1) {
-          mockLrmListApiService.deleteItemAssociationsByListIdAndListOwner(listId = ofType(UUID::class), listOwner = ofType(String::class))
+      }
+
+      context("post") {
+        val lrmItemCreateRequest = LrmItemCreateRequest(name = "List Item Name", description = "List Item Description", quantity = 99, isSuppressed = false)
+
+        it("list item is created and added to a list") {
+          val lrmListItemResponse = LrmListItemResponse.fromLrmListItem(createLrmListItem(id[0]))
+
+          every {
+            mockLrmListApiService.createListItem(
+              listId = ofType<UUID>(),
+              itemCreateRequest = lrmItemCreateRequest,
+              creator = ofType<String>(),
+            )
+          } returns
+            ApiServiceResponse(content = lrmListItemResponse, message = apiResponseMessage)
+
+          performRequest(HttpMethod.POST, instance, Json.encodeToString(lrmItemCreateRequest)).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.POST.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.id").value(lrmListItemResponse.id.toString()),
+          )
+        }
+
+        it("list item is not created") {
+          every {
+            mockLrmListApiService.createListItem(
+              listId = ofType<UUID>(),
+              itemCreateRequest = lrmItemCreateRequest,
+              creator = ofType<String>(),
+            )
+          } throws DomainException()
+
+          performRequest(HttpMethod.POST, instance, Json.encodeToString(lrmItemCreateRequest)).andExpectAll(
+            status().isInternalServerError(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.ERROR.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.POST.name().lowercase()),
+            jsonPath("$.message").value(DomainException.DEFAULT_TITLE),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.detail").value(DomainException.DEFAULT_TITLE),
+          )
+        }
+      }
+    }
+
+    describe("/lists/{list-id}/items/{item-id}") {
+      context("delete") {
+        it("item is removed from list") {
+          val instance = "/lists/${id[1]}/items/${id[2]}"
+          val lrmItemName = "58cVf5N8rSstjC6L"
+          val lrmListName = "nxuS5LKlpP9TVhzV"
+
+          every {
+            mockLrmListApiService.removeListItem(
+              itemId = id[2],
+              listId = id[1],
+              componentsOwner = ofType(String::class),
+            )
+          } returns
+            ApiServiceResponse(
+              content = AssociationDeletedResponse(itemName = lrmItemName, listName = lrmListName),
+              message = apiResponseMessage,
+            )
+
+          performRequest(HttpMethod.DELETE, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.DELETE.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+          )
+        }
+
+        it("item is not found") {
+          val instance = "/lists/${id[1]}/items/${id[2]}"
+
+          every {
+            mockLrmListApiService.removeListItem(
+              itemId = id[2],
+              listId = id[1],
+              componentsOwner = ofType(String::class),
+            )
+          } throws ItemNotFoundException(id[2])
+
+          performRequest(HttpMethod.DELETE, instance).andExpectAll(
+            status().isNotFound(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.DELETE.name().lowercase()),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.title").value(ItemNotFoundException::class.java.simpleName),
+            jsonPath("$.content.status").value(HttpStatus.NOT_FOUND.value()),
+          )
+        }
+
+        it("list is not found") {
+          val instance = "/lists/${id[1]}/items/${id[2]}"
+
+          every {
+            mockLrmListApiService.removeListItem(
+              itemId = id[2],
+              listId = id[1],
+              componentsOwner = ofType(String::class),
+            )
+          } throws ListNotFoundException(id[1])
+
+          performRequest(HttpMethod.DELETE, instance).andExpectAll(
+            status().isNotFound(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.DELETE.name().lowercase()),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.title").value(ListNotFoundException::class.java.simpleName),
+            jsonPath("$.content.status").value(HttpStatus.NOT_FOUND.value()),
+          )
+        }
+      }
+
+      context("patch") {
+        it("list item is updated") {
+          val instance = "/lists/${id[1]}/items/${id[2]}"
+          val apiResponseContent = LrmListItemResponse.fromLrmListItem(createLrmListItem(id[3]))
+
+          every {
+            mockLrmListApiService.patchListItem(
+              itemId = id[2],
+              listId = id[1],
+              listOwner = ofType(String::class),
+              patchRequest = any(),
+            )
+          } returns ApiServiceResponse(
+            content = apiResponseContent,
+            message = apiResponseMessage,
+          )
+
+          performRequest(
+            HttpMethod.PATCH,
+            instance,
+            Json.encodeToString(mapOf("name" to createLrmItem(id[0]).name)),
+          ).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PATCH.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.name").value(apiResponseContent.name),
+          )
+        }
+
+        it("list item is not updated") {
+          val instance = "/lists/${id[1]}/items/${id[2]}"
+          val apiResponseContent = LrmListItemResponse.fromLrmListItem(createLrmListItem(id[3]))
+
+          every {
+            mockLrmListApiService.patchListItem(
+              itemId = id[2],
+              listId = id[1],
+              listOwner = ofType(String::class),
+              patchRequest = any(),
+            )
+          } returns ApiServiceResponse(
+            content = apiResponseContent,
+            message = "not updated",
+          )
+
+          performRequest(
+            HttpMethod.PATCH,
+            instance,
+            Json.encodeToString(mapOf("name" to createLrmItem(id[0]).name)),
+          ).andExpectAll(
+            status().isNoContent,
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PATCH.name().lowercase()),
+            jsonPath("$.message").value("not updated"),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.name").value(apiResponseContent.name),
+          )
+        }
+
+        it("list item is not found") {
+          val instance = "/lists/${id[1]}/items/${id[2]}"
+
+          every {
+            mockLrmListApiService.patchListItem(
+              itemId = id[2],
+              listId = id[1],
+              listOwner = ofType(String::class),
+              patchRequest = any(),
+            )
+          } throws ListItemNotFoundException()
+
+          performRequest(
+            HttpMethod.PATCH,
+            instance,
+            Json.encodeToString(mapOf("name" to createLrmItem(id[0]).name)),
+          ).andExpectAll(
+            status().isNotFound(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PATCH.name().lowercase()),
+            jsonPath("$.message").value("ListItem could not be found."),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+          )
+        }
+      }
+
+      describe("put") {
+        it("item is added to list") {
+          val instance = "/lists/${id[1]}/items"
+
+          val mockResponse = LrmListItemAddedResponse(
+            componentName = createLrmList(id[1]).name,
+            associatedComponents = listOf(LrmItemSuccinct.fromLrmItem(createLrmItem(id[2]))),
+          )
+
+          every {
+            mockLrmListApiService.addListItem(
+              listId = id[1],
+              itemIdCollection = any(),
+              owner = ofType(String::class),
+            )
+          } returns ApiServiceResponse(content = mockResponse, message = apiResponseMessage)
+
+          val requestBody = LrmListItemAddRequest(itemIdCollection = setOf(UUID.randomUUID()))
+
+          performRequest(
+            HttpMethod.PUT,
+            instance,
+            Json.encodeToString(requestBody),
+          ).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PUT.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.componentName").value(mockResponse.componentName),
+            jsonPath("$.content.associatedComponents.length()").value(1),
+            jsonPath("$.content.associatedComponents[0].type").value("item"),
+            jsonPath("$.content.associatedComponents[0].id").value(mockResponse.associatedComponents[0].id.toString()),
+            jsonPath("$.content.associatedComponents[0].name").value(mockResponse.associatedComponents[0].name),
+          )
+        }
+
+        it("item is added to lists") {
+          val instance = "/lists/${id[1]}/items"
+
+          val mockResponse = LrmListItemAddedResponse(
+            componentName = createLrmList(id[1]).name,
+            associatedComponents = listOf(
+              LrmItemSuccinct.fromLrmItem(createLrmItem(id[2])),
+              LrmItemSuccinct.fromLrmItem(createLrmItem(id[3])),
+            ),
+          )
+
+          every {
+            mockLrmListApiService.addListItem(
+              listId = id[1],
+              itemIdCollection = any(),
+              owner = ofType(String::class),
+            )
+          } returns ApiServiceResponse(content = mockResponse, message = apiResponseMessage)
+
+          val requestBody = LrmListItemAddRequest(itemIdCollection = setOf(UUID.randomUUID()))
+
+          performRequest(
+            HttpMethod.PUT,
+            instance,
+            Json.encodeToString(requestBody),
+          ).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PUT.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.componentName").value(mockResponse.componentName),
+            jsonPath("$.content.associatedComponents.length()").value(2),
+            jsonPath("$.content.associatedComponents[0].type").value("item"),
+            jsonPath("$.content.associatedComponents[0].id").value(mockResponse.associatedComponents[0].id.toString()),
+            jsonPath("$.content.associatedComponents[0].name").value(mockResponse.associatedComponents[0].name),
+          )
+        }
+
+        it("list is not found") {
+          val instance = "/lists/${id[1]}/items"
+
+          every {
+            mockLrmListApiService.addListItem(
+              listId = id[1],
+              itemIdCollection = any(),
+              owner = ofType(String::class),
+            )
+          } throws ListNotFoundException(id[2])
+
+          val requestBody = LrmListItemAddRequest(itemIdCollection = setOf(UUID.randomUUID()))
+
+          performRequest(
+            HttpMethod.PUT,
+            instance,
+            Json.encodeToString(requestBody),
+          ).andExpectAll(
+            status().isNotFound(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PUT.name().lowercase()),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.title").value(ListNotFoundException::class.java.simpleName),
+            jsonPath("$.content.status").value(HttpStatus.NOT_FOUND.value()),
+          )
+        }
+
+        it("item is not found") {
+          val instance = "/lists/${id[1]}/items"
+
+          every {
+            mockLrmListApiService.addListItem(
+              listId = id[1],
+              itemIdCollection = any(),
+              owner = ofType(String::class),
+            )
+          } throws ItemNotFoundException(id[2])
+
+          val requestBody = LrmListItemAddRequest(itemIdCollection = setOf(UUID.randomUUID()))
+
+          performRequest(
+            HttpMethod.PUT,
+            instance,
+            Json.encodeToString(requestBody),
+          ).andExpectAll(
+            status().isNotFound(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PUT.name().lowercase()),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.title").value(ItemNotFoundException::class.java.simpleName),
+            jsonPath("$.content.status").value(HttpStatus.NOT_FOUND.value()),
+          )
+        }
+      }
+    }
+
+    describe("/lists/{list-id}/items/{item-id}/{list-id}") {
+      context("patch") {
+        it("list item is moved from one list to another") {
+          val instance = "/lists/${id[1]}/items/${id[2]}/${id[3]}"
+          val apiResponseContent = LrmListItemMovedResponse(itemName = "", currentListName = "", newListName = "")
+
+          every {
+            mockLrmListApiService.moveListItem(id[1], id[2], id[3], ofType<String>())
+          } returns ApiServiceResponse(content = apiResponseContent, message = apiResponseMessage)
+
+          performRequest(HttpMethod.PATCH, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.PATCH.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.message").value(apiResponseMessage),
+          )
+        }
+      }
+    }
+
+    describe("/lists/{list-id}/items/count") {
+      context("get") {
+        it("count of item associations is returned") {
+          val instance = "/lists/${id[1]}/items/count"
+
+          every { mockLrmListApiService.countListItems(listId = id[1], listOwner = ofType(String::class)) } returns
+            ApiServiceResponse(content = ApiMessageNumeric(999), message = apiResponseMessage)
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isOk(),
+            content().contentType(MediaType.APPLICATION_JSON),
+            jsonPath("$.disposition").value(DispositionOfSuccess.SUCCESS.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.message").value(apiResponseMessage),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.length()").value(1),
+            jsonPath("$.content.value").value(999),
+          )
+        }
+
+        it("item is not found") {
+          val instance = "/lists/${id[1]}/items/count"
+
+          every {
+            mockLrmListApiService.countListItems(listId = id[1], listOwner = ofType(String::class))
+          } throws DomainException(httpStatus = HttpStatus.NOT_FOUND)
+
+          performRequest(HttpMethod.GET, instance).andExpectAll(
+            status().isNotFound(),
+            jsonPath("$.disposition").value(DispositionOfProblem.FAILURE.nameAsLowercase()),
+            jsonPath("$.method").value(HttpMethod.GET.name().lowercase()),
+            jsonPath("$.instance").value(instance),
+            jsonPath("$.size").value(1),
+            jsonPath("$.content.status").value(HttpStatus.NOT_FOUND.value()),
+          )
         }
       }
     }

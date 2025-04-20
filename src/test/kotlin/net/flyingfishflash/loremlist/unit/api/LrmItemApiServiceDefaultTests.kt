@@ -15,33 +15,28 @@ import net.flyingfishflash.loremlist.api.data.response.ApiServiceResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmItemDeletedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmItemResponse
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
-import net.flyingfishflash.loremlist.domain.LrmComponentType
 import net.flyingfishflash.loremlist.domain.ServiceResponse
-import net.flyingfishflash.loremlist.domain.association.AssociationService
-import net.flyingfishflash.loremlist.domain.association.data.AssociationCreated
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemServiceDefault
-import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemCreate
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleted
-import net.flyingfishflash.loremlist.domain.lrmlist.LrmListSuccinct
+import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItemService
 import java.util.*
 
 class LrmItemApiServiceDefaultTests :
   DescribeSpec({
     val mockLrmItemService = mockk<LrmItemServiceDefault>(relaxed = true)
-    val mockAssociationService = mockk<AssociationService>(relaxed = true)
-    val lrmItemApiService = LrmItemApiServiceDefault(mockLrmItemService, mockAssociationService)
+    val mockLrmListItemService = mockk<LrmListItemService>(relaxed = true)
+    val lrmItemApiService = LrmItemApiServiceDefault(mockLrmItemService, mockLrmListItemService)
 
     val now = now()
     val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
-    val lrmItemCreateRequest = LrmItemCreateRequest("Lorem Item Name", "Lorem Item Description")
+    val lrmItemCreateRequest = LrmItemCreateRequest(name = "Lorem Item Name", description = "Lorem Item Description", isSuppressed = false)
     val irrelevantMessage = "ksADs8y96KRa1Zo4ipMdr5t8faudmFj4c564S02MjsNG6TXEO7yctC08Bb53bCB7"
 
     fun lrmItem(): LrmItem = LrmItem(
       id = id0,
       name = lrmItemCreateRequest.name,
       description = lrmItemCreateRequest.description,
-      quantity = 0,
       owner = "Lorem Ipsum Owner",
       created = now,
       creator = "Lorem Ipsum Created By",
@@ -57,19 +52,11 @@ class LrmItemApiServiceDefaultTests :
         val owner = "test_owner"
         val expectedCount = 10L
         val serviceResponse = ServiceResponse(expectedCount, message = irrelevantMessage)
-        val apiServiceResponse = ApiServiceResponse(content = ApiMessageNumeric(serviceResponse.content), message = serviceResponse.message)
+        val apiServiceResponse =
+          ApiServiceResponse(content = ApiMessageNumeric(serviceResponse.content), message = serviceResponse.message)
         every { mockLrmItemService.countByOwner(owner) } returns serviceResponse
         lrmItemApiService.countByOwner(owner) shouldBe apiServiceResponse
         verify { mockLrmItemService.countByOwner(owner) }
-      }
-
-      it("create a new item") {
-        val owner = "test_owner"
-        val serviceResponse = ServiceResponse(content = lrmItem(), message = irrelevantMessage)
-        val apiServiceResponse = ApiServiceResponse(LrmItemResponse.fromLrmItem(serviceResponse.content), serviceResponse.message)
-        every { mockLrmItemService.create(ofType(LrmItemCreate::class), owner) } returns serviceResponse
-        lrmItemApiService.create(mockk<LrmItemCreateRequest>(relaxed = true), owner) shouldBe apiServiceResponse
-        verify { mockLrmItemService.create(ofType(LrmItemCreate::class), owner) }
       }
 
       it("delete items by owner") {
@@ -152,21 +139,32 @@ class LrmItemApiServiceDefaultTests :
         val owner = "test_owner"
         val updatedItemName = "Updated Item Name"
         val updatedItemDescription = "Updated Item Description"
-        val updatedItemQuantity = 10000
-        val patchRequest = mapOf("name" to updatedItemName, "description" to updatedItemDescription, "quantity" to updatedItemQuantity)
+//        val updatedItemQuantity = 10000
+        val patchRequest = mapOf(
+          "name" to updatedItemName,
+          "description" to updatedItemDescription,
+//          "quantity" to updatedItemQuantity
+        )
         val originalLrmItem = lrmItem()
-        val updatedLrmItem = lrmItem().copy(name = updatedItemName, description = updatedItemDescription, quantity = updatedItemQuantity)
-        every { mockLrmItemService.findByOwnerAndId(id0, owner) } returns ServiceResponse(originalLrmItem, irrelevantMessage) andThen
+        val updatedLrmItem = lrmItem().copy(
+          name = updatedItemName,
+          description = updatedItemDescription,
+          // quantity = updatedItemQuantity
+        )
+        every { mockLrmItemService.findByOwnerAndId(id0, owner) } returns ServiceResponse(
+          originalLrmItem,
+          irrelevantMessage,
+        ) andThen
           ServiceResponse(updatedLrmItem, irrelevantMessage)
         every { mockLrmItemService.patchName(any()) } returns Unit
         every { mockLrmItemService.patchDescription(any()) } returns Unit
-        every { mockLrmItemService.patchQuantity(any()) } returns Unit
+//        every { mockLrmItemService.patchQuantity(any()) } returns Unit
         val apiServiceResponse = lrmItemApiService.patchByOwnerAndId(id0, owner, patchRequest)
         apiServiceResponse.content shouldBe LrmItemResponse.fromLrmItem(updatedLrmItem)
-        apiServiceResponse.message shouldBe "Item 'Updated Item Name' updated. Fields changed: name, description, quantity."
+        apiServiceResponse.message shouldBe "Item 'Updated Item Name' updated. Fields changed: name, description."
         verify { mockLrmItemService.patchName(any()) }
         verify { mockLrmItemService.patchDescription(any()) }
-        verify { mockLrmItemService.patchQuantity(any()) }
+//        verify { mockLrmItemService.patchQuantity(any()) }
         verify { mockLrmItemService.findByOwnerAndId(id0, owner) }
       }
 
@@ -174,21 +172,28 @@ class LrmItemApiServiceDefaultTests :
         val owner = "test_owner"
         val updatedItemName = lrmItem().name
         val updatedItemDescription = lrmItem().description.toString()
-        val updatedItemQuantity = lrmItem().quantity
-        val patchRequest = mapOf("name" to updatedItemName, "description" to updatedItemDescription, "quantity" to updatedItemQuantity)
+//        val updatedItemQuantity = lrmItem().quantity
+        val patchRequest = mapOf(
+          "name" to updatedItemName,
+          "description" to updatedItemDescription,
+//          "quantity" to updatedItemQuantity
+        )
         val originalLrmItem = lrmItem()
         val updatedLrmItem = lrmItem().copy()
-        every { mockLrmItemService.findByOwnerAndId(id0, owner) } returns ServiceResponse(originalLrmItem, irrelevantMessage) andThen
+        every { mockLrmItemService.findByOwnerAndId(id0, owner) } returns ServiceResponse(
+          originalLrmItem,
+          irrelevantMessage,
+        ) andThen
           ServiceResponse(updatedLrmItem, irrelevantMessage)
         every { mockLrmItemService.patchName(any()) } returns Unit
         every { mockLrmItemService.patchDescription(any()) } returns Unit
-        every { mockLrmItemService.patchQuantity(any()) } returns Unit
+//        every { mockLrmItemService.patchQuantity(any()) } returns Unit
         val apiServiceResponse = lrmItemApiService.patchByOwnerAndId(id0, owner, patchRequest)
         apiServiceResponse.content shouldBe LrmItemResponse.fromLrmItem(updatedLrmItem)
         apiServiceResponse.message shouldBe "Item '${updatedLrmItem.name}' not updated."
         verify(exactly = 0) { mockLrmItemService.patchName(any()) }
         verify(exactly = 0) { mockLrmItemService.patchDescription(any()) }
-        verify(exactly = 0) { mockLrmItemService.patchQuantity(any()) }
+//        verify(exactly = 0) { mockLrmItemService.patchQuantity(any()) }
         verify(exactly = 2) { mockLrmItemService.findByOwnerAndId(id0, owner) }
       }
 
@@ -206,115 +211,13 @@ class LrmItemApiServiceDefaultTests :
         val itemCount = 999L
         val serviceResponse = ServiceResponse(content = itemCount, message = irrelevantMessage)
         every {
-          mockAssociationService.countByIdAndItemOwnerForItem(itemId = ofType(UUID::class), itemOwner = ofType(String::class))
+          mockLrmListItemService.countByOwnerAndItemId(
+            itemId = ofType(UUID::class),
+            owner = ofType(String::class),
+          )
         } returns serviceResponse
         val apiServiceResponse = lrmItemApiService.countListAssociationsByItemIdAndItemOwner(id0, "test_owner")
         apiServiceResponse.content.value shouldBe itemCount
-        apiServiceResponse.message shouldBe irrelevantMessage
-      }
-
-      it("create list associations (single)") {
-        val serviceResponse = ServiceResponse(
-          AssociationCreated(
-            componentName = lrmItem().name,
-            associatedComponents = listOf(LrmListSuccinct(id = UUID.randomUUID(), "J8hVJW9PxHXWHVtO")),
-          ),
-          message = irrelevantMessage,
-        )
-
-        every {
-          mockAssociationService.create(
-            id = ofType<UUID>(),
-            idCollection = ofType<List<UUID>>(),
-            type = LrmComponentType.Item,
-            componentsOwner = ofType<String>(),
-          )
-        } returns serviceResponse
-
-        val apiServiceResponse = lrmItemApiService.createListAssociations(
-          itemId = UUID.randomUUID(),
-          listIdCollection = setOf(UUID.randomUUID()),
-          owner = "test_owner",
-        )
-
-        apiServiceResponse.content.componentName shouldBe serviceResponse.content.componentName
-        apiServiceResponse.content.associatedComponents shouldBe serviceResponse.content.associatedComponents
-        apiServiceResponse.message shouldBe irrelevantMessage
-      }
-
-      it("create list associations (multiple)") {
-        val serviceResponse = ServiceResponse(
-          AssociationCreated(
-            componentName = lrmItem().name,
-            associatedComponents = listOf(
-              LrmListSuccinct(id = UUID.randomUUID(), "JQq4Uc1IYphEltHB"),
-              LrmListSuccinct(id = UUID.randomUUID(), "J8hVJW9PxHXWHVtO"),
-            ),
-          ),
-          message = irrelevantMessage,
-        )
-
-        every {
-          mockAssociationService.create(
-            id = ofType<UUID>(),
-            idCollection = ofType<List<UUID>>(),
-            type = LrmComponentType.Item,
-            componentsOwner = ofType<String>(),
-          )
-        } returns serviceResponse
-
-        val apiServiceResponse = lrmItemApiService.createListAssociations(
-          itemId = UUID.randomUUID(),
-          listIdCollection = setOf(UUID.randomUUID()),
-          owner = "test_owner",
-        )
-
-        apiServiceResponse.content.componentName shouldBe serviceResponse.content.componentName
-        apiServiceResponse.content.associatedComponents shouldBe serviceResponse.content.associatedComponents
-        apiServiceResponse.message shouldBe irrelevantMessage
-      }
-
-      it("delete list association by item id and list id and item owner") {
-        val itemId = UUID.randomUUID()
-        val listId = UUID.randomUUID()
-        val itemOwner = "59kl3ulHWzunEvyP"
-        val serviceResponse = ServiceResponse(Pair("Item 1", "List A"), message = irrelevantMessage)
-        every { mockAssociationService.deleteByItemIdAndListId(ofType<UUID>(), ofType<UUID>(), ofType<String>()) } returns serviceResponse
-        val apiServiceResponse = lrmItemApiService.deleteListAssociationByItemIdAndListIdAndItemOwner(itemId, listId, itemOwner)
-        apiServiceResponse.content.itemName shouldBe serviceResponse.content.first
-        apiServiceResponse.content.listName shouldBe serviceResponse.content.second
-        apiServiceResponse.message shouldBe irrelevantMessage
-      }
-
-      it("delete list associations by item id and item owner") {
-        val itemId = UUID.randomUUID()
-        val itemOwner = "b4QXzRAxsMHi7oHd"
-        val serviceResponse = ServiceResponse(content = Pair(lrmItem().name, 3), message = irrelevantMessage)
-        every { mockAssociationService.deleteByItemOwnerAndItemId(itemId, itemOwner) } returns serviceResponse
-        val apiServiceResponse = lrmItemApiService.deleteListAssociationsByItemIdAndItemOwner(itemId, itemOwner)
-        apiServiceResponse.content.itemName shouldBe serviceResponse.content.first
-        apiServiceResponse.content.deletedAssociationsCount shouldBe serviceResponse.content.second
-//        apiServiceResponse.message shouldBe "Removed item 'Lorem Item Name' from all associated lists (3)."
-      }
-
-      it("update list association") {
-        val itemId = UUID.randomUUID()
-        val currentListId = UUID.randomUUID()
-        val destinationListId = UUID.randomUUID()
-        val owner = "owner123"
-        val serviceResponse = ServiceResponse(content = Triple("Item 1", "List A", "List B"), message = irrelevantMessage)
-        every {
-          mockAssociationService.updateList(
-            itemId = itemId,
-            currentListId = currentListId,
-            destinationListId = destinationListId,
-            componentsOwner = owner,
-          )
-        } returns serviceResponse
-        val apiServiceResponse = lrmItemApiService.updateListAssociation(itemId, currentListId, destinationListId, owner)
-        apiServiceResponse.content.itemName shouldBe "Item 1"
-        apiServiceResponse.content.currentListName shouldBe "List A"
-        apiServiceResponse.content.newListName shouldBe "List B"
         apiServiceResponse.message shouldBe irrelevantMessage
       }
     }

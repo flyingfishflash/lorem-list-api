@@ -6,7 +6,6 @@ import kotlinx.datetime.Clock.System.now
 import net.flyingfishflash.loremlist.core.exceptions.CoreException
 import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.domain.ServiceResponse
-import net.flyingfishflash.loremlist.domain.association.AssociationService
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListCreate
 import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleted
 import net.flyingfishflash.loremlist.toJsonElement
@@ -14,10 +13,15 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
+import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItemService
 
 @Service
 @Transactional
-class LrmListServiceDefault(private val associationService: AssociationService, private val lrmListRepository: LrmListRepository): LrmListService {
+class LrmListServiceDefault(
+  private val lrmListRepository: LrmListRepository,
+  private val lrmListItemService: LrmListItemService
+): LrmListService {
   private val validator = Validation.buildDefaultValidatorFactory().validator
 
   override fun countByOwner(owner: String): ServiceResponse<Long> {
@@ -62,7 +66,7 @@ class LrmListServiceDefault(private val associationService: AssociationService, 
       val lists = findByOwner(owner).content
       if (lists.isNotEmpty()) {
         lists.filter { it.items.isNotEmpty() }.forEach {
-          associationService.deleteByListOwnerAndListId(listId = it.id, listOwner = owner)
+          lrmListItemService.removeByOwnerAndListId(listId = it.id, owner = owner)
         }
         lrmListRepository.deleteById(ids = lists.map { it.id }.toSet())
       }
@@ -116,6 +120,10 @@ class LrmListServiceDefault(private val associationService: AssociationService, 
     }
   }
 
+  override fun findEligibleItemsByOwner(id: UUID, owner: String): ServiceResponse<List<LrmItem>> {
+    TODO("Not yet implemented")
+  }
+
   private fun createDeleteResponse(list: LrmList): LrmListDeleted {
     return LrmListDeleted(
       listNames = listOf(list.name),
@@ -124,7 +132,7 @@ class LrmListServiceDefault(private val associationService: AssociationService, 
   }
 
   private fun deleteItemAssociations(id: UUID, owner: String) {
-    associationService.deleteByListOwnerAndListId(listId = id, listOwner = owner)
+    lrmListItemService.removeByOwnerAndListId(listId = id, owner = owner)
     val deletedCount = lrmListRepository.deleteByOwnerAndId(id = id, owner = owner)
     if (deletedCount > 1) {
       handleInvalidAffectedRecordCount(deletedCount, id)
@@ -223,7 +231,7 @@ class LrmListServiceDefault(private val associationService: AssociationService, 
   }
 
   private fun validateListEntity(lrmList: LrmList) {
-    val violations = validator.validate(LrmListEntity.fromLrmList(lrmList))
+    val violations = validator.validate(lrmList)
     if (violations.isNotEmpty()) {
       throw ConstraintViolationException(violations)
     }

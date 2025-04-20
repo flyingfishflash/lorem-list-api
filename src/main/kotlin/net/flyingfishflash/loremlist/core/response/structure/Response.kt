@@ -3,7 +3,7 @@ package net.flyingfishflash.loremlist.core.response.structure
 import jakarta.servlet.http.HttpServletRequest
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import net.flyingfishflash.loremlist.core.serialization.UUIDSerializer
+import net.flyingfishflash.loremlist.core.serialization.UuidSerializer
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.server.ServerHttpRequest
@@ -27,7 +27,7 @@ sealed interface Response<T> {
 
 @Serializable
 data class ResponseProblem(
-  @Serializable(with = UUIDSerializer::class) override val id: UUID = UUID.randomUUID(),
+  @Serializable(with = UuidSerializer::class) override val id: UUID = UUID.randomUUID(),
   override val disposition: DispositionOfProblem,
   override val method: String,
   override val instance: String,
@@ -87,7 +87,7 @@ data class ResponseProblem(
 
 @Serializable
 data class ResponseSuccess<T>(
-  @Serializable(with = UUIDSerializer::class) override val id: UUID = UUID.randomUUID(),
+  @Serializable(with = UuidSerializer::class) override val id: UUID = UUID.randomUUID(),
   override val disposition: DispositionOfSuccess,
   override val method: String,
   override val instance: String?,

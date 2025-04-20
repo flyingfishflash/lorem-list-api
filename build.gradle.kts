@@ -80,6 +80,7 @@ dependencies {
   testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
   testImplementation("io.kotest:kotest-assertions-json:$kotestVersion")
   testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+  testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
   testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestExtensionsSpringVersion")
   testImplementation("org.springframework.security:spring-security-test")
   testImplementation("org.springframework.boot:spring-boot-starter-test") {
@@ -110,20 +111,13 @@ sonarqube {
     property(
       "sonar.coverage.exclusions",
       "src/main/kotlin/net/flyingfishflash/loremlist/LoremListApplication.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/**/data/*," +
+        "src/main/kotlin/net/flyingfishflash/loremlist/**/data/**," +
         "src/main/kotlin/net/flyingfishflash/loremlist/*/*/*Configuration.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/core/configuration/**," +
         "src/main/kotlin/net/flyingfishflash/loremlist/core/response/structure/ApiMessage.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/EntityModel.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/*/*Repository.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/association/Association.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/association/data/ItemToListAssociationUpdateRequest.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/LrmItem.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/data/LrmItemRequest.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/data/LrmItemDeleteResponse.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/LrmList.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/data/LrmListRequest.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/data/LrmListSuccinct.kt," +
         "src/main/kotlin/net/flyingfishflash/loremlist/persistence/**,",
     )
   }
@@ -151,9 +145,9 @@ spotless {
         mapOf(
           "indent_size" to 2,
           "ktlint_code_style" to "intellij_idea",
-          "max_line_length" to 140,
+          "max_line_length" to 160,
           "ktlint_standard_function-expression-body" to "disabled",
-          "ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than" to "4",
+          "ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than" to "5",
         ),
       )
     suppressLintsFor {

@@ -4,7 +4,6 @@ create table item (
   id uuid not null,
   name varchar(64) not null,
   description varchar(2048),
-  quantity bigint,
   owner varchar(64) not null,
   created timestamp with time zone not null,
   creator varchar(64) not null,
@@ -26,23 +25,23 @@ create table list (
   primary key (id)
 );
 
-create table lists_items (
-  id uuid not null,
+create table list_item (
   item_id uuid not null,
   list_id uuid not null,
-  unique (item_id, list_id),
-  primary key (id)
+  item_quantity bigint not null,
+  item_is_suppressed boolean not null,
+  primary key (list_id, item_id)
 );
 
 create unique index item_id on item (id);
 create unique index list_id on list (id);
 
 alter table
-  if exists lists_items
+  if exists list_item
 add
   constraint fk_item_id foreign key (item_id) references item;
 
 alter table
-  if exists lists_items
+  if exists list_item
 add
   constraint fk_list_id foreign key (list_id) references list;

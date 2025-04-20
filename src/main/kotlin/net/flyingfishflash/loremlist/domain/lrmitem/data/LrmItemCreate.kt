@@ -13,4 +13,5 @@ data class LrmItemCreate(
   val description: String? = null,
   @field:Min(value = 0, message = "Item quantity must be zero or greater.")
   val quantity: Int = 0,
+  val isSuppressed: Boolean,
 )

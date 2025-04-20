@@ -91,10 +91,7 @@ class CoreExceptionHandler(private val environment: Environment) : ResponseEntit
   }
 
   @ExceptionHandler(ConstraintViolationException::class)
-  fun handleConstraintViolationException(
-    request: HttpServletRequest,
-    exception: ConstraintViolationException,
-  ): ResponseEntity<ResponseProblem> {
+  fun handleConstraintViolationException(request: HttpServletRequest, exception: ConstraintViolationException): ResponseEntity<ResponseProblem> {
     val fields = exception.constraintViolations.mapNotNull { it.propertyPath.toString() }.distinct().sorted()
     val errors = exception.constraintViolations.mapNotNull { it.message }.sorted()
     val responseMessage = "$VALIDATION_FAILURE_MESSAGE ${fields.joinToString()}."

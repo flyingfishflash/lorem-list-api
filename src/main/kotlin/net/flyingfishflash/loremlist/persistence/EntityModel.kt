@@ -1,7 +1,6 @@
 package net.flyingfishflash.loremlist.persistence
 
 import kotlinx.datetime.Instant
-import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
@@ -21,11 +20,10 @@ object LrmListTable : Table("list") {
   override val primaryKey = PrimaryKey(id, name = "list_pk")
 }
 
-object LrmListItemTable : Table("item") {
+object LrmItemTable : Table("item") {
   val id: Column<UUID> = uuid(name = "id")
   val name: Column<String> = varchar("name", length = 64)
   val description: Column<String?> = varchar("description", length = 2048).nullable()
-  val quantity: Column<Int> = integer("quantity")
   val owner: Column<String> = varchar(name = "owner", length = 64)
   val created: Column<Instant> = timestamp(name = "created")
   val creator: Column<String> = varchar(name = "creator", length = 64)
@@ -34,10 +32,10 @@ object LrmListItemTable : Table("item") {
   override val primaryKey = PrimaryKey(id, name = "item_pk")
 }
 
-object LrmListsItemsTable : UUIDTable("lists_items", "id") {
+object LrmListItemsTable : Table("list_item") {
   val list = reference(name = "list_id", refColumn = LrmListTable.id, onDelete = ReferenceOption.CASCADE)
-  val item = reference(name = "item_id", refColumn = LrmListItemTable.id, onDelete = ReferenceOption.CASCADE)
-  init {
-    uniqueIndex("list_item_index", list, item)
-  }
+  val item = reference(name = "item_id", refColumn = LrmItemTable.id, onDelete = ReferenceOption.CASCADE)
+  val itemQuantity: Column<Int> = integer("item_quantity")
+  val itemIsSuppressed: Column<Boolean> = bool(name = "item_is_suppressed")
+  override val primaryKey = PrimaryKey(list, item, name = "list_items_pk")
 }
