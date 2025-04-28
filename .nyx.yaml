@@ -31,33 +31,33 @@ git:
       authenticationMethod: USER_PASSWORD
       user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_LAN{{/environmentVariable}}"
       password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_LAN{{/environmentVariable}}"
-    gitlab:
-      authenticationMethod: USER_PASSWORD
-      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITLAB{{/environmentVariable}}"
-      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITLAB{{/environmentVariable}}"
     github:
       authenticationMethod: USER_PASSWORD
       user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITHUB{{/environmentVariable}}"
       password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITHUB{{/environmentVariable}}"
-    codeberg:
+    gitlab:
       authenticationMethod: USER_PASSWORD
-      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
-      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITLAB{{/environmentVariable}}"
+      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITLAB{{/environmentVariable}}"
+#    codeberg:
+#      authenticationMethod: USER_PASSWORD
+#      user: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+#      password: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
 releaseTypes:
   enabled:
     - mainline
     - release
     - internal
   publicationServices:
-    # - gitlab
-    - github
     - lan
-    - codeberg
+    - github
+    - gitlab
+#    - codeberg
   remoteRepositories:
-    # - gitlab
-    - github
     - lan
-    - codeberg
+    - github
+    - gitlab
+#    - codeberg
   items:
     mainline:
       collapseVersions: false
@@ -94,13 +94,6 @@ releaseTypes:
           qualifier: "{{#lower}}{{branch}}{{/lower}}"
           value: "{{#sanitize}}{{#environmentVariable}}CI_PIPELINE_NUMBER{{/environmentVariable}}{{/sanitize}}"
 services:
-  codeberg:
-    type: "GITHUB"
-    options:
-      AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
-      BASE_URI: "https://codeberg.org/api/v1"
-      REPOSITORY_NAME: "lorem-list-api"
-      REPOSITORY_OWNER: "lorem-list"
   lan:
     type: "GITHUB"
     options:
@@ -120,3 +113,10 @@ services:
       AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_GITLAB{{/environmentVariable}}"
       REPOSITORY_NAME: "lorem-list-api"
       REPOSITORY_OWNER: "flyingfishflash"
+#  codeberg:
+#    type: "GITHUB"
+#    options:
+#      AUTHENTICATION_TOKEN: "{{#environmentVariable}}NYX_FLYINGFISHFLASH_TOKEN_CODEBERG{{/environmentVariable}}"
+#      BASE_URI: "https://codeberg.org/api/v1"
+#      REPOSITORY_NAME: "lorem-list-api"
+#      REPOSITORY_OWNER: "lorem-list"
