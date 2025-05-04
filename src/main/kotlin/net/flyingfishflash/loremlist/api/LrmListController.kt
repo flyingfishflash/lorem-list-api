@@ -15,6 +15,7 @@ import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
 import net.flyingfishflash.loremlist.api.data.request.LrmListCreateRequest
 import net.flyingfishflash.loremlist.api.data.request.LrmListItemAddRequest
 import net.flyingfishflash.loremlist.api.data.response.AssociationDeletedResponse
+import net.flyingfishflash.loremlist.api.data.response.LrmItemResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListDeletedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListItemAddedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListItemResponse
@@ -55,7 +56,7 @@ import java.util.UUID
 )
 @RestController
 @RequestMapping("/lists")
-class LrmListController(private val lrmListApiService: LrmListApiService, val json: Json) {
+class LrmListController(private val lrmListApiService: LrmListApiService, private val lrmItemApiService: LrmItemApiService, val json: Json) {
   private val logger = KotlinLogging.logger {}
 
   @GetMapping("/count")
@@ -198,6 +199,20 @@ class LrmListController(private val lrmListApiService: LrmListApiService, val js
     val apiServiceResponse = lrmListApiService.patchByOwnerAndId(id = listId, owner = principal.subject, patchRequest)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = if (apiServiceResponse.message.contains("not updated")) HttpStatus.NO_CONTENT else HttpStatus.OK
+    logger.info { json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
+  @Operation(summary = "Retrieve items eligible to be added to a list.")
+  @GetMapping("/{list-id}/items/eligible")
+  fun findByPrincipalAndHavingNoListAssociations(
+    @PathVariable("list-id") @ValidUuid listId: UUID,
+    request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
+  ): ResponseEntity<ResponseSuccess<List<LrmItemResponse>>> {
+    val apiServiceResponse = lrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = principal.subject, listId = listId)
+    val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
+    val responseStatus = HttpStatus.OK
     logger.info { json.encodeToString(response) }
     return ResponseEntity(response, responseStatus)
   }

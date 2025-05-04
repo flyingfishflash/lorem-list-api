@@ -15,6 +15,7 @@ interface LrmItemApiService {
   fun findByOwner(owner: String): ApiServiceResponse<List<LrmItemResponse>>
   fun findByOwnerAndId(id: UUID, owner: String): ApiServiceResponse<LrmItemResponse>
   fun findByOwnerAndHavingNoListAssociations(owner: String): ApiServiceResponse<List<LrmItemResponse>>
+  fun findByOwnerAndHavingNoListAssociations(owner: String, listId: UUID): ApiServiceResponse<List<LrmItemResponse>>
   fun patchByOwnerAndId(id: UUID, owner: String, patchRequest: Map<String, Any>): ApiServiceResponse<LrmItemResponse>
 
   // list item context scoped by owner

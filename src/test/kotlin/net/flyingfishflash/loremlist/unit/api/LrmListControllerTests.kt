@@ -6,9 +6,11 @@ import io.kotest.extensions.spring.SpringExtension
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.datetime.Clock.System.now
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import net.flyingfishflash.loremlist.api.LrmItemApiService
 import net.flyingfishflash.loremlist.api.LrmListApiService
 import net.flyingfishflash.loremlist.api.LrmListController
 import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
@@ -17,6 +19,7 @@ import net.flyingfishflash.loremlist.api.data.request.LrmListItemAddRequest
 import net.flyingfishflash.loremlist.api.data.response.ApiServiceResponse
 import net.flyingfishflash.loremlist.api.data.response.AssociationDeletedResponse
 import net.flyingfishflash.loremlist.api.data.response.AssociationsDeletedResponse
+import net.flyingfishflash.loremlist.api.data.response.LrmItemResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListDeletedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListItemAddedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListItemMovedResponse
@@ -45,6 +48,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActions
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -63,10 +67,14 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
   @MockkBean
   lateinit var mockLrmListApiService: LrmListApiService
 
+  @MockkBean
+  lateinit var mockLrmItemApiService: LrmItemApiService
+
   init {
     val now = now()
     val id = (0..3).map { UUID.fromString("00000000-0000-4000-a000-00000000000$it") }
     val apiResponseMessage = "ksADs8y96KRa1Zo4ipMdr5t8faudmFj4c564S02MjsNG6TXEO7yctC08Bb53bCB7"
+    val lrmItemCreateRequest = LrmItemCreateRequest(name = "Lorem Item Name", description = "Lorem Item Description", isSuppressed = false)
 
     fun createLrmList(id: UUID, nameSuffix: String = "") = LrmList(
       id = id,
@@ -102,6 +110,18 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       creator = "Lorem Ipsum Created By",
       updated = now,
       updater = "Lorem Ipsum Updated By",
+    )
+
+    fun lrmItem(): LrmItem = LrmItem(
+      id = id[0],
+      name = lrmItemCreateRequest.name,
+      description = lrmItemCreateRequest.description,
+      owner = "Lorem Ipsum Owner",
+      created = now,
+      creator = "Lorem Ipsum Created By",
+      updated = now,
+      updater = "Lorem Ipsum Updated By",
+
     )
 
     fun performRequest(method: HttpMethod, url: String, content: String? = null): ResultActions {
@@ -964,6 +984,39 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.size").value(1),
             jsonPath("$.content.status").value(HttpStatus.NOT_FOUND.value()),
           )
+        }
+      }
+    }
+
+    describe("/lists/{list-id}/items/eligible") {
+      describe("get") {
+        it("items eligible for list are returned") {
+          val listId = UUID.fromString("00000000-0000-4000-a000-000000000010")
+          val serviceResponse = listOf(LrmItemResponse.fromLrmItem(lrmItem()))
+          val mockApiServiceResponse = ApiServiceResponse(serviceResponse, "message is irrelevant")
+          every {
+            mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class), listId = listId)
+          } returns mockApiServiceResponse
+          val instance = "/lists/$listId/items/eligible"
+          mockMvc.get(instance) {
+            with(jwt())
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+            jsonPath("$.message") { value("message is irrelevant") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(serviceResponse.size) }
+            jsonPath("$.content") { exists() }
+            jsonPath("$.content") { isArray() }
+            jsonPath("$.content.[0].name") { value(serviceResponse[0].name) }
+            jsonPath("$.content.[0].description") { value(serviceResponse[0].description) }
+          }
+          verify(exactly = 1) {
+            mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class), listId = listId)
+          }
         }
       }
     }
