@@ -452,5 +452,38 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         }
       }
     }
+
+    describe("/items/eligible-for-list/{list-id}") {
+      describe("get") {
+        it("items eligible for list are returned") {
+          val listId = UUID.fromString("00000000-0000-4000-a000-000000000010")
+          val serviceResponse = listOf(LrmItemResponse.fromLrmItem(lrmItem()))
+          val mockApiServiceResponse = ApiServiceResponse(serviceResponse, "message is irrelevant")
+          every {
+            mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class), listId = listId)
+          } returns mockApiServiceResponse
+          val instance = "/items/eligible-for-list/$listId"
+          mockMvc.get(instance) {
+            with(jwt())
+            contentType = MediaType.APPLICATION_JSON
+          }.andExpect {
+            status { isOk() }
+            content { contentType(MediaType.APPLICATION_JSON) }
+            jsonPath("$.disposition") { value(DispositionOfSuccess.SUCCESS.nameAsLowercase()) }
+            jsonPath("$.method") { value(HttpMethod.GET.name().lowercase()) }
+            jsonPath("$.message") { value("message is irrelevant") }
+            jsonPath("$.instance") { value(instance) }
+            jsonPath("$.size") { value(serviceResponse.size) }
+            jsonPath("$.content") { exists() }
+            jsonPath("$.content") { isArray() }
+            jsonPath("$.content.[0].name") { value(serviceResponse[0].name) }
+            jsonPath("$.content.[0].description") { value(serviceResponse[0].description) }
+          }
+          verify(exactly = 1) {
+            mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class), listId = listId)
+          }
+        }
+      }
+    }
   }
 }

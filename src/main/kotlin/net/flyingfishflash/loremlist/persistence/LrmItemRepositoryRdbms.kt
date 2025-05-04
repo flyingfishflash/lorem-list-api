@@ -64,6 +64,15 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
     return result
   }
 
+  override fun findByOwnerAndHavingNoListAssociations(owner: String, listId: UUID): List<LrmItem> {
+    val result = (repositoryTable leftJoin LrmListItemsTable)
+      .selectAll()
+      .where { repositoryTable.owner eq owner }
+      .andWhere { LrmListItemsTable.list neq listId }
+      .map { it.toLrmItem() }
+    return result
+  }
+
   override fun findIdsByOwnerAndIds(itemIdCollection: List<UUID>, owner: String): List<UUID> {
     return repositoryTable.select(repositoryTable.id)
       .where { repositoryTable.id inList itemIdCollection }
@@ -147,7 +156,6 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
       id = this[repositoryTable.id],
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
-//      quantity = this[repositoryTable.quantity],
       owner = this[repositoryTable.owner],
       created = this[repositoryTable.created],
       creator = this[repositoryTable.creator],

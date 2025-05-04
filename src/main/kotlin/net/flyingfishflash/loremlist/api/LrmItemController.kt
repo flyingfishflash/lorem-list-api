@@ -150,6 +150,20 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     return ResponseEntity(response, responseStatus)
   }
 
+  @Operation(summary = "Retrieve items eligible to be added to a list.")
+  @GetMapping("/eligible-for-list/{list-id}")
+  fun findByPrincipalAndHavingNoListAssociations(
+    @PathVariable("list-id") @ValidUuid listId: UUID,
+    request: HttpServletRequest,
+    @AuthenticationPrincipal principal: Jwt,
+  ): ResponseEntity<ResponseSuccess<List<LrmItemResponse>>> {
+    val apiServiceResponse = lrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = principal.subject, listId = listId)
+    val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
+    val responseStatus = HttpStatus.OK
+    logger.info { json.encodeToString(response) }
+    return ResponseEntity(response, responseStatus)
+  }
+
   @Operation(summary = "Update an item.")
   @ApiResponses(
     value = [

@@ -10,6 +10,7 @@ interface LrmItemRepository {
   fun findByOwner(owner: String): List<LrmItem>
   fun findByOwnerAndIdOrNull(id: UUID, owner: String): LrmItem?
   fun findByOwnerAndHavingNoListAssociations(owner: String): List<LrmItem>
+  fun findByOwnerAndHavingNoListAssociations(owner: String, listId: UUID): List<LrmItem>
   fun findIdsByOwnerAndIds(itemIdCollection: List<UUID>, owner: String): List<UUID>
   fun notFoundByOwnerAndId(itemIdCollection: List<UUID>, owner: String): Set<UUID>
   fun insert(lrmItem: LrmItem): UUID
