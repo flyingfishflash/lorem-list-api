@@ -6,6 +6,7 @@ import net.flyingfishflash.loremlist.core.exceptions.CoreException
 import net.flyingfishflash.loremlist.domain.ServiceResponse
 import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemDeleted
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
 import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItemService
 import net.flyingfishflash.loremlist.toJsonElement
 import org.springframework.http.HttpStatus
@@ -15,7 +16,11 @@ import java.util.UUID
 
 @Service
 @Transactional
-class LrmItemServiceDefault(private val lrmItemRepository: LrmItemRepository, private val lrmListItemService: LrmListItemService) : LrmItemService {
+class LrmItemServiceDefault(
+  private val lrmItemRepository: LrmItemRepository,
+  private val lrmListService: LrmListService,
+  private val lrmListItemService: LrmListItemService,
+) : LrmItemService {
   private val validator = Validation.buildDefaultValidatorFactory().validator
 
   override fun countByOwner(owner: String): ServiceResponse<Long> {
@@ -140,6 +145,25 @@ class LrmItemServiceDefault(private val lrmItemRepository: LrmItemRepository, pr
       return@runCatching ServiceResponse(content = repositoryResponse, message = "Retrieved ${repositoryResponse.size} items that are not a part of a list.")
     }.getOrElse { cause ->
       throw DomainException(cause = cause, message = exceptionMessage)
+    }
+  }
+
+  override fun findByOwnerAndHavingNoListAssociations(owner: String, listId: UUID): ServiceResponse<List<LrmItem>> {
+    var exceptionMessage = "Items eligible to be added to list '$listId' could not be retrieved"
+    var httpStatus: HttpStatus? = null
+    return runCatching {
+      val lrmList = lrmListService.findByOwnerAndId(owner = owner, id = listId).content
+      val repositoryResponse = lrmItemRepository.findByOwnerAndHavingNoListAssociations(owner = owner, listId = listId)
+      return@runCatching ServiceResponse(
+        content = repositoryResponse,
+        message = "Retrieved ${repositoryResponse.size} items eligible to be added to list '${lrmList.name}'.",
+      )
+    }.getOrElse { cause ->
+      if (cause is DomainException) {
+        httpStatus = cause.httpStatus
+      }
+      exceptionMessage = "$exceptionMessage: ${cause.message}"
+      throw DomainException(cause = cause, message = exceptionMessage, httpStatus = httpStatus)
     }
   }
 

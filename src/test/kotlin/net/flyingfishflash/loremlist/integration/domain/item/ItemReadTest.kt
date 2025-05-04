@@ -2,6 +2,7 @@ package net.flyingfishflash.loremlist.integration.domain.item
 
 import io.kotest.datatest.withData
 import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
+import net.flyingfishflash.loremlist.api.data.request.LrmListCreateRequest
 import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
@@ -23,31 +24,34 @@ import java.util.UUID
 class ItemReadTest(mockMvc: MockMvc) :
   DomainFunctionTest(mockMvc = mockMvc, body = {
     data class ListItemRequestRecord(val listId: UUID, val itemId: UUID?, val listItemCreateRequest: LrmItemCreateRequest)
-    var requestsAlpha: List<ListItemRequestRecord> = emptyList()
-    var requestsBeta: List<ListItemRequestRecord> = emptyList()
+    data class ListRequestRecord(val listId: UUID, val listCreateRequest: LrmListCreateRequest)
+
+    var requestsAlpha = emptyList<ListItemRequestRecord>()
+    var requestsBeta = emptyList<ListItemRequestRecord>()
+    var listWithItems: ListRequestRecord? = null
+    var listWithNoItems: ListRequestRecord? = null
 
     beforeSpec {
       purgeDomain()
-      val listWithItems = createAndVerifyList(listRequest = listCreateRequests[0])
-      val listWithNoItems = createAndVerifyList(listRequest = listCreateRequests[1])
+      listWithItems = ListRequestRecord(createAndVerifyList(listCreateRequests[0]), listCreateRequests[0])
+      listWithNoItems = ListRequestRecord(createAndVerifyList(listCreateRequests[1]), listCreateRequests[1])
 
       requestsAlpha = itemCreateRequestsAlpha.map {
-        ListItemRequestRecord(listId = listWithItems, itemId = createAndVerifyListItem(listWithItems, it), listItemCreateRequest = it)
+        ListItemRequestRecord(listWithItems.listId, createAndVerifyListItem(listWithItems.listId, it), it)
       }
-
       requestsBeta = itemCreateRequestsBeta.map {
-        ListItemRequestRecord(listId = listWithNoItems, itemId = createAndVerifyListItem(listWithNoItems, it), listItemCreateRequest = it)
+        ListItemRequestRecord(listWithNoItems.listId, createAndVerifyListItem(listWithNoItems.listId, it), it)
       }
 
       performRequestAndVerifyResponse(
         method = HttpMethod.DELETE,
-        instance = "/lists/$listWithNoItems/items",
+        instance = "/lists/${listWithNoItems.listId}/items",
         expectedDisposition = DispositionOfSuccess.SUCCESS,
       )
 
       verifyContentValue(url = "/lists/count", expectedValue = 2)
-      verifyContentValue(url = "/lists/$listWithItems/items/count", expectedValue = requestsAlpha.size)
-      verifyContentValue(url = "/lists/$listWithNoItems/items/count", expectedValue = 0)
+      verifyContentValue(url = "/lists/${listWithItems.listId}/items/count", expectedValue = requestsAlpha.size)
+      verifyContentValue(url = "/lists/${listWithNoItems.listId}/items/count", expectedValue = 0)
       verifyContentSize(url = "/items/with-no-lists", expectedSize = requestsBeta.size)
     }
 

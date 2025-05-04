@@ -2,14 +2,17 @@ package net.flyingfishflash.loremlist.integration.domain.listitem
 
 import io.kotest.datatest.withData
 import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
+import net.flyingfishflash.loremlist.api.data.request.LrmListCreateRequest
 import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
+import net.flyingfishflash.loremlist.domain.exceptions.DomainException
 import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
 import net.flyingfishflash.loremlist.domain.lrmlistitem.ListItemNotFoundException
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest.TestData.invalidUuids
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest.TestData.itemCreateRequestsAlpha
+import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest.TestData.itemCreateRequestsBeta
 import net.flyingfishflash.loremlist.integration.domain.DomainFunctionTest.TestData.listCreateRequests
 import org.springframework.http.HttpMethod
 import org.springframework.test.web.servlet.MockMvc
@@ -24,14 +27,33 @@ class ListItemReadTest(mockMvc: MockMvc) :
     data class ListItemRequestRecord(val listId: UUID, val itemId: UUID?, val listItemCreateRequest: LrmItemCreateRequest)
     var requests: List<ListItemRequestRecord> = emptyList()
 
+    data class ListRequestRecord(val listId: UUID, val listCreateRequest: LrmListCreateRequest)
+    var requestsBeta = emptyList<ListItemRequestRecord>()
+    var listWithItems: ListRequestRecord? = null
+    var listWithNoItems: ListRequestRecord? = null
+
     beforeSpec {
       purgeDomain()
-      val listId = createAndVerifyList(listRequest = listCreateRequests[0])
+      listWithItems = ListRequestRecord(createAndVerifyList(listCreateRequests[0]), listCreateRequests[0])
       requests = itemCreateRequestsAlpha.map {
-        ListItemRequestRecord(listId = listId, itemId = createAndVerifyListItem(listId, it), listItemCreateRequest = it)
+        ListItemRequestRecord(listId = listWithItems.listId, itemId = createAndVerifyListItem(listWithItems.listId, it), listItemCreateRequest = it)
       }
-      verifyContentValue(url = "/lists/count", expectedValue = 1)
-      verifyContentValue(url = "/lists/$listId/items/count", expectedValue = requests.size)
+
+      listWithNoItems = ListRequestRecord(createAndVerifyList(listCreateRequests[1]), listCreateRequests[1])
+      requestsBeta = itemCreateRequestsBeta.map {
+        ListItemRequestRecord(listWithNoItems.listId, createAndVerifyListItem(listWithNoItems.listId, it), it)
+      }
+
+      performRequestAndVerifyResponse(
+        method = HttpMethod.DELETE,
+        instance = "/lists/${listWithNoItems.listId}/items",
+        expectedDisposition = DispositionOfSuccess.SUCCESS,
+      )
+
+      verifyContentValue(url = "/lists/count", expectedValue = 2)
+      verifyContentValue(url = "/lists/${listWithItems.listId}/items/count", expectedValue = requests.size)
+      verifyContentValue(url = "/lists/${listWithNoItems.listId}/items/count", expectedValue = 0)
+      verifyContentSize(url = "/items/with-no-lists", expectedSize = requestsBeta.size)
     }
 
     describe("list item retrieval") {
@@ -78,7 +100,6 @@ class ListItemReadTest(mockMvc: MockMvc) :
       }
 
       context("retrieving a list item: /lists/{list-id}/items/{item-id}") {
-
         it("fails when invalid uuid is provided for list id and item id") {
           performRequestAndVerifyResponse(
             method = HttpMethod.GET,
@@ -133,6 +154,48 @@ class ListItemReadTest(mockMvc: MockMvc) :
             statusMatcher = status().isOk,
             additionalMatchers = arrayOf(
               jsonPath("$.content.lists.length()").value(1),
+            ),
+          )
+        }
+      }
+
+      context("retrieving items eligible for addition to a list: /lists/{list-id}/items/eligible") {
+        withData(
+          nameFn = { (listName, listId, expectedSize) -> "succeeds for '$listName' with $expectedSize items" },
+          listOf(
+            // eligible items will not include requestsAlpha because those items are already in this list
+            Triple(listWithItems?.listCreateRequest?.name, listWithItems?.listId, requestsBeta.size),
+            // eligible items will include all items since none are in this list
+            Triple(listWithNoItems?.listCreateRequest?.name, listWithNoItems?.listId, requests.size + requestsBeta.size),
+          ),
+        ) { (desc, listId, expectedSize) ->
+          verifyContentSize(url = "/lists/$listId/items/eligible", expectedSize = expectedSize)
+        }
+
+        it("fails when list is not found") {
+          val randomId = UUID.randomUUID()
+          performRequestAndVerifyResponse(
+            method = HttpMethod.GET,
+            instance = "/lists/$randomId/items/eligible",
+            expectedDisposition = DispositionOfProblem.FAILURE,
+            statusMatcher = status().isNotFound(),
+            additionalMatchers = arrayOf(
+              jsonPath("$.content.title").value(DomainException::class.java.simpleName),
+              jsonPath("$.content.status").value("404"),
+              jsonPath("$.content.cause.name").value(ListNotFoundException::class.simpleName),
+            ),
+          )
+        }
+
+        it("fails when invalid uuid is provided for list id") {
+          performRequestAndVerifyResponse(
+            method = HttpMethod.GET,
+            instance = "/lists/${invalidUuids[0]}/items/eligible",
+            expectedDisposition = DispositionOfProblem.FAILURE,
+            statusMatcher = status().isBadRequest(),
+            additionalMatchers = arrayOf(
+              jsonPath("$.message").value("$VALIDATION_FAILURE_MESSAGE listId."),
+              jsonPath("$.content.validationErrors.length()").value(1),
             ),
           )
         }

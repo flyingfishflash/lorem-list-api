@@ -20,6 +20,7 @@ import net.flyingfishflash.loremlist.api.data.response.LrmListDeletedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListResponse
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.domain.ServiceResponse
+import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemServiceDefault
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemSuccinct
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemCreate
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
@@ -34,6 +35,7 @@ import java.util.UUID
 class LrmListApiServiceDefaultTests :
   DescribeSpec({
     val mockLrmListService = mockk<LrmListServiceDefault>()
+    val mockLrmItemService = mockk<LrmItemServiceDefault>()
     val mockLrmListItemService = mockk<LrmListItemService>()
     val mockLrmList = mockk<LrmList>(relaxed = true)
     val mockLrmListItem = mockk<LrmListItem>(relaxed = true)

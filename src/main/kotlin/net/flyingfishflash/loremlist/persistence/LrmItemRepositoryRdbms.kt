@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.orWhere
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.UpdateStatement
 import org.jetbrains.exposed.sql.update
@@ -60,6 +61,15 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
       .selectAll()
       .where { repositoryTable.owner eq owner }
       .andWhere { LrmListItemsTable.item.isNull() }
+      .map { it.toLrmItem() }
+    return result
+  }
+
+  override fun findByOwnerAndHavingNoListAssociations(owner: String, listId: UUID): List<LrmItem> {
+    val result = (repositoryTable leftJoin LrmListItemsTable)
+      .selectAll()
+      .where { repositoryTable.owner eq owner }
+      .andWhere { LrmListItemsTable.list neq listId }.orWhere { LrmListItemsTable.list.isNull() }
       .map { it.toLrmItem() }
     return result
   }
@@ -147,7 +157,6 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
       id = this[repositoryTable.id],
       name = this[repositoryTable.name],
       description = this[repositoryTable.description],
-//      quantity = this[repositoryTable.quantity],
       owner = this[repositoryTable.owner],
       created = this[repositoryTable.created],
       creator = this[repositoryTable.creator],

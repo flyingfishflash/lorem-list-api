@@ -21,6 +21,9 @@ import net.flyingfishflash.loremlist.domain.lrmitem.LrmItem
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemRepository
 import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemServiceDefault
 import net.flyingfishflash.loremlist.domain.lrmitem.data.LrmItemCreate
+import net.flyingfishflash.loremlist.domain.lrmlist.ListNotFoundException
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
+import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListSuccinct
 import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItemService
 import org.jetbrains.exposed.exceptions.ExposedSQLException
@@ -34,7 +37,8 @@ class LrmItemServiceTests :
   DescribeSpec({
     val mockLrmItemRepository = mockk<LrmItemRepository>()
     val mockLrmListItemService = mockk<LrmListItemService>()
-    val lrmItemService = LrmItemServiceDefault(mockLrmItemRepository, mockLrmListItemService)
+    val mockLrmListService = mockk<LrmListService>()
+    val lrmItemService = LrmItemServiceDefault(mockLrmItemRepository, mockLrmListService, mockLrmListItemService)
 
     val now = now()
     val id0 = UUID.fromString("00000000-0000-4000-a000-000000000000")
@@ -46,6 +50,18 @@ class LrmItemServiceTests :
       id = id0,
       name = lrmItemCreate.name,
       description = lrmItemCreate.description,
+      owner = "Lorem Ipsum Owner",
+      created = now,
+      creator = "Lorem Ipsum Created By",
+      updated = now,
+      updater = "Lorem Ipsum Updated By",
+    )
+
+    fun lrmList(): LrmList = LrmList(
+      id = id1,
+      name = "Lorem List Name",
+      description = "Lorem List Description",
+      public = false,
       owner = "Lorem Ipsum Owner",
       created = now,
       creator = "Lorem Ipsum Created By",
@@ -266,9 +282,45 @@ class LrmItemServiceTests :
 
       it("item repository throws exception") {
         every { mockLrmItemRepository.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class)) } throws Exception("Lorem Ipsum")
-        val exception = shouldThrow<DomainException> { lrmItemService.findByOwnerAndHavingNoListAssociations(owner = "lorem upsum") }
+        val exception = shouldThrow<DomainException> { lrmItemService.findByOwnerAndHavingNoListAssociations(owner = "lorem ipsum") }
         exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
         exception.message.shouldContainIgnoringCase("could not be retrieved")
+      }
+    }
+
+    describe("findByOwnerAndHavingNoListAssociations()") {
+      it("eligible items are returned") {
+        every { mockLrmListService.findByOwnerAndId(owner = ofType(String::class), id = id1) } returns
+          ServiceResponse(content = lrmList(), message = "Lorem Ipsum")
+        every { mockLrmItemRepository.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class), listId = id1) } returns listOf(lrmItem())
+        val serviceResponse = lrmItemService.findByOwnerAndHavingNoListAssociations(owner = "lorem ipsum", listId = id1)
+        serviceResponse.content shouldBe listOf(lrmItem())
+        serviceResponse.message shouldContain "Retrieved 1 items eligible to be added to list"
+        verify { mockLrmItemRepository.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class), listId = id1) }
+      }
+
+      it("list service throws ListNotFound exception") {
+        every { mockLrmListService.findByOwnerAndId(owner = ofType(String::class), id = id1) } throws ListNotFoundException()
+        val exception = shouldThrow<DomainException> { lrmItemService.findByOwnerAndHavingNoListAssociations(owner = "lorem ipsum", listId = id1) }
+        exception.httpStatus.shouldBe(HttpStatus.NOT_FOUND)
+        exception.message.shouldContainIgnoringCase("could not be retrieved")
+        exception.message.shouldContainIgnoringCase("list could not be found")
+      }
+
+      it("list service throws exception") {
+        every { mockLrmListService.findByOwnerAndId(owner = ofType(String::class), id = id1) } throws Exception("Lorem Ipsum")
+        val exception = shouldThrow<DomainException> { lrmItemService.findByOwnerAndHavingNoListAssociations(owner = "lorem ipsum", listId = id1) }
+        exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        exception.message.shouldContainIgnoringCase("could not be retrieved")
+        exception.message.shouldContainIgnoringCase("lorem ipsum")
+      }
+
+      it("item repository throws exception") {
+        every { mockLrmItemRepository.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class), listId = id0) } throws Exception("Lorem Ipsum")
+        val exception = shouldThrow<DomainException> { lrmItemService.findByOwnerAndHavingNoListAssociations(owner = "lorem ipsum", listId = id0) }
+        exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
+        exception.message.shouldContainIgnoringCase("could not be retrieved")
+        exception.message.shouldContainIgnoringCase("lorem ipsum")
       }
     }
 

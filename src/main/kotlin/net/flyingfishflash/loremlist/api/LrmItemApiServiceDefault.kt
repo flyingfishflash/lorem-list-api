@@ -62,6 +62,14 @@ class LrmItemApiServiceDefault(private val lrmItemService: LrmItemService, priva
     )
   }
 
+  override fun findByOwnerAndHavingNoListAssociations(owner: String, listId: UUID): ApiServiceResponse<List<LrmItemResponse>> {
+    val serviceResponse = lrmItemService.findByOwnerAndHavingNoListAssociations(owner = owner, listId = listId)
+    return ApiServiceResponse(
+      content = serviceResponse.content.map { LrmItemResponse.fromLrmItem(it) },
+      message = serviceResponse.message,
+    )
+  }
+
   override fun patchByOwnerAndId(id: UUID, owner: String, patchRequest: Map<String, Any>): ApiServiceResponse<LrmItemResponse> {
     val lrmItem = lrmItemService.findByOwnerAndId(id = id, owner = owner).content
     val patchedFields = mutableSetOf<String>()

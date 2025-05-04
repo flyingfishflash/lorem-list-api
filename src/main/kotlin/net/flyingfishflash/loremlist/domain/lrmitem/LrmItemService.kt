@@ -11,6 +11,7 @@ interface LrmItemService {
   fun findByOwner(owner: String): ServiceResponse<List<LrmItem>>
   fun findByOwnerAndId(id: UUID, owner: String): ServiceResponse<LrmItem>
   fun findByOwnerAndHavingNoListAssociations(owner: String): ServiceResponse<List<LrmItem>>
+  fun findByOwnerAndHavingNoListAssociations(owner: String, listId: UUID): ServiceResponse<List<LrmItem>>
   fun patchName(patchedLrmItem: LrmItem)
   fun patchDescription(patchedLrmItem: LrmItem)
 }
