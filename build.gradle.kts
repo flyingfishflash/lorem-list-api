@@ -38,7 +38,7 @@ val kotlinLoggingVersion = "7.0.7"
 val kotlinxDateTimeVersion = "0.6.2"
 val kotlinxSerializationJson = "1.8.1"
 val postgresqlVersion = "42.7.5"
-val springDocOpenApiStarterWebmvcUiVersion = "2.8.6"
+val springDocOpenApiStarterWebmvcUiVersion = "2.8.8"
 val springmockkVersion = "4.0.2"
 
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
