@@ -10,7 +10,6 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
@@ -52,15 +51,15 @@ class WebSecurityConfiguration {
       }
       sessionManagement { sessionCreationPolicy = SessionCreationPolicy.STATELESS }
       authorizeHttpRequests {
-        authorize(AntPathRequestMatcher("favicon.ico", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/v3/api-docs/**", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/swagger-resources/**", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/swagger-ui/**", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/webjars/**", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/management/health", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/management/info", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/public/lists", HttpMethod.GET.name()), permitAll)
-        authorize(AntPathRequestMatcher("/public/lists/count", HttpMethod.GET.name()), permitAll)
+        authorize(HttpMethod.GET, "favicon.ico", permitAll)
+        authorize(HttpMethod.GET, "/v3/api-docs/**", permitAll)
+        authorize(HttpMethod.GET, "/swagger-resources/**", permitAll)
+        authorize(HttpMethod.GET, "/swagger-ui/**", permitAll)
+        authorize(HttpMethod.GET, "/webjars/**", permitAll)
+        authorize(HttpMethod.GET, "/management/health", permitAll)
+        authorize(HttpMethod.GET, "/management/info", permitAll)
+        authorize(HttpMethod.GET, "/public/lists", permitAll)
+        authorize(HttpMethod.GET, "/public/lists/count", permitAll)
         authorize(anyRequest, authenticated)
 //        hasAuthority("SCOPE_administrator")
       }
