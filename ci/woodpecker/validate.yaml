@@ -1,5 +1,5 @@
 variables:
-  - &validation_image registry.flyingfishflash.net/docker.io/alpine/httpie
+  - &validation_image harbor.flyingfishflash.net/docker.io/alpine/httpie
   - TERM: &validation_term xterm-256color
   - OPTIONS: &validation_options --verify=no --style=gruvbox-dark --pretty=all --print=mhb
   - &validation_commands

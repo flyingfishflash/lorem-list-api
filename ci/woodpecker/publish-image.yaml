@@ -31,7 +31,7 @@ clone:
 
 steps:
   - name: generate image tags
-    image: registry.flyingfishflash.net/flyingfishflash/nyx:3.1.0
+    image: harbor.flyingfishflash.net/flyingfishflash/nyx:3.1.3
     commands:
       - nyx infer --fatal
       - nyx infer --fatal | grep 'current version' | awk '{ print $4 > ".version.tmp" }'

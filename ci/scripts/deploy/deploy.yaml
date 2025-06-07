@@ -269,7 +269,7 @@
 
     - name: Pull image lorem-list-api:{{ tag }}
       containers.podman.podman_image:
-        name: registry.flyingfishflash.net/lorem-list/lorem-list-api
+        name: "{{ registry_url }}/lorem-list-api"
         force: true
         tag: "{{ tag }}"
 
