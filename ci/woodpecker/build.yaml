@@ -1,5 +1,7 @@
 variables:
   - &cache_volume '/home/container-runner/.local/share/docker/volumes-managed/woodpecker-ci-cache:/woodpecker/cache'
+  - &postgres 'harbor.flyingfishflash.net/docker.io/postgres:17-alpine'
+  - &gradle 'harbor.flyingfishflash.net/docker.io/gradle:8-jdk23'
 
 when:
   event:
@@ -22,7 +24,7 @@ when:
   
 services:
   - name: postgres
-    image: harbor.flyingfishflash.net/docker.io/postgres:17-alpine
+    image: *postgres
     environment:
       POSTGRES_USER: lorem-list
       POSTGRES_PASSWORD: lorem-list
@@ -37,7 +39,7 @@ clone:
 
 steps:
   - name: verify postgres
-    image: harbor.flyingfishflash.net/docker.io/postgres:17-alpine
+    image: *postgres
     commands:
       - |
         until psql "dbname=lorem-list host=postgres user=lorem-list password=lorem-list port=5432" \
@@ -48,7 +50,7 @@ steps:
 
   - name: build
     # for reason unknown, when building with the -alpine tag the postgres password property does not propogate
-    image: harbor.flyingfishflash.net/docker.io/gradle:8-jdk23
+    image: *gradle
     depends_on:
       - verify postgres
     commands:

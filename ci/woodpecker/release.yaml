@@ -1,3 +1,7 @@
+variables:
+  - &cache_volume '/home/container-runner/.local/share/docker/volumes-managed/woodpecker-ci-cache:/woodpecker/cache'
+  - &nyx 'harbor.flyingfishflash.net/flyingfishflash/nyx:3.1.3'
+
 when:
   event:
     - push
@@ -6,9 +10,6 @@ when:
 
 depends_on:
   - publish-image
-
-variables:
-  - &cache_volume '/home/container-runner/.local/share/docker/volumes-managed/woodpecker-ci-cache:/woodpecker/cache'
 
 clone:
   git:
@@ -19,7 +20,7 @@ clone:
 
 steps:
   - name: release
-    image: harbor.flyingfishflash.net/flyingfishflash/nyx:3.1.3
+    image: *nyx
     environment:
       NYX_FLYINGFISHFLASH_TOKEN_CODEBERG:
         from_secret: nyx_flyingfishflash_token_codeberg

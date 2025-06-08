@@ -1,5 +1,5 @@
 variables:
-  - &validation_image harbor.flyingfishflash.net/docker.io/alpine/httpie
+  - &httpie harbor.flyingfishflash.net/docker.io/alpine/httpie
   - TERM: &validation_term xterm-256color
   - OPTIONS: &validation_options --verify=no --style=gruvbox-dark --pretty=all --print=mhb
   - &validation_commands
@@ -28,7 +28,7 @@ skip_clone: true
 
 steps:
   - name: verify api is up [dev]
-    image: *validation_image
+    image: *httpie
     environment:
       TERM: *validation_term
       OPTIONS: *validation_options
@@ -40,7 +40,7 @@ steps:
           exclude: release
 
   - name: verify api is up [prd]
-    image: *validation_image
+    image: *httpie
     environment:
       TERM: *validation_term
       OPTIONS: *validation_options
