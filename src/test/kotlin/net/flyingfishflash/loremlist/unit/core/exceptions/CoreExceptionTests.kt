@@ -5,10 +5,10 @@ import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import net.flyingfishflash.loremlist.core.exceptions.CoreException
-import net.flyingfishflash.loremlist.core.exceptions.CoreException.Companion.DEFAULT_HTTP_STATUS
-import net.flyingfishflash.loremlist.core.exceptions.CoreException.Companion.DEFAULT_MESSAGE
-import net.flyingfishflash.loremlist.core.exceptions.CoreException.Companion.DEFAULT_PROBLEM_TYPE
-import net.flyingfishflash.loremlist.core.exceptions.CoreException.Companion.DEFAULT_TITLE
+import net.flyingfishflash.loremlist.core.exceptions.CoreException.DEFAULT_HTTP_STATUS
+import net.flyingfishflash.loremlist.core.exceptions.CoreException.DEFAULT_MESSAGE
+import net.flyingfishflash.loremlist.core.exceptions.CoreException.DEFAULT_PROBLEM_TYPE
+import net.flyingfishflash.loremlist.core.exceptions.CoreException.DEFAULT_TITLE
 import org.springframework.http.HttpStatus
 import java.net.URI
 
@@ -23,7 +23,7 @@ class CoreExceptionTests :
       }
 
       it("default parameter values") {
-        val exception = CoreException()
+        val exception = CoreException.builder().build()
         exception.cause.shouldBeNull()
         exception.httpStatus.shouldBe(DEFAULT_HTTP_STATUS)
         exception.message.shouldBe(DEFAULT_MESSAGE)
@@ -34,7 +34,7 @@ class CoreExceptionTests :
 
       it("http status") {
         val expectedStatus = HttpStatus.I_AM_A_TEAPOT
-        val exception = CoreException(httpStatus = expectedStatus)
+        val exception = CoreException.builder().httpStatus(expectedStatus).build()
         exception.cause.shouldBeNull()
         exception.httpStatus.shouldBe(expectedStatus)
         exception.message.shouldBe(DEFAULT_MESSAGE)
@@ -45,7 +45,7 @@ class CoreExceptionTests :
 
       it("message") {
         val expectedMessage = "Lorem Ipsum"
-        val exception = CoreException(message = expectedMessage)
+        val exception = CoreException.builder().message(expectedMessage).build()
         exception.cause.shouldBeNull()
         exception.httpStatus.shouldBe(DEFAULT_HTTP_STATUS)
         exception.message.shouldBe(expectedMessage)
@@ -56,7 +56,7 @@ class CoreExceptionTests :
 
       it("response message") {
         val expectedResponseMessage = "Lorem Ipsum"
-        val exception = CoreException(responseMessage = expectedResponseMessage)
+        val exception = CoreException.builder().responseMessage(expectedResponseMessage).build()
         exception.cause.shouldBeNull()
         exception.httpStatus.shouldBe(DEFAULT_HTTP_STATUS)
         exception.message.shouldBe(DEFAULT_MESSAGE)
@@ -68,7 +68,7 @@ class CoreExceptionTests :
 
       it("title") {
         val expectedTitle = "Lorem Ipsum"
-        val exception = CoreException(title = expectedTitle)
+        val exception = CoreException.builder().title(expectedTitle).build()
         exception.cause.shouldBeNull()
         exception.httpStatus.shouldBe(DEFAULT_HTTP_STATUS)
         exception.message.shouldBe(DEFAULT_MESSAGE)
@@ -79,7 +79,7 @@ class CoreExceptionTests :
 
       it("type") {
         val expectedType: URI = URI.create("http://example.net")
-        val exception = CoreException(type = expectedType)
+        val exception = CoreException.builder().type(expectedType).build()
         exception.cause.shouldBeNull()
         exception.httpStatus.shouldBe(DEFAULT_HTTP_STATUS)
         exception.message.shouldBe(DEFAULT_MESSAGE)

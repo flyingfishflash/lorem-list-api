@@ -6,10 +6,13 @@ import java.util.UUID
 
 abstract class EntityNotFoundException(idCollection: Set<UUID>, message: String? = null, lrmComponentType: LrmComponentType? = null) :
   DomainException(
-    httpStatus = HTTP_STATUS,
-    title = "${lrmComponentType?.name ?: "Entity"}NotFoundException",
-    message = message ?: defaultMessage(idCollection, lrmComponentType),
-    supplemental = mapOf("notFound" to idCollection.map { it.toString() }.toJsonElement()),
+    null,
+    HTTP_STATUS,
+    message ?: defaultMessage(idCollection, lrmComponentType),
+    null,
+    "${lrmComponentType?.name ?: "Entity"}NotFoundException",
+    null,
+    mapOf("notFound" to idCollection.map { it.toString() }.toJsonElement()),
   ) {
   companion object {
     val HTTP_STATUS = HttpStatus.NOT_FOUND

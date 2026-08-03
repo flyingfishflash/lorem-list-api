@@ -65,7 +65,7 @@ class LrmListApiServiceDefaultTests :
       context("list") {
         it("count lists by owner") {
           val serviceResponse = ServiceResponse(content = 10L, message = serviceResponseMessage)
-          val apiServiceResponse = ApiServiceResponse(ApiMessageNumeric(value = serviceResponse.content), serviceResponse.message)
+          val apiServiceResponse = ApiServiceResponse(ApiMessageNumeric(serviceResponse.content), serviceResponse.message)
           every { mockLrmListService.countByOwner(owner) } returns serviceResponse
           lrmListApiService.countByOwner(owner) shouldBe apiServiceResponse
         }

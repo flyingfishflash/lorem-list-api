@@ -16,11 +16,11 @@ object UuidSerializer : KSerializer<UUID> {
     try {
       return UUID.fromString(decoder.decodeString())
     } catch (ex: IllegalArgumentException) {
-      throw CoreException(
-        cause = ex,
-        httpStatus = HttpStatus.BAD_REQUEST,
-        message = "Error deserializing UUID.",
-      )
+      throw CoreException.builder()
+        .cause(ex)
+        .httpStatus(HttpStatus.BAD_REQUEST)
+        .message("Error deserializing UUID.")
+        .build()
     }
   }
 

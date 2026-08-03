@@ -29,7 +29,7 @@ class LrmItemServiceDefault(
       val message = if (repositoryResponse == 1L) "$repositoryResponse item." else "$repositoryResponse items."
       return@runCatching ServiceResponse(content = repositoryResponse, message = message)
     }.getOrElse { cause ->
-      throw DomainException(cause = cause, message = "Total item count couldn't be generated.")
+      throw DomainException.builder().cause(cause).message("Total item count couldn't be generated.").build()
     }
   }
 
@@ -52,13 +52,13 @@ class LrmItemServiceDefault(
       )
     }.getOrElse { cause ->
       when (cause) {
-        is CoreException -> throw DomainException(
-          cause = cause,
-          httpStatus = cause.httpStatus,
-          message = "No items were deleted: ${cause.responseMessage}",
-          supplemental = cause.supplemental,
-        )
-        else -> throw DomainException(cause = cause, message = "No items were deleted.")
+        is CoreException -> throw DomainException.builder()
+          .cause(cause)
+          .httpStatus(cause.httpStatus)
+          .message("No items were deleted: ${cause.responseMessage}")
+          .supplemental(cause.supplemental)
+          .build()
+        else -> throw DomainException.builder().cause(cause).message("No items were deleted.").build()
       }
     }
   }
@@ -82,13 +82,13 @@ class LrmItemServiceDefault(
       )
     }.getOrElse { cause ->
       when (cause) {
-        is CoreException -> throw DomainException(
-          cause = cause,
-          httpStatus = cause.httpStatus,
-          message = "Item id $id could not be deleted: ${cause.responseMessage}",
-          supplemental = cause.supplemental,
-        )
-        else -> throw DomainException(cause = cause, message = "Item id $id could not be deleted.")
+        is CoreException -> throw DomainException.builder()
+          .cause(cause)
+          .httpStatus(cause.httpStatus)
+          .message("Item id $id could not be deleted: ${cause.responseMessage}")
+          .supplemental(cause.supplemental)
+          .build()
+        else -> throw DomainException.builder().cause(cause).message("Item id $id could not be deleted.").build()
       }
     }
   }
@@ -103,14 +103,16 @@ class LrmItemServiceDefault(
   private fun throwListAssociationException(lrmItemDeleteResponse: LrmItemDeleted) {
     val message = "Item '${lrmItemDeleteResponse.itemNames.first()}' " +
       "is associated with ${lrmItemDeleteResponse.associatedListNames.size} list(s). First remove the item from each list."
-    throw DomainException(
-      httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-      supplemental = mapOf(
-        "itemNames" to lrmItemDeleteResponse.itemNames.toJsonElement(),
-        "associatedListNames" to lrmItemDeleteResponse.associatedListNames.toJsonElement(),
-      ),
-      message = message,
-    )
+    throw DomainException.builder()
+      .httpStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+      .supplemental(
+        mapOf(
+          "itemNames" to lrmItemDeleteResponse.itemNames.toJsonElement(),
+          "associatedListNames" to lrmItemDeleteResponse.associatedListNames.toJsonElement(),
+        ),
+      )
+      .message(message)
+      .build()
   }
 
   private fun doDeleteByOwnerAndId(itemId: UUID, owner: String) {
@@ -125,7 +127,7 @@ class LrmItemServiceDefault(
       val repositoryResponse = lrmItemRepository.findByOwner(owner = owner)
       return@runCatching ServiceResponse(content = repositoryResponse, message = "Retrieved all items owned by $owner.")
     }.getOrElse { cause ->
-      throw DomainException(cause = cause, message = "Items could not be retrieved.")
+      throw DomainException.builder().cause(cause).message("Items could not be retrieved.").build()
     }
   }
 
@@ -133,7 +135,7 @@ class LrmItemServiceDefault(
     val repositoryResponse = runCatching {
       return@runCatching lrmItemRepository.findByOwnerAndIdOrNull(id = id, owner = owner)
     }.getOrElse { cause ->
-      throw DomainException(cause = cause, message = "Item id $id could not be retrieved.")
+      throw DomainException.builder().cause(cause).message("Item id $id could not be retrieved.").build()
     } ?: throw ItemNotFoundException(id = id)
     return ServiceResponse(content = repositoryResponse, message = "Retrieved item '${repositoryResponse.name}'")
   }
@@ -144,7 +146,7 @@ class LrmItemServiceDefault(
       val repositoryResponse = lrmItemRepository.findByOwnerAndHavingNoListAssociations(owner = owner)
       return@runCatching ServiceResponse(content = repositoryResponse, message = "Retrieved ${repositoryResponse.size} items that are not a part of a list.")
     }.getOrElse { cause ->
-      throw DomainException(cause = cause, message = exceptionMessage)
+      throw DomainException.builder().cause(cause).message(exceptionMessage).build()
     }
   }
 
@@ -163,7 +165,7 @@ class LrmItemServiceDefault(
         httpStatus = cause.httpStatus
       }
       exceptionMessage = "$exceptionMessage: ${cause.message}"
-      throw DomainException(cause = cause, message = exceptionMessage, httpStatus = httpStatus)
+      throw DomainException.builder().cause(cause).message(exceptionMessage).httpStatus(httpStatus).build()
     }
   }
 
@@ -186,8 +188,8 @@ class LrmItemServiceDefault(
 
   private fun handleInvalidAffectedRecordCount(affectedRecordCount: Int, id: UUID) {
     when {
-      affectedRecordCount < 1 -> throw DomainException(message = "No item affected by the repository operation.")
-      affectedRecordCount > 1 -> throw DomainException(message = "More than one item with id $id were found.")
+      affectedRecordCount < 1 -> throw DomainException.builder().message("No item affected by the repository operation.").build()
+      affectedRecordCount > 1 -> throw DomainException.builder().message("More than one item with id $id were found.").build()
       else -> throw IllegalArgumentException("$affectedRecordCount should not be passed to this function")
     }
   }

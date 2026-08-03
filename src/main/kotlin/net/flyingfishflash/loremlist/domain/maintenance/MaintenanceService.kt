@@ -27,10 +27,10 @@ class MaintenanceService(
       )
       return ServiceResponse(content = domainPurged, message = "Domain has been purged.")
     } catch (exception: Exception) {
-      throw DomainException(
-        cause = exception,
-        message = "$exceptionMessage.",
-      )
+      throw DomainException.builder()
+        .cause(exception)
+        .message("$exceptionMessage.")
+        .build()
     }
   }
 }

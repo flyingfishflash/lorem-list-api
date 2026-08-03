@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.api
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
@@ -8,8 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.api.data.response.LrmItemDeletedResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmItemResponse
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
@@ -49,7 +48,7 @@ import java.util.UUID
 )
 @RestController
 @RequestMapping("/items")
-class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json) {
+class LrmItemController(val lrmItemApiService: LrmItemApiService, val objectMapper: ObjectMapper) {
   private val logger = KotlinLogging.logger {}
 
   @Operation(summary = "Count of all items.")
@@ -58,7 +57,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     val apiServiceResponse = lrmItemApiService.countByOwner(owner = principal.subject)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -71,7 +70,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     val apiServiceResponse = lrmItemApiService.deleteByOwner(owner = principal.subject)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -100,7 +99,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     val apiServiceResponse = lrmItemApiService.deleteByOwnerAndId(id = itemId, owner = principal.subject, removeListAssociations)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -110,7 +109,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     val apiServiceResponse = lrmItemApiService.findByOwner(owner = principal.subject)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -133,7 +132,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     val apiServiceResponse = lrmItemApiService.findByOwnerAndId(itemId, owner = principal.subject)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -146,7 +145,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     val apiServiceResponse = lrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = principal.subject)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -171,7 +170,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     val apiServiceResponse = lrmItemApiService.patchByOwnerAndId(id = itemId, owner = principal.subject, patchRequest)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = if (apiServiceResponse.message.contains("not patched")) HttpStatus.NO_CONTENT else HttpStatus.OK
-    logger.info { json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, responseStatus)
   }
 
@@ -194,7 +193,7 @@ class LrmItemController(val lrmItemApiService: LrmItemApiService, val json: Json
     val apiServiceResponse = lrmItemApiService.countListAssociationsByItemIdAndItemOwner(itemId = itemId, itemOwner = principal.subject)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
-    logger.info { json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, responseStatus)
   }
 }

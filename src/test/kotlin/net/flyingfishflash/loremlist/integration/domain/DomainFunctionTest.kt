@@ -1,18 +1,16 @@
 package net.flyingfishflash.loremlist.integration.domain
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.extensions.spring.SpringExtension
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
 import net.flyingfishflash.loremlist.api.data.request.LrmListCreateRequest
-import net.flyingfishflash.loremlist.api.data.response.LrmListItemResponse
-import net.flyingfishflash.loremlist.api.data.response.LrmListResponse
-import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
+import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.Disposition
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
-import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpMethod
@@ -90,7 +88,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
       ),
     )
     val response = result.andReturn().response.contentAsString
-    return Json.decodeFromString<ResponseSuccess<LrmListResponse>>(response).content.id
+    return UUID.fromString(ObjectMapper().readTree(response).path("content").path("id").asText())
   }
 
   /** create a list item and return the resulting id */
@@ -113,7 +111,7 @@ abstract class DomainFunctionTest(body: DomainFunctionTest.() -> Unit, private v
       ),
     )
     val response = result.andReturn().response.contentAsString
-    return Json.decodeFromString<ResponseSuccess<LrmListItemResponse>>(response).content.id
+    return UUID.fromString(ObjectMapper().readTree(response).path("content").path("id").asText())
   }
 
   fun verifyContentSize(url: String, expectedSize: Int) {

@@ -1,11 +1,10 @@
 package net.flyingfishflash.loremlist.api
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.api.data.response.LrmListResponse
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
 import org.springframework.http.HttpStatus
@@ -16,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "public")
 @RestController
-class LrmListPublicController(val lrmListService: LrmListApiService) {
+class LrmListPublicController(val lrmListService: LrmListApiService, val objectMapper: ObjectMapper) {
   private val logger = KotlinLogging.logger {}
 
   @Operation(summary = "Retrieve all public lists, optionally including the details of each associated item.")
@@ -27,7 +26,7 @@ class LrmListPublicController(val lrmListService: LrmListApiService) {
   ): ResponseEntity<ResponseSuccess<List<LrmListResponse>>> {
     val apiServiceResponse = if (includeItems) lrmListService.findByPublic() else lrmListService.findByPublicExcludeItems()
     val response = ResponseSuccess(apiServiceResponse.content.map { it }, apiServiceResponse.message, request)
-    logger.info { Json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, HttpStatus.OK)
   }
 }

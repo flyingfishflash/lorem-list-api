@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.api
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
@@ -8,8 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import net.flyingfishflash.loremlist.api.data.response.DomainPurgedResponse
 import net.flyingfishflash.loremlist.core.response.structure.ResponseProblem
 import net.flyingfishflash.loremlist.core.response.structure.ResponseSuccess
@@ -31,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController
 )
 @RestController
 @RequestMapping("/maintenance")
-class MaintenanceController(private val maintenanceApiService: MaintenanceApiService) {
+class MaintenanceController(private val maintenanceApiService: MaintenanceApiService, private val objectMapper: ObjectMapper) {
   private val logger = KotlinLogging.logger {}
 
   @Operation(summary = "Purge all items, lists, and associations")
@@ -48,7 +47,7 @@ class MaintenanceController(private val maintenanceApiService: MaintenanceApiSer
     val apiServiceResponse = maintenanceApiService.purge()
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
-    logger.info { Json.encodeToString(response) }
+    logger.info { objectMapper.writeValueAsString(response) }
     return ResponseEntity(response, responseStatus)
   }
 }

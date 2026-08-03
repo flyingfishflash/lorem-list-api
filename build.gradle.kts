@@ -44,7 +44,7 @@ val springmockkVersion = "4.0.2"
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
 
 dependencies {
-//  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 //  https://github.com/oshai/kotlin-logging/releases
   implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
   implementation("jakarta.validation:jakarta.validation-api:$jakartaValidationApiVersion")
@@ -70,9 +70,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-validation")
-  implementation("org.springframework.boot:spring-boot-starter-web") {
-    exclude(group = "org.springframework.boot", module = "spring-boot-starter-json")
-  }
+  implementation("org.springframework.boot:spring-boot-starter-web")
   runtimeOnly("com.h2database:h2")
   runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")

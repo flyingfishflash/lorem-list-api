@@ -34,11 +34,11 @@ class LrmListItemServiceDefault(
       lrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) ?: throw ListNotFoundException(listId)
       lrmListItemRepository.countByOwnerAndListId(listId = listId, listOwner = owner)
     }.getOrElse { exception ->
-      throw DomainException(
-        cause = exception,
-        httpStatus = (exception as? ListNotFoundException)?.httpStatus,
-        message = "$exceptionMessage: ${exception.message.takeIf { exception is ListNotFoundException } ?: ""}",
-      )
+      throw DomainException.builder()
+        .cause(exception)
+        .httpStatus((exception as? ListNotFoundException)?.httpStatus)
+        .message("$exceptionMessage: ${exception.message.takeIf { exception is ListNotFoundException } ?: ""}")
+        .build()
     }
     return ServiceResponse(content = associations, message = "List is associated with $associations items.")
   }
@@ -63,32 +63,32 @@ class LrmListItemServiceDefault(
       return@runCatching ServiceResponse(content = listItemCreated, message = message)
     }.getOrElse { exception ->
       when (exception) {
-        is CoreException -> throw DomainException(
-          cause = exception,
-          httpStatus = exception.httpStatus,
-          message = "$exceptionMessage: ${exception.message}",
-          supplemental = exception.supplemental,
-        )
+        is CoreException -> throw DomainException.builder()
+          .cause(exception)
+          .httpStatus(exception.httpStatus)
+          .message("$exceptionMessage: ${exception.message}")
+          .supplemental(exception.supplemental)
+          .build()
         is SQLException -> {
           when {
             exception.message?.contains("duplicate key value violates unique constraint") == true ||
               exception.message?.contains("Unique index or primary key violation") == true -> {
-              throw DomainException(
-                cause = exception,
-                httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-                message = "$exceptionMessage: It already exists.",
-              )
+              throw DomainException.builder()
+                .cause(exception)
+                .httpStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+                .message("$exceptionMessage: It already exists.")
+                .build()
             }
-            else -> throw DomainException(
-              cause = exception,
-              message = "$exceptionMessage: Unanticipated SQL exception.",
-            )
+            else -> throw DomainException.builder()
+              .cause(exception)
+              .message("$exceptionMessage: Unanticipated SQL exception.")
+              .build()
           }
         }
-        else -> throw DomainException(
-          cause = exception,
-          message = "$exceptionMessage.",
-        )
+        else -> throw DomainException.builder()
+          .cause(exception)
+          .message("$exceptionMessage.")
+          .build()
       }
     }
   }
@@ -104,9 +104,9 @@ class LrmListItemServiceDefault(
     // create associations
     val associations = lrmListItemRepository.create(itemIdCollection.map { listId to it }.toSet())
     if (associations.size != itemIdCollection.size) {
-      throw DomainException(
-        message = "Mismatch in created associations count (created = ${associations.size} / requested = ${itemIdCollection.size})",
-      )
+      throw DomainException.builder()
+        .message("Mismatch in created associations count (created = ${associations.size} / requested = ${itemIdCollection.size})")
+        .build()
     }
 
     // return created associations with sorted item names
@@ -130,7 +130,7 @@ class LrmListItemServiceDefault(
     val newLrmItem = lrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = creator)
       ?: throw ItemNotFoundException(itemId)
     return@runCatching newLrmItem
-  }.getOrElse { cause -> throw DomainException(cause = cause, message = "Item could not be created.") }
+  }.getOrElse { cause -> throw DomainException.builder().cause(cause).message("Item could not be created.").build() }
 
   /** Create a new item and associate it with the specified list */
   override fun create(listId: UUID, lrmItemCreate: LrmItemCreate, creator: String): ServiceResponse<LrmListItem> {
@@ -180,11 +180,11 @@ class LrmListItemServiceDefault(
       )
     },
     onFailure = { exception ->
-      throw DomainException(
-        cause = exception,
-        httpStatus = (exception as? EntityNotFoundException)?.httpStatus,
-        message = "Item id $itemId was not moved from list id $currentListId to list id $destinationListId.",
-      )
+      throw DomainException.builder()
+        .cause(exception)
+        .httpStatus((exception as? EntityNotFoundException)?.httpStatus)
+        .message("Item id $itemId was not moved from list id $currentListId to list id $destinationListId.")
+        .build()
     },
   )
 
@@ -204,15 +204,15 @@ class LrmListItemServiceDefault(
     return@runCatching ServiceResponse(content = Pair(item.name, deletedCount), message = "Removed '${item.name}' from $deletedCount $subject.")
   }.getOrElse { exception ->
     throw when (exception) {
-      is ItemNotFoundException -> DomainException(
-        cause = exception,
-        httpStatus = exception.httpStatus,
-        message = "Item id $itemId could not be removed from any/all lists: ${exception.message}",
-      )
-      else -> DomainException(
-        cause = exception,
-        message = "Item id $itemId could not be removed from any/all lists.",
-      )
+      is ItemNotFoundException -> DomainException.builder()
+        .cause(exception)
+        .httpStatus(exception.httpStatus)
+        .message("Item id $itemId could not be removed from any/all lists: ${exception.message}")
+        .build()
+      else -> DomainException.builder()
+        .cause(exception)
+        .message("Item id $itemId could not be removed from any/all lists.")
+        .build()
     }
   }
 
@@ -225,15 +225,15 @@ class LrmListItemServiceDefault(
       return@runCatching ServiceResponse(content = Pair(list.name, deletedCount), message = "Removed $deletedCount $subject from list '${list.name}'")
     }.getOrElse { exception ->
       when (exception) {
-        is ListNotFoundException -> throw DomainException(
-          cause = exception,
-          httpStatus = exception.httpStatus,
-          message = "$exceptionMessage: ${exception.message}",
-        )
-        else -> throw DomainException(
-          cause = exception,
-          message = "$exceptionMessage.",
-        )
+        is ListNotFoundException -> throw DomainException.builder()
+          .cause(exception)
+          .httpStatus(exception.httpStatus)
+          .message("$exceptionMessage: ${exception.message}")
+          .build()
+        else -> throw DomainException.builder()
+          .cause(exception)
+          .message("$exceptionMessage.")
+          .build()
       }
     }
   }
@@ -251,20 +251,20 @@ class LrmListItemServiceDefault(
 
       return@runCatching Triple(item, list, association)
     }.getOrElse { exception ->
-      throw DomainException(
-        cause = exception,
-        httpStatus = (exception as? EntityNotFoundException)?.httpStatus,
-        message = "$exceptionMessage: ${exception.message}",
-      )
+      throw DomainException.builder()
+        .cause(exception)
+        .httpStatus((exception as? EntityNotFoundException)?.httpStatus)
+        .message("$exceptionMessage: ${exception.message}")
+        .build()
     }
 
     val deletedCount = runCatching {
       lrmListItemRepository.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner)
     }.getOrElse { cause ->
-      throw DomainException(
-        cause = cause,
-        message = "$exceptionMessage.",
-      )
+      throw DomainException.builder()
+        .cause(cause)
+        .message("$exceptionMessage.")
+        .build()
     }
 
     return when {
@@ -275,17 +275,17 @@ class LrmListItemServiceDefault(
         )
       }
       deletedCount < 1 -> {
-        throw DomainException(
-          message = "$exceptionMessage: Item id $itemId exists, list id $listId exists, association id ${association.id} exists, but 0 records were deleted.",
-          responseMessage = "$exceptionMessage: Item, list, and association were found, but 0 records were deleted.",
-        )
+        throw DomainException.builder()
+          .message("$exceptionMessage: Item id $itemId exists, list id $listId exists, association id ${association.id} exists, but 0 records were deleted.")
+          .responseMessage("$exceptionMessage: Item, list, and association were found, but 0 records were deleted.")
+          .build()
       }
       else -> {
-        throw DomainException(
-          httpStatus = HttpStatus.BAD_REQUEST,
-          message = "$exceptionMessage: Delete transaction rolled back because the count of deleted records was > 1.",
-          responseMessage = "$exceptionMessage: Item id $itemId is associated with list id $listId multiple times.",
-        )
+        throw DomainException.builder()
+          .httpStatus(HttpStatus.BAD_REQUEST)
+          .message("$exceptionMessage: Delete transaction rolled back because the count of deleted records was > 1.")
+          .responseMessage("$exceptionMessage: Item id $itemId is associated with list id $listId multiple times.")
+          .build()
       }
     }
   }
@@ -298,11 +298,11 @@ class LrmListItemServiceDefault(
       lrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) ?: throw ItemNotFoundException(itemId)
       lrmListItemRepository.countByOwnerAndItemId(itemId = itemId, itemOwner = owner)
     }.getOrElse { exception ->
-      throw DomainException(
-        cause = exception,
-        httpStatus = (exception as? ItemNotFoundException)?.httpStatus,
-        message = "$exceptionMessage: ${(exception as? ItemNotFoundException)?.message ?: ""}",
-      )
+      throw DomainException.builder()
+        .cause(exception)
+        .httpStatus((exception as? ItemNotFoundException)?.httpStatus)
+        .message("$exceptionMessage: ${(exception as? ItemNotFoundException)?.message ?: ""}")
+        .build()
     }
     return ServiceResponse(content = associations, message = "Item is associated with $associations lists.")
   }
@@ -325,8 +325,8 @@ class LrmListItemServiceDefault(
 
   private fun handleInvalidAffectedRecordCount(affectedRecordCount: Int, id: UUID) {
     when {
-      affectedRecordCount < 1 -> throw DomainException(message = "No item affected by the repository operation.")
-      affectedRecordCount > 1 -> throw DomainException(message = "More than one item with id $id were found.")
+      affectedRecordCount < 1 -> throw DomainException.builder().message("No item affected by the repository operation.").build()
+      affectedRecordCount > 1 -> throw DomainException.builder().message("More than one item with id $id were found.").build()
       else -> throw IllegalArgumentException("$affectedRecordCount should not be passed to this function")
     }
   }

@@ -27,7 +27,7 @@ import net.flyingfishflash.loremlist.api.data.response.LrmListItemResponse
 import net.flyingfishflash.loremlist.api.data.response.LrmListResponse
 import net.flyingfishflash.loremlist.core.configuration.SerializationConfig
 import net.flyingfishflash.loremlist.core.configuration.WebSecurityConfiguration
-import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
+import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.ApiMessageNumeric
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
@@ -598,7 +598,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               itemCreateRequest = lrmItemCreateRequest,
               creator = ofType<String>(),
             )
-          } throws DomainException()
+          } throws DomainException.builder().build()
 
           performRequest(HttpMethod.POST, instance, Json.encodeToString(lrmItemCreateRequest)).andExpectAll(
             status().isInternalServerError(),
@@ -974,7 +974,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.countListItems(listId = id[1], listOwner = ofType(String::class))
-          } throws DomainException(httpStatus = HttpStatus.NOT_FOUND)
+          } throws DomainException.builder().httpStatus(HttpStatus.NOT_FOUND).build()
 
           performRequest(HttpMethod.GET, instance).andExpectAll(
             status().isNotFound(),

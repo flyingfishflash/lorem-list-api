@@ -34,7 +34,7 @@ class ApiExceptionHandlerTests :
         val mockEnvironment = mockk<Environment>(relaxed = true)
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "never"
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiException = CoreException()
+        val apiException = CoreException.builder().build()
         val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
         val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, apiException)
         responseEntity.body?.content?.cause.shouldBeNull()
@@ -46,7 +46,7 @@ class ApiExceptionHandlerTests :
         val mockEnvironment = mockk<Environment>(relaxed = true)
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "never"
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiException = CoreException(cause = RuntimeException())
+        val apiException = CoreException.builder().cause(RuntimeException()).build()
         val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
         val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, apiException)
         responseEntity.body?.content?.cause.shouldNotBeNull()
@@ -58,7 +58,7 @@ class ApiExceptionHandlerTests :
         val mockEnvironment = mockk<Environment>(relaxed = true)
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiException = CoreException()
+        val apiException = CoreException.builder().build()
         val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
         val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, apiException)
         responseEntity.body?.content?.cause.shouldBeNull()
@@ -70,7 +70,7 @@ class ApiExceptionHandlerTests :
         val mockEnvironment = mockk<Environment>(relaxed = true)
         every { mockEnvironment.getProperty("server.error.include-stacktrace") } returns "always"
         val mockHttpServletRequest = mockk<HttpServletRequest>(relaxed = true)
-        val apiException = CoreException(cause = RuntimeException())
+        val apiException = CoreException.builder().cause(RuntimeException()).build()
         val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
         val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, apiException)
         responseEntity.body?.content?.cause.shouldNotBeNull()
@@ -87,7 +87,7 @@ class ApiExceptionHandlerTests :
         val rootCause = IllegalArgumentException("Root cause exception")
         val intermediateCause = IllegalStateException("Intermediate cause exception")
         intermediateCause.initCause(rootCause)
-        val topLevelException = CoreException(message = "Top level exception", cause = intermediateCause)
+        val topLevelException = CoreException.builder().message("Top level exception").cause(intermediateCause).build()
         val coreExceptionHandler = CoreExceptionHandler(mockEnvironment)
         val responseEntity = coreExceptionHandler.handleAbstractCoreException(mockHttpServletRequest, topLevelException)
         responseEntity.body?.content?.supplemental?.shouldNotBeNull()

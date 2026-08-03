@@ -381,7 +381,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               itemId = id1,
               itemOwner = ofType(String::class),
             )
-          } throws DomainException(httpStatus = HttpStatus.NOT_FOUND)
+          } throws DomainException.builder().httpStatus(HttpStatus.NOT_FOUND).build()
           val instance = "/items/$id1/lists/count"
           mockMvc.get(instance) {
             with(jwt())

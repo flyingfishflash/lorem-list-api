@@ -4,7 +4,7 @@ import io.kotest.matchers.ints.beGreaterThanOrEqualTo
 import io.kotest.matchers.should
 import net.flyingfishflash.loremlist.api.data.request.LrmItemCreateRequest
 import net.flyingfishflash.loremlist.api.data.request.LrmListCreateRequest
-import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.Companion.VALIDATION_FAILURE_MESSAGE
+import net.flyingfishflash.loremlist.core.response.advice.CoreExceptionHandler.VALIDATION_FAILURE_MESSAGE
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfProblem
 import net.flyingfishflash.loremlist.core.response.structure.DispositionOfSuccess
 import net.flyingfishflash.loremlist.domain.exceptions.DomainException

@@ -31,7 +31,7 @@ class LrmListServiceDefault(
         content = repositoryResponse,
         message = if (repositoryResponse == 1L) "$repositoryResponse list." else "$repositoryResponse lists.")
     }.getOrElse { cause ->
-      throw DomainException(cause = cause, message = "Total list count couldn't be generated.")
+      throw DomainException.builder().cause(cause).message("Total list count couldn't be generated.").build()
     }
   }
 
@@ -54,10 +54,10 @@ class LrmListServiceDefault(
       val createdLrmList = findByOwnerAndId(id = id, owner = creator).content
       return@runCatching ServiceResponse(content = createdLrmList, message = "Created list '${createdLrmList.name}'")
     }.getOrElse { cause ->
-      throw DomainException(
-        cause = cause,
-        message = "List could not be created.",
-      )
+      throw DomainException.builder()
+        .cause(cause)
+        .message("List could not be created.")
+        .build()
     }
   }
 
@@ -79,13 +79,13 @@ class LrmListServiceDefault(
         message = "Deleted all (${lrmListDeleteResponse.listNames.size}) of your lists, and disassociated ${lrmListDeleteResponse.associatedItemNames.size} items.")
     }.getOrElse { cause ->
       when (cause) {
-        is CoreException -> throw DomainException(
-          cause = cause,
-          httpStatus = cause.httpStatus,
-          message = "No lists were deleted: ${cause.responseMessage}",
-          supplemental = cause.supplemental,
-        )
-        else -> throw DomainException(cause = cause, message = "No lists were deleted.")
+        is CoreException -> throw DomainException.builder()
+          .cause(cause)
+          .httpStatus(cause.httpStatus)
+          .message("No lists were deleted: ${cause.responseMessage}")
+          .supplemental(cause.supplemental)
+          .build()
+        else -> throw DomainException.builder().cause(cause).message("No lists were deleted.").build()
       }
     }
   }
@@ -109,13 +109,13 @@ class LrmListServiceDefault(
         message = "Deleted list '${deleteResponse.listNames.first()}', and disassociated ${deleteResponse.associatedItemNames.size} $noun.")
     }.getOrElse { cause ->
       when (cause) {
-        is CoreException -> throw DomainException(
-          cause = cause,
-          httpStatus = cause.httpStatus,
-          message = "List could not be deleted: ${cause.responseMessage}",
-          supplemental = cause.supplemental,
-        )
-        else -> throw DomainException(cause = cause, message = "List id $id could not be deleted.")
+        is CoreException -> throw DomainException.builder()
+          .cause(cause)
+          .httpStatus(cause.httpStatus)
+          .message("List could not be deleted: ${cause.responseMessage}")
+          .supplemental(cause.supplemental)
+          .build()
+        else -> throw DomainException.builder().cause(cause).message("List id $id could not be deleted.").build()
       }
     }
   }
@@ -142,15 +142,17 @@ class LrmListServiceDefault(
   private fun throwItemAssociationException(deleteResponse: LrmListDeleted, listName: String) {
     val message = "List '$listName' is associated with ${deleteResponse.associatedItemNames.size} item(s). " +
       "First remove each item from the list."
-    throw DomainException(
-      httpStatus = HttpStatus.UNPROCESSABLE_ENTITY,
-      supplemental = mapOf(
-        "listNames" to deleteResponse.listNames.toJsonElement(),
-        "associatedItemNames" to deleteResponse.associatedItemNames.toJsonElement(),
-      ),
-      responseMessage = "'$listName' includes ${deleteResponse.associatedItemNames.size} item(s).",
-      message = message,
-    )
+    throw DomainException.builder()
+      .httpStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+      .supplemental(
+        mapOf(
+          "listNames" to deleteResponse.listNames.toJsonElement(),
+          "associatedItemNames" to deleteResponse.associatedItemNames.toJsonElement(),
+        ),
+      )
+      .responseMessage("'$listName' includes ${deleteResponse.associatedItemNames.size} item(s).")
+      .message(message)
+      .build()
   }
 
   private fun doDeleteByOwnerAndId(id: UUID, owner: String) {
@@ -169,7 +171,7 @@ class LrmListServiceDefault(
         message = "Retrieved all lists owned by '$owner'"
       )
     }.getOrElse { cause ->
-      throw DomainException(cause = cause, message = exceptionMessage)
+      throw DomainException.builder().cause(cause).message(exceptionMessage).build()
     }
   }
 
@@ -178,7 +180,7 @@ class LrmListServiceDefault(
     val list = runCatching {
       lrmListRepository.findByOwnerAndIdOrNull(id = id, owner = owner)
     }.getOrElse { cause ->
-      throw DomainException(cause = cause, message = exceptionMessage)
+      throw DomainException.builder().cause(cause).message(exceptionMessage).build()
     } ?: throw ListNotFoundException(id)
     return ServiceResponse(content = list, message = "Retrieved list '${list.name}'")
   }
@@ -189,7 +191,7 @@ class LrmListServiceDefault(
       val repositoryResponse = lrmListRepository.findByOwnerAndHavingNoItemAssociations(owner = owner)
       return@runCatching ServiceResponse(content = repositoryResponse, message = "Retrieved ${repositoryResponse.size} lists that have no items.")
     }.getOrElse { cause ->
-      throw DomainException(cause = cause, message = exceptionMessage)
+      throw DomainException.builder().cause(cause).message(exceptionMessage).build()
     }
   }
 
@@ -198,7 +200,7 @@ class LrmListServiceDefault(
       val repositoryResponse = lrmListRepository.findByPublic()
       return@runCatching ServiceResponse(content = repositoryResponse, message = "Retrieved ${repositoryResponse.size} public lists.")
     }.getOrElse { cause ->
-      throw DomainException(cause = cause, message = "Public lists (including associated items) could not be retrieved.")
+      throw DomainException.builder().cause(cause).message("Public lists (including associated items) could not be retrieved.").build()
     }
   }
 
@@ -224,8 +226,8 @@ class LrmListServiceDefault(
 
   private fun handleInvalidAffectedRecordCount(affectedRecordCount: Int, id: UUID) {
     when {
-      affectedRecordCount < 1 -> throw DomainException(message = "No list affected by the repository operation.")
-      affectedRecordCount > 1 -> throw DomainException(message = "More than one list with id $id found.")
+      affectedRecordCount < 1 -> throw DomainException.builder().message("No list affected by the repository operation.").build()
+      affectedRecordCount > 1 -> throw DomainException.builder().message("More than one list with id $id found.").build()
       else -> throw IllegalArgumentException("$affectedRecordCount should not be passed to this function")
     }
   }

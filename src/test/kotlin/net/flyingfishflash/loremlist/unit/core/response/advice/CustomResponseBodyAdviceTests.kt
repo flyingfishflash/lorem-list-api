@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.unit.core.response.advice
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -40,70 +41,52 @@ class CustomResponseBodyAdviceTests :
       describe("false") {
         it("class is OpenApiWebMvcResource and method name is openapiJson") {
           val methodParameter = mockk<MethodParameter>(relaxed = true)
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           every { methodParameter.declaringClass } returns OpenApiWebMvcResource::class.java
           every { methodParameter.method?.name } returns "openapiJson"
-          customResponseBodyAdvice.supports(
-            converterType = MappingJackson2HttpMessageConverter::class.java,
-            methodParameter = methodParameter,
-          ).shouldBeFalse()
+          customResponseBodyAdvice.supports(methodParameter, MappingJackson2HttpMessageConverter::class.java).shouldBeFalse()
         }
 
         it("class is SwaggerConfigResource and method name is openapiJson") {
           val methodParameter = mockk<MethodParameter>(relaxed = true)
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           every { methodParameter.declaringClass } returns SwaggerConfigResource::class.java
           every { methodParameter.method?.name } returns "openapiJson"
-          customResponseBodyAdvice.supports(
-            converterType = MappingJackson2HttpMessageConverter::class.java,
-            methodParameter = methodParameter,
-          ).shouldBeFalse()
+          customResponseBodyAdvice.supports(methodParameter, MappingJackson2HttpMessageConverter::class.java).shouldBeFalse()
         }
       }
 
       describe("true") {
         it("class is OpenApiWebMvcResource and method is null") {
           val methodParameter = mockk<MethodParameter>(relaxed = true)
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           every { methodParameter.declaringClass } returns OpenApiWebMvcResource::class.java
           every { methodParameter.method } returns null
-          customResponseBodyAdvice.supports(
-            converterType = MappingJackson2HttpMessageConverter::class.java,
-            methodParameter = methodParameter,
-          ).shouldBeTrue()
+          customResponseBodyAdvice.supports(methodParameter, MappingJackson2HttpMessageConverter::class.java).shouldBeTrue()
         }
 
         it("class is OpenApiWebMvcResource and method name is not openapiJson") {
           val methodParameter = mockk<MethodParameter>(relaxed = true)
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           every { methodParameter.declaringClass } returns OpenApiWebMvcResource::class.java
           every { methodParameter.method?.name } returns "Lorem Ipsum"
-          customResponseBodyAdvice.supports(
-            converterType = MappingJackson2HttpMessageConverter::class.java,
-            methodParameter = methodParameter,
-          ).shouldBeTrue()
+          customResponseBodyAdvice.supports(methodParameter, MappingJackson2HttpMessageConverter::class.java).shouldBeTrue()
         }
 
         it("class is not OpenApiWebMvcResource and method name is openapiJson") {
           val methodParameter = mockk<MethodParameter>(relaxed = true)
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           every { methodParameter.declaringClass } returns String::class.java
           every { methodParameter.method?.name } returns "openapiJson"
-          customResponseBodyAdvice.supports(
-            converterType = MappingJackson2HttpMessageConverter::class.java,
-            methodParameter = methodParameter,
-          ).shouldBeTrue()
+          customResponseBodyAdvice.supports(methodParameter, MappingJackson2HttpMessageConverter::class.java).shouldBeTrue()
         }
 
         it("class is not OpenApiWebMvcResource and method name is not openapiJson") {
           val methodParameter = mockk<MethodParameter>(relaxed = true)
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           every { methodParameter.declaringClass } returns String::class.java
           every { methodParameter.method?.name } returns "Lorem Ipsum"
-          customResponseBodyAdvice.supports(
-            converterType = MappingJackson2HttpMessageConverter::class.java,
-            methodParameter = methodParameter,
-          ).shouldBeTrue()
+          customResponseBodyAdvice.supports(methodParameter, MappingJackson2HttpMessageConverter::class.java).shouldBeTrue()
         }
       }
     }
@@ -111,121 +94,121 @@ class CustomResponseBodyAdviceTests :
     describe("beforeBodyWrite()") {
       describe("body") {
         it("is ResponseSuccess") {
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = ResponseSuccess(
-              responseContent = "responseContent - Lorem Ipsum",
-              responseMessage = "responseMessage - Lorem Ipsum",
-              request = mockk<ServerHttpRequest>(relaxed = true),
+            ResponseSuccess(
+              "responseContent - Lorem Ipsum",
+              "responseMessage - Lorem Ipsum",
+              mockk<ServerHttpRequest>(relaxed = true),
             ),
-            methodParameter = mockk<MethodParameter>(relaxed = true),
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            mockk<MethodParameter>(relaxed = true),
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<ResponseSuccess<*>>()
         }
 
         it("is ResponseProblem (3xx)") {
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val problemDetail = ProblemDetail.forStatus(300)
           val apiProblemDetail = ApiProblemDetail(problemDetail)
           val responseProblem = ResponseProblem(apiProblemDetail, "Lorem Ipsum", mockk<HttpServletRequest>(relaxed = true))
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = responseProblem,
-            methodParameter = mockk<MethodParameter>(relaxed = true),
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            responseProblem,
+            mockk<MethodParameter>(relaxed = true),
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<ResponseProblem>()
         }
 
         it("is ResponseProblem (4xx)") {
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val problemDetail = ProblemDetail.forStatus(400)
           val apiProblemDetail = ApiProblemDetail(problemDetail)
           val responseProblem = ResponseProblem(apiProblemDetail, "Lorem Ipsum", mockk<HttpServletRequest>(relaxed = true))
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = responseProblem,
-            methodParameter = mockk<MethodParameter>(relaxed = true),
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            responseProblem,
+            mockk<MethodParameter>(relaxed = true),
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<ResponseProblem>()
         }
 
         it("is ResponseProblem (5xx)") {
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val problemDetail = ProblemDetail.forStatus(500)
           val apiProblemDetail = ApiProblemDetail(problemDetail)
           val responseProblem = ResponseProblem(apiProblemDetail, "Lorem Ipsum", mockk<HttpServletRequest>(relaxed = true))
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = responseProblem,
-            methodParameter = mockk<MethodParameter>(relaxed = true),
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            responseProblem,
+            mockk<MethodParameter>(relaxed = true),
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<ResponseProblem>()
         }
 
         it("is Throwable and is not ErrorResponseException") {
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = Exception("Lorem Ipsum"),
-            methodParameter = mockk<MethodParameter>(relaxed = true),
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            Exception("Lorem Ipsum"),
+            mockk<MethodParameter>(relaxed = true),
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<ResponseProblem>()
         }
 
         it("is ErrorResponseException") {
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = ErrorResponseException(HttpStatus.I_AM_A_TEAPOT),
-            methodParameter = mockk<MethodParameter>(relaxed = true),
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            ErrorResponseException(HttpStatus.I_AM_A_TEAPOT),
+            mockk<MethodParameter>(relaxed = true),
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<ResponseProblem>()
         }
 
         it("is ProblemDetail") {
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = ProblemDetail.forStatus(400),
-            methodParameter = mockk<MethodParameter>(relaxed = true),
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            ProblemDetail.forStatus(400),
+            mockk<MethodParameter>(relaxed = true),
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<ResponseProblem>()
         }
 
         it("is null") {
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val method = ClassUtils.getMethod(LrmListServiceDefault::class.java, "create", LrmListCreate::class.java, String::class.java)
           val returnType = MethodParameter(method, -1)
           val body =
             customResponseBodyAdvice.beforeBodyWrite(
-              o = null,
-              methodParameter = returnType,
-              mediaType = mockk<MediaType>(relaxed = true),
-              selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-              serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-              serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+              null,
+              returnType,
+              mockk<MediaType>(relaxed = true),
+              KotlinSerializationJsonHttpMessageConverter::class.java,
+              mockk<ServerHttpRequest>(relaxed = true),
+              mockk<ServerHttpResponse>(relaxed = true),
             )
           body.shouldBeInstanceOf<ResponseProblem>()
         }
@@ -233,20 +216,20 @@ class CustomResponseBodyAdviceTests :
 
       describe("method") {
         it("is null (does not ignore response binding)") {
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val methodParameter = mockk<MethodParameter>(relaxed = true)
           every { methodParameter.method } returns null
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = ResponseSuccess(
-              responseContent = "responseContent - Lorem Ipsum",
-              responseMessage = "responseMessage - Lorem Ipsum",
-              request = mockk<ServerHttpRequest>(relaxed = true),
+            ResponseSuccess(
+              "responseContent - Lorem Ipsum",
+              "responseMessage - Lorem Ipsum",
+              mockk<ServerHttpRequest>(relaxed = true),
             ),
-            methodParameter = methodParameter,
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            methodParameter,
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<ResponseSuccess<*>>()
         }
@@ -260,16 +243,16 @@ class CustomResponseBodyAdviceTests :
               return ""
             }
           }
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val method = ClassUtils.getMethod(TestClass::class.java, "handle", String::class.java)
           val returnType = MethodParameter(method, -1)
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = "Lorem Ipsum",
-            methodParameter = returnType,
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            "Lorem Ipsum",
+            returnType,
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<String>()
         }
@@ -282,16 +265,16 @@ class CustomResponseBodyAdviceTests :
               return ""
             }
           }
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val method = ClassUtils.getMethod(TestClass::class.java, "handle")
           val returnType = MethodParameter(method, -1)
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = "Lorem Ipsum",
-            methodParameter = returnType,
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            "Lorem Ipsum",
+            returnType,
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<String>()
         }
@@ -304,16 +287,16 @@ class CustomResponseBodyAdviceTests :
               return ""
             }
           }
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val method = ClassUtils.getMethod(TestClass::class.java, "handle", String::class.java)
           val returnType = MethodParameter(method, -1)
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = "Lorem Ipsum",
-            methodParameter = returnType,
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            "Lorem Ipsum",
+            returnType,
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<ResponseSuccess<*>>()
         }
@@ -325,16 +308,16 @@ class CustomResponseBodyAdviceTests :
               return ""
             }
           }
-          val customResponseBodyAdvice = CustomResponseBodyAdvice()
+          val customResponseBodyAdvice = CustomResponseBodyAdvice(ObjectMapper())
           val method = ClassUtils.getMethod(TestClass::class.java, "handle")
           val returnType = MethodParameter(method, -1)
           val body = customResponseBodyAdvice.beforeBodyWrite(
-            o = "Lorem Ipsum",
-            methodParameter = returnType,
-            mediaType = mockk<MediaType>(relaxed = true),
-            selectedConverterType = KotlinSerializationJsonHttpMessageConverter::class.java,
-            serverHttpRequest = mockk<ServerHttpRequest>(relaxed = true),
-            serverHttpResponse = mockk<ServerHttpResponse>(relaxed = true),
+            "Lorem Ipsum",
+            returnType,
+            mockk<MediaType>(relaxed = true),
+            KotlinSerializationJsonHttpMessageConverter::class.java,
+            mockk<ServerHttpRequest>(relaxed = true),
+            mockk<ServerHttpResponse>(relaxed = true),
           )
           body.shouldBeInstanceOf<String>()
         }

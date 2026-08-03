@@ -1,5 +1,6 @@
 package net.flyingfishflash.loremlist.api.data.response
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -20,7 +21,7 @@ data class LrmListItemResponse(
   val name: String,
   val description: String? = null,
   @EncodeDefault val quantity: Int = 0,
-  val isSuppressed: Boolean,
+  @get:JsonProperty("isSuppressed") val isSuppressed: Boolean,
   val owner: String,
   val created: Instant,
   val creator: String,
