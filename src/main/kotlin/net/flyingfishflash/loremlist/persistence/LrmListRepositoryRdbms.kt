@@ -85,7 +85,7 @@ class LrmListRepositoryRdbms : LrmListRepository {
       it[id] = lrmList.id
       it[name] = lrmList.name
       it[description] = lrmList.description
-      it[public] = lrmList.public
+      it[public] = lrmList.isPublic
       it[owner] = lrmList.owner
       it[created] = lrmList.created
       it[creator] = lrmList.creator
@@ -98,14 +98,14 @@ class LrmListRepositoryRdbms : LrmListRepository {
   override fun update(lrmList: LrmList): Int = updateList(lrmList) {
     it[repositoryTable.name] = lrmList.name
     it[repositoryTable.description] = lrmList.description
-    it[repositoryTable.public] = lrmList.public
+    it[repositoryTable.public] = lrmList.isPublic
   }
 
   override fun updateName(lrmList: LrmList): Int = updateList(lrmList) { it[repositoryTable.name] = lrmList.name }
 
   override fun updateDescription(lrmList: LrmList): Int = updateList(lrmList) { it[repositoryTable.description] = lrmList.description }
 
-  override fun updateIsPublic(lrmList: LrmList): Int = updateList(lrmList) { it[repositoryTable.public] = lrmList.public }
+  override fun updateIsPublic(lrmList: LrmList): Int = updateList(lrmList) { it[repositoryTable.public] = lrmList.isPublic }
 
   private fun updateList(lrmList: LrmList, updateAction: (UpdateStatement) -> Unit): Int {
     return repositoryTable.update({ repositoryTable.id eq lrmList.id }) {
@@ -143,32 +143,33 @@ class LrmListRepositoryRdbms : LrmListRepository {
 
   private fun ResultRow.toLrmList(lrmItems: Set<LrmListItem> = emptySet()): LrmList {
     return LrmList(
-      id = this[repositoryTable.id],
-      name = this[repositoryTable.name],
-      description = this[repositoryTable.description],
-      public = this[repositoryTable.public],
-      owner = this[repositoryTable.owner],
-      created = this[repositoryTable.created],
-      creator = this[repositoryTable.creator],
-      updated = this[repositoryTable.updated],
-      updater = this[repositoryTable.updater],
-      items = lrmItems,
+      this[repositoryTable.id],
+      this[repositoryTable.name],
+      this[repositoryTable.description],
+      this[repositoryTable.public],
+      this[repositoryTable.owner],
+      this[repositoryTable.created],
+      this[repositoryTable.creator],
+      this[repositoryTable.updated],
+      this[repositoryTable.updater],
+      lrmItems,
     )
   }
 
   private fun ResultRow.toLrmListItem(): LrmListItem {
     return LrmListItem(
-      id = this[LrmItemTable.id],
-      listId = this[LrmListItemsTable.list],
-      name = this[LrmItemTable.name],
-      description = this[LrmItemTable.description],
-      quantity = this[LrmListItemsTable.itemQuantity],
-      isSuppressed = this[LrmListItemsTable.itemIsSuppressed],
-      owner = this[LrmItemTable.owner],
-      created = this[LrmItemTable.created],
-      updated = this[LrmItemTable.updated],
-      creator = this[LrmItemTable.creator],
-      updater = this[LrmItemTable.updater],
+      this[LrmItemTable.id],
+      this[LrmListItemsTable.list],
+      this[LrmItemTable.name],
+      this[LrmItemTable.description],
+      this[LrmListItemsTable.itemQuantity],
+      this[LrmListItemsTable.itemIsSuppressed],
+      this[LrmItemTable.owner],
+      this[LrmItemTable.created],
+      this[LrmItemTable.creator],
+      this[LrmItemTable.updated],
+      this[LrmItemTable.updater],
+      emptySet(),
     )
   }
 }

@@ -209,8 +209,8 @@ class LrmItemApiServiceDefaultTests :
         val serviceResponse = ServiceResponse(content = itemCount, message = irrelevantMessage)
         every {
           mockLrmListItemService.countByOwnerAndItemId(
-            itemId = ofType(UUID::class),
-            owner = ofType(String::class),
+            ofType(UUID::class),
+            ofType(String::class),
           )
         } returns serviceResponse
         val apiServiceResponse = lrmItemApiService.countListAssociationsByItemIdAndItemOwner(id0, "test_owner")

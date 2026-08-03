@@ -232,7 +232,7 @@ public class LrmItemServiceDefault implements LrmItemService {
           "Retrieved "
               + repositoryResponse.size()
               + " items eligible to be added to list '"
-              + lrmList.getName()
+              + lrmList.name()
               + "'.");
     } catch (Exception cause) {
       if (cause instanceof DomainException domainException) {

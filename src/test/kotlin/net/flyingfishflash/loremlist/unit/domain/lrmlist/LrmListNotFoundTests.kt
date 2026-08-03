@@ -11,29 +11,29 @@ class LrmListNotFoundTests :
 
       it("primary constructor: default message") {
         val id = UUID.randomUUID()
-        val listNotFoundException = ListNotFoundException(id = id)
+        val listNotFoundException = ListNotFoundException(id)
         listNotFoundException.message.shouldBe("List could not be found.")
       }
 
       it("primary constructor: non-default message") {
-        val listNotFoundException = ListNotFoundException(id = UUID.randomUUID(), message = "Lorem Ipsum")
+        val listNotFoundException = ListNotFoundException(UUID.randomUUID(), "Lorem Ipsum")
         listNotFoundException.message?.shouldBe("Lorem Ipsum")
       }
 
       it("secondary constructor: default message, set size = 1") {
         val ids = setOf(UUID.randomUUID())
-        val listNotFoundException = ListNotFoundException(idCollection = ids)
+        val listNotFoundException = ListNotFoundException(ids)
         listNotFoundException.message.shouldBe("List could not be found.")
       }
 
       it("secondary constructor: default message, set size > 1") {
         val ids = setOf(UUID.randomUUID(), UUID.randomUUID())
-        val listNotFoundException = ListNotFoundException(idCollection = ids)
+        val listNotFoundException = ListNotFoundException(ids)
         listNotFoundException.message.shouldBe("Lists (2) could not be found.")
       }
 
       it("secondary constructor: non-default message") {
-        val listNotFoundException = ListNotFoundException(idCollection = setOf(UUID.randomUUID()), message = "Lorem Ipsum")
+        val listNotFoundException = ListNotFoundException(setOf(UUID.randomUUID()), "Lorem Ipsum")
         listNotFoundException.message.shouldBe("Lorem Ipsum")
       }
     }

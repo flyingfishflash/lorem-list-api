@@ -3,6 +3,7 @@ package net.flyingfishflash.loremlist.unit.domain.lrmlistitem
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 import net.flyingfishflash.loremlist.domain.lrmlistitem.ListItemNotFoundException
+import java.util.Set
 import java.util.UUID
 
 class ListItemNotFoundTests :
@@ -16,12 +17,12 @@ class ListItemNotFoundTests :
 
       it("id is not null") {
         val id = UUID.randomUUID()
-        val exception = ListItemNotFoundException(id = id)
+        val exception = ListItemNotFoundException(id)
         exception.responseMessage.shouldBe("ListItem could not be found.")
       }
 
       it("custom message") {
-        val exception = ListItemNotFoundException(message = "Lorem Ipsum")
+        val exception = ListItemNotFoundException(Set.of(), "Lorem Ipsum")
         exception.message.shouldBe("Lorem Ipsum")
         exception.responseMessage.shouldBe("Lorem Ipsum")
       }

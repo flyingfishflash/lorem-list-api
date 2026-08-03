@@ -42,18 +42,19 @@ class PublicControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     val irrelevantMessage = "message is irrelevant"
 
     fun lrmList(): LrmList = LrmList(
-      id = id0,
-      name = lrmListCreateRequest.name,
-      description = lrmListCreateRequest.description,
-      public = lrmListCreateRequest.public,
-      owner = "Lorem Ipsum Owner",
-      created = now,
-      creator = "Lorum Ipsum Created By",
-      updated = now,
-      updater = "Lorem Ipsum Updated By",
+      id0,
+      lrmListCreateRequest.name,
+      lrmListCreateRequest.description,
+      lrmListCreateRequest.public,
+      "Lorem Ipsum Owner",
+      now,
+      "Lorum Ipsum Created By",
+      now,
+      "Lorem Ipsum Updated By",
+      emptySet(),
     )
 
-    fun lrmListWithEmptyItems(): LrmList = lrmList().copy()
+    fun lrmListWithEmptyItems(): LrmList = lrmList()
 
     describe("/public/lists") {
       describe("get") {

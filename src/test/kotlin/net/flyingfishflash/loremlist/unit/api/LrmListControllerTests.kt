@@ -77,15 +77,16 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     val lrmItemCreateRequest = LrmItemCreateRequest(name = "Lorem Item Name", description = "Lorem Item Description", isSuppressed = false)
 
     fun createLrmList(id: UUID, nameSuffix: String = "") = LrmList(
-      id = id,
-      name = "Lorem List Name${if (nameSuffix.isNotEmpty()) " ($nameSuffix)" else ""}",
-      description = "Lorem List Description",
-      public = true,
-      owner = "Lorem Ipsum Owner",
-      created = now,
-      creator = "Lorem Ipsum Created By",
-      updated = now,
-      updater = "Lorem Ipsum Updated By",
+      id,
+      "Lorem List Name${if (nameSuffix.isNotEmpty()) " ($nameSuffix)" else ""}",
+      "Lorem List Description",
+      true,
+      "Lorem Ipsum Owner",
+      now,
+      "Lorem Ipsum Created By",
+      now,
+      "Lorem Ipsum Updated By",
+      emptySet(),
     )
 
     fun createLrmItem(id: UUID, nameSuffix: String = "") = LrmItem(
@@ -101,16 +102,18 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     )
 
     fun createLrmListItem(id: UUID, nameSuffix: String = "") = LrmListItem(
-      id = id,
-      listId = UUID.randomUUID(),
-      name = "Lorem List Item Name${if (nameSuffix.isNotEmpty()) " ($nameSuffix)" else ""}",
-      description = "Lorem List Item Description",
-      isSuppressed = false,
-      owner = "Lorem Ipsum Owner",
-      created = now,
-      creator = "Lorem Ipsum Created By",
-      updated = now,
-      updater = "Lorem Ipsum Updated By",
+      id,
+      UUID.randomUUID(),
+      "Lorem List Item Name${if (nameSuffix.isNotEmpty()) " ($nameSuffix)" else ""}",
+      "Lorem List Item Description",
+      0,
+      false,
+      "Lorem Ipsum Owner",
+      now,
+      "Lorem Ipsum Created By",
+      now,
+      "Lorem Ipsum Updated By",
+      emptySet(),
     )
 
     fun lrmItem(): LrmItem = LrmItem(
@@ -147,8 +150,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("lists are deleted") {
           val instance = "/lists"
           val content = LrmListDeletedResponse(
-            listNames = listOf("Lorem List Name"),
-            associatedItemNames = listOf("Lorem Item Name"),
+            listOf("Lorem List Name"),
+            listOf("Lorem Item Name"),
           )
 
           every { mockLrmListApiService.deleteByOwner(ofType(String::class)) } returns
@@ -240,7 +243,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
         it("requested list name is an empty string") {
           val instance = "/lists"
-          val content = LrmListCreateRequest("", createLrmList(id[0]).description, createLrmList(id[0]).public)
+          val content = LrmListCreateRequest("", createLrmList(id[0]).description, createLrmList(id[0]).isPublic())
 
           performRequest(HttpMethod.POST, instance, content = Json.encodeToString(content)).andExpectAll(
             status().isBadRequest(),
@@ -257,7 +260,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
         it("requested list description is an empty string") {
           val instance = "/lists"
-          val content = LrmListCreateRequest(createLrmList(id[0]).name, "", createLrmList(id[0]).public)
+          val content = LrmListCreateRequest(createLrmList(id[0]).name, "", createLrmList(id[0]).isPublic())
 
           performRequest(HttpMethod.POST, instance, content = Json.encodeToString(content)).andExpectAll(
             status().isBadRequest(),
@@ -280,7 +283,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val instance = "/lists/with-no-items"
           val content = listOf(LrmListResponse.fromLrmList(createLrmList(id[0])))
 
-          every { mockLrmListApiService.findByOwnerAndHavingNoItemAssociations(owner = ofType(String::class)) } returns
+          every { mockLrmListApiService.findByOwnerAndHavingNoItemAssociations(ofType(String::class)) } returns
             ApiServiceResponse(content = content, message = apiResponseMessage)
 
           performRequest(HttpMethod.GET, instance).andExpectAll(
@@ -305,7 +308,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("count of lists is returned") {
           val instance = "/lists/count"
 
-          every { mockLrmListApiService.countByOwner(owner = ofType(String::class)) } returns
+          every { mockLrmListApiService.countByOwner(ofType(String::class)) } returns
             ApiServiceResponse(content = ApiMessageNumeric(999), message = apiResponseMessage)
 
           performRequest(HttpMethod.GET, instance).andExpectAll(
@@ -328,15 +331,15 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list is deleted") {
           val instance = "/lists/${id[1]}"
           val content =
-            LrmListDeletedResponse(listNames = listOf("dolor sit amet"), associatedItemNames = listOf("Lorem Ipsum"))
+            LrmListDeletedResponse(listOf("dolor sit amet"), listOf("Lorem Ipsum"))
 
           // nonsensical conditioning of the delete response:
           // if the count of item to list associations is 0, then associatedListNames should be an empty list
           every {
             mockLrmListApiService.deleteByOwnerAndId(
-              id = id[1],
-              owner = ofType(String::class),
-              removeItemAssociations = false,
+              id[1],
+              ofType(String::class),
+              false,
             )
           } returns ApiServiceResponse(content = content, message = apiResponseMessage)
 
@@ -360,9 +363,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.deleteByOwnerAndId(
-              id = id[1],
-              owner = ofType(String::class),
-              removeItemAssociations = false,
+              id[1],
+              ofType(String::class),
+              false,
             )
           } throws ListNotFoundException(id[1])
 
@@ -383,7 +386,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list is found") {
           val instance = "/lists/${id[1]}"
 
-          every { mockLrmListApiService.findByOwnerAndId(id = id[1], owner = ofType(String::class)) } returns
+          every { mockLrmListApiService.findByOwnerAndId(id[1], ofType(String::class)) } returns
             ApiServiceResponse((LrmListResponse.fromLrmList(createLrmList(id[0]))), message = apiResponseMessage)
 
           performRequest(HttpMethod.GET, instance).andExpectAll(
@@ -402,7 +405,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list is found ?includeItems=true") {
           val instance = "/lists/${id[1]}?includeItems=true"
 
-          every { mockLrmListApiService.findByOwnerAndId(id = id[1], owner = ofType(String::class)) } returns
+          every { mockLrmListApiService.findByOwnerAndId(id[1], ofType(String::class)) } returns
             ApiServiceResponse(LrmListResponse.fromLrmList(createLrmList(id[0])), message = apiResponseMessage)
 
           performRequest(HttpMethod.GET, instance).andExpectAll(
@@ -424,8 +427,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.findByOwnerAndIdExcludeItems(
-              id = id[1],
-              owner = ofType(String::class),
+              id[1],
+              ofType(String::class),
             )
           } returns
             ApiServiceResponse(LrmListResponse.fromLrmList(createLrmList(id[0])), message = apiResponseMessage)
@@ -447,7 +450,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list is not found") {
           val instance = "/lists/${id[1]}"
 
-          every { mockLrmListApiService.findByOwnerAndId(id = id[1], owner = ofType(String::class)) } throws
+          every { mockLrmListApiService.findByOwnerAndId(id[1], ofType(String::class)) } throws
             ListNotFoundException(id[1])
 
           performRequest(HttpMethod.GET, instance).andExpectAll(
@@ -467,7 +470,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list is found and updated") {
           val instance = "/lists/${id[1]}"
 
-          every { mockLrmListApiService.patchByOwnerAndId(id = id[1], owner = ofType(String::class), any()) } returns
+          every { mockLrmListApiService.patchByOwnerAndId(id[1], ofType(String::class), any()) } returns
             ApiServiceResponse(
               content = LrmListResponse.fromLrmList(createLrmList(id[0])),
               message = apiResponseMessage,
@@ -494,7 +497,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list is found and not updated") {
           val instance = "/lists/${id[1]}"
 
-          every { mockLrmListApiService.patchByOwnerAndId(id = id[1], owner = ofType(String::class), any()) } returns
+          every { mockLrmListApiService.patchByOwnerAndId(id[1], ofType(String::class), any()) } returns
             ApiServiceResponse(content = LrmListResponse.fromLrmList(createLrmList(id[0])), message = "not updated")
 
           performRequest(
@@ -517,7 +520,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list is not found") {
           val instance = "/lists/${id[1]}"
 
-          every { mockLrmListApiService.patchByOwnerAndId(id = id[1], owner = ofType(String::class), any()) } throws
+          every { mockLrmListApiService.patchByOwnerAndId(id[1], ofType(String::class), any()) } throws
             ListNotFoundException(id[1])
 
           performRequest(
@@ -544,11 +547,11 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("all items are removed from a list") {
           every {
             mockLrmListApiService.removeAllListItems(
-              listId = id[1],
-              listOwner = ofType(String::class),
+              id[1],
+              ofType(String::class),
             )
           } returns ApiServiceResponse(
-            AssociationsDeletedResponse(itemName = "irrelevant", 999),
+            AssociationsDeletedResponse("irrelevant", 999),
             message = apiResponseMessage,
           )
 
@@ -573,9 +576,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.createListItem(
-              listId = ofType<UUID>(),
-              itemCreateRequest = lrmItemCreateRequest,
-              creator = ofType<String>(),
+              ofType<UUID>(),
+              lrmItemCreateRequest,
+              ofType<String>(),
             )
           } returns
             ApiServiceResponse(content = lrmListItemResponse, message = apiResponseMessage)
@@ -595,9 +598,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("list item is not created") {
           every {
             mockLrmListApiService.createListItem(
-              listId = ofType<UUID>(),
-              itemCreateRequest = lrmItemCreateRequest,
-              creator = ofType<String>(),
+              ofType<UUID>(),
+              lrmItemCreateRequest,
+              ofType<String>(),
             )
           } throws DomainException.builder().build()
 
@@ -624,13 +627,13 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.removeListItem(
-              itemId = id[2],
-              listId = id[1],
-              componentsOwner = ofType(String::class),
+              id[1],
+              id[2],
+              ofType(String::class),
             )
           } returns
             ApiServiceResponse(
-              content = AssociationDeletedResponse(itemName = lrmItemName, listName = lrmListName),
+              content = AssociationDeletedResponse(lrmItemName, lrmListName),
               message = apiResponseMessage,
             )
 
@@ -650,9 +653,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.removeListItem(
-              itemId = id[2],
-              listId = id[1],
-              componentsOwner = ofType(String::class),
+              id[1],
+              id[2],
+              ofType(String::class),
             )
           } throws ItemNotFoundException(id[2])
 
@@ -673,9 +676,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.removeListItem(
-              itemId = id[2],
-              listId = id[1],
-              componentsOwner = ofType(String::class),
+              id[1],
+              id[2],
+              ofType(String::class),
             )
           } throws ListNotFoundException(id[1])
 
@@ -699,10 +702,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.patchListItem(
-              itemId = id[2],
-              listId = id[1],
-              listOwner = ofType(String::class),
-              patchRequest = any(),
+              id[1],
+              id[2],
+              ofType(String::class),
+              any(),
             )
           } returns ApiServiceResponse(
             content = apiResponseContent,
@@ -731,10 +734,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.patchListItem(
-              itemId = id[2],
-              listId = id[1],
-              listOwner = ofType(String::class),
-              patchRequest = any(),
+              id[1],
+              id[2],
+              ofType(String::class),
+              any(),
             )
           } returns ApiServiceResponse(
             content = apiResponseContent,
@@ -762,10 +765,10 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.patchListItem(
-              itemId = id[2],
-              listId = id[1],
-              listOwner = ofType(String::class),
-              patchRequest = any(),
+              id[1],
+              id[2],
+              ofType(String::class),
+              any(),
             )
           } throws ListItemNotFoundException()
 
@@ -790,15 +793,15 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val instance = "/lists/${id[1]}/items"
 
           val mockResponse = LrmListItemAddedResponse(
-            componentName = createLrmList(id[1]).name,
-            associatedComponents = listOf(LrmItemSuccinct.fromLrmItem(createLrmItem(id[2]))),
+            createLrmList(id[1]).name,
+            listOf(LrmItemSuccinct.fromLrmItem(createLrmItem(id[2]))),
           )
 
           every {
             mockLrmListApiService.addListItem(
-              listId = id[1],
-              itemIdCollection = any(),
-              owner = ofType(String::class),
+              id[1],
+              any(),
+              ofType(String::class),
             )
           } returns ApiServiceResponse(content = mockResponse, message = apiResponseMessage)
 
@@ -828,8 +831,8 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val instance = "/lists/${id[1]}/items"
 
           val mockResponse = LrmListItemAddedResponse(
-            componentName = createLrmList(id[1]).name,
-            associatedComponents = listOf(
+            createLrmList(id[1]).name,
+            listOf(
               LrmItemSuccinct.fromLrmItem(createLrmItem(id[2])),
               LrmItemSuccinct.fromLrmItem(createLrmItem(id[3])),
             ),
@@ -837,9 +840,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.addListItem(
-              listId = id[1],
-              itemIdCollection = any(),
-              owner = ofType(String::class),
+              id[1],
+              any(),
+              ofType(String::class),
             )
           } returns ApiServiceResponse(content = mockResponse, message = apiResponseMessage)
 
@@ -870,9 +873,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.addListItem(
-              listId = id[1],
-              itemIdCollection = any(),
-              owner = ofType(String::class),
+              id[1],
+              any(),
+              ofType(String::class),
             )
           } throws ListNotFoundException(id[2])
 
@@ -899,9 +902,9 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
           every {
             mockLrmListApiService.addListItem(
-              listId = id[1],
-              itemIdCollection = any(),
-              owner = ofType(String::class),
+              id[1],
+              any(),
+              ofType(String::class),
             )
           } throws ItemNotFoundException(id[2])
 
@@ -929,7 +932,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       context("patch") {
         it("list item is moved from one list to another") {
           val instance = "/lists/${id[1]}/items/${id[2]}/${id[3]}"
-          val apiResponseContent = LrmListItemMovedResponse(itemName = "", currentListName = "", newListName = "")
+          val apiResponseContent = LrmListItemMovedResponse("", "", "")
 
           every {
             mockLrmListApiService.moveListItem(id[1], id[2], id[3], ofType<String>())
@@ -954,7 +957,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("count of item associations is returned") {
           val instance = "/lists/${id[1]}/items/count"
 
-          every { mockLrmListApiService.countListItems(listId = id[1], listOwner = ofType(String::class)) } returns
+          every { mockLrmListApiService.countListItems(id[1], ofType(String::class)) } returns
             ApiServiceResponse(content = ApiMessageNumeric(999), message = apiResponseMessage)
 
           performRequest(HttpMethod.GET, instance).andExpectAll(
@@ -974,7 +977,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val instance = "/lists/${id[1]}/items/count"
 
           every {
-            mockLrmListApiService.countListItems(listId = id[1], listOwner = ofType(String::class))
+            mockLrmListApiService.countListItems(id[1], ofType(String::class))
           } throws DomainException.builder().httpStatus(HttpStatus.NOT_FOUND).build()
 
           performRequest(HttpMethod.GET, instance).andExpectAll(

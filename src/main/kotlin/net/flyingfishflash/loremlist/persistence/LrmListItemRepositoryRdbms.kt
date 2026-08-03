@@ -153,8 +153,8 @@ class LrmListItemRepositoryRdbms : LrmListItemRepository {
     return resultRows
       .distinctBy { it[LrmItemTable.id] }
       .map {
-        it.toLrmListItem().copy(
-          lists = listsByItems[it[LrmItemTable.id]]?.sortedBy { list -> list.name }?.toSet() ?: emptySet(),
+        it.toLrmListItem().withLists(
+          listsByItems[it[LrmItemTable.id]]?.sortedBy { list -> list.name }?.toSet() ?: emptySet(),
         )
       }
   }
@@ -163,17 +163,18 @@ class LrmListItemRepositoryRdbms : LrmListItemRepository {
 
   private fun ResultRow.toLrmListItem(): LrmListItem {
     return LrmListItem(
-      id = this[item],
-      listId = this[list],
-      name = this[LrmItemTable.name],
-      description = this[LrmItemTable.description],
-      owner = this[LrmItemTable.owner],
-      created = this[LrmItemTable.created],
-      creator = this[LrmItemTable.creator],
-      updated = this[LrmItemTable.updated],
-      updater = this[LrmItemTable.updater],
-      quantity = this[itemQuantity],
-      isSuppressed = this[itemIsSuppressed],
+      this[item],
+      this[list],
+      this[LrmItemTable.name],
+      this[LrmItemTable.description],
+      this[itemQuantity],
+      this[itemIsSuppressed],
+      this[LrmItemTable.owner],
+      this[LrmItemTable.created],
+      this[LrmItemTable.creator],
+      this[LrmItemTable.updated],
+      this[LrmItemTable.updater],
+      emptySet(),
     )
   }
 }

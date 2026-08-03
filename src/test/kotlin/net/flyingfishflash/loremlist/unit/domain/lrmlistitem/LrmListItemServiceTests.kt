@@ -51,7 +51,7 @@ class LrmListItemServiceTests :
       it("return expected count when list found") {
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.countByOwnerAndListId(listId = listId, listOwner = owner) } returns 1
-        val response = lrmListItemService.countByOwnerAndListId(listId = listId, owner = owner)
+        val response = lrmListItemService.countByOwnerAndListId(listId, owner)
         response.content shouldBe 1L
         response.message shouldBe "List is associated with 1 items."
         verify { mockLrmListItemRepository.countByOwnerAndListId(listId, owner) }
@@ -80,7 +80,7 @@ class LrmListItemServiceTests :
         every { mockLrmListItem.name } returns "Lorem List Item"
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = listId, owner = owner) } returns mockLrmListItem
-        val response = lrmListItemService.findByOwnerAndItemIdAndListId(itemId = itemId, listId = listId, owner = owner)
+        val response = lrmListItemService.findByOwnerAndItemIdAndListId(itemId, listId, owner)
         response.content shouldBe mockLrmListItem
         response.message shouldBe "Retrieved list item 'Lorem List Item'"
       }
@@ -88,7 +88,7 @@ class LrmListItemServiceTests :
       it("throw ListNotFoundException when list is not found") {
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns null
         shouldThrow<ListNotFoundException> {
-          lrmListItemService.findByOwnerAndItemIdAndListId(itemId = itemId, listId = listId, owner = owner)
+          lrmListItemService.findByOwnerAndItemIdAndListId(itemId, listId, owner)
         }
       }
 
@@ -96,7 +96,7 @@ class LrmListItemServiceTests :
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = listId, owner = owner) } returns null
         shouldThrow<ListItemNotFoundException> {
-          lrmListItemService.findByOwnerAndItemIdAndListId(itemId = itemId, listId = listId, owner = owner)
+          lrmListItemService.findByOwnerAndItemIdAndListId(itemId, listId, owner)
         }
       }
     }
@@ -107,20 +107,20 @@ class LrmListItemServiceTests :
       val itemId2 = UUID.randomUUID()
 
       it("catch/rethrow IllegalStateException when item ids are empty") {
-        val exception = shouldThrow<DomainException> { lrmListItemService.add(id = listId, idCollection = emptyList(), componentsOwner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.add(listId, emptyList(), owner) }
         exception.cause.shouldBeInstanceOf<IllegalStateException>()
       }
 
       it("catch/rethrow ListNotFoundException when list not found") {
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns null
-        val exception = shouldThrow<DomainException> { lrmListItemService.add(id = listId, idCollection = listOf(itemId1), componentsOwner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.add(listId, listOf(itemId1), owner) }
         exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       }
 
       it("catch/rethrow ItemNotFoundException when item not found") {
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmItemRepository.notFoundByOwnerAndId(itemIdCollection = listOf(itemId1), owner = owner) } returns setOf(itemId1)
-        val exception = shouldThrow<DomainException> { lrmListItemService.add(id = listId, idCollection = listOf(itemId1), componentsOwner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.add(listId, listOf(itemId1), owner) }
         exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       }
 
@@ -142,7 +142,7 @@ class LrmListItemServiceTests :
             listOf(
               SuccinctLrmComponentPair(list = LrmListSuccinct.fromLrmList(mockLrmList), item = LrmItemSuccinct.fromLrmItem(mockLrmItem1)),
             )
-          val response = lrmListItemService.add(id = listId, idCollection = listOf(itemId1), componentsOwner = owner)
+          val response = lrmListItemService.add(listId, listOf(itemId1), owner)
           response.message shouldContain "to item"
           response.content.items shouldBe setOf(LrmItemSuccinct.fromLrmItem(mockLrmItem1))
         }
@@ -170,7 +170,7 @@ class LrmListItemServiceTests :
           listOf(
             SuccinctLrmComponentPair(list = LrmListSuccinct.fromLrmList(mockLrmList), item = LrmItemSuccinct.fromLrmItem(mockLrmItem1)),
           )
-        val exception = shouldThrow<DomainException> { lrmListItemService.add(id = listId, idCollection = listOf(itemId1, itemId2), componentsOwner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.add(listId, listOf(itemId1, itemId2), owner) }
         exception.message.shouldContain("created = 1 / requested = 2")
       }
 
@@ -182,21 +182,21 @@ class LrmListItemServiceTests :
 
         it("h2 -> Unique index or primary key violation") {
           every { mockLrmListItemRepository.create(any()) } throws SQLException("Unique index or primary key violation")
-          val exception = shouldThrow<DomainException> { lrmListItemService.add(id = listId, idCollection = listOf(itemId1), componentsOwner = owner) }
+          val exception = shouldThrow<DomainException> { lrmListItemService.add(listId, listOf(itemId1), owner) }
           exception.cause.shouldBeInstanceOf<SQLException>()
           exception.responseMessage.shouldContain("It already exists.")
         }
 
         it("pg -> duplicate key value violates unique constraint") {
           every { mockLrmListItemRepository.create(any()) } throws SQLException("duplicate key value violates unique constraint")
-          val exception = shouldThrow<DomainException> { lrmListItemService.add(id = listId, idCollection = listOf(itemId1), componentsOwner = "lorem ipsum") }
+          val exception = shouldThrow<DomainException> { lrmListItemService.add(listId, listOf(itemId1), "lorem ipsum") }
           exception.cause.shouldBeInstanceOf<SQLException>()
           exception.responseMessage.shouldContain("It already exists.")
         }
 
         it("other sql exception") {
           every { mockLrmListItemRepository.create(any()) } throws SQLException("other sql exception")
-          val exception = shouldThrow<DomainException> { lrmListItemService.add(id = listId, idCollection = listOf(itemId1), componentsOwner = "lorem ipsum") }
+          val exception = shouldThrow<DomainException> { lrmListItemService.add(listId, listOf(itemId1), "lorem ipsum") }
           exception.cause.shouldBeInstanceOf<SQLException>()
           exception.responseMessage.shouldContain("Unanticipated SQL exception")
         }
@@ -204,7 +204,7 @@ class LrmListItemServiceTests :
 
       it("catch/rethrow DomainException when repository throws RuntimeException") {
         every { mockLrmListItemRepository.create(any()) } throws RuntimeException("Repository Exception")
-        val exception = shouldThrow<DomainException> { lrmListItemService.add(id = listId, idCollection = listOf(itemId1), componentsOwner = "lorem ipsum") }
+        val exception = shouldThrow<DomainException> { lrmListItemService.add(listId, listOf(itemId1), "lorem ipsum") }
         exception.cause.shouldBeInstanceOf<RuntimeException>()
         exception.responseMessage.shouldContain("Could not create a new association")
       }
@@ -223,25 +223,38 @@ class LrmListItemServiceTests :
       }
 
       it("create item and assign it to a list") {
+        val realLrmListItem = LrmListItem(
+          itemId,
+          listId,
+          "Zmi22CTcJ4",
+          "Lorem List Item Description",
+          0,
+          false,
+          owner,
+          kotlinx.datetime.Clock.System.now(),
+          owner,
+          kotlinx.datetime.Clock.System.now(),
+          owner,
+          emptySet(),
+        )
         every { mockLrmItem1.id } returns itemId
         every { mockLrmList.name } returns mockListName
-        every { mockLrmListItem.name } returns "Zmi22CTcJ4"
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns mockLrmItem1
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmItemRepository.notFoundByOwnerAndId(itemIdCollection = listOf(itemId), owner = owner) } returns emptySet()
         every { mockLrmListItemRepository.create(associationCollection = setOf(Pair(listId, itemId))) } returns listOf(mockSuccinctLrmComponentPair)
         every { mockSuccinctLrmComponentPair.item.name } returns mockSuccinctItemName
-        every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = listId, owner = owner) } returns mockLrmListItem
+        every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = listId, owner = owner) } returns realLrmListItem
         every { mockLrmListItemRepository.updateQuantity(lrmListItem = ofType<LrmListItem>()) } returns 1
         every { mockLrmListItemRepository.updateIsItemSuppressed(lrmListItem = ofType<LrmListItem>()) } returns 1
-        val response = lrmListItemService.create(listId = listId, lrmItemCreate = lrmItemCreate, creator = owner)
+        val response = lrmListItemService.create(listId, lrmItemCreate, owner)
         response.message shouldBe "Created item '$mockSuccinctItemName' and assigned it to list '$mockListName'"
-        response.content shouldBe mockLrmListItem
+        response.content shouldBe realLrmListItem
       }
 
       it("item cannot be created") {
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns null
-        val exception = shouldThrow<DomainException> { lrmListItemService.create(listId = listId, lrmItemCreate = lrmItemCreate, creator = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.create(listId, lrmItemCreate, owner) }
         exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       }
     }
@@ -261,21 +274,21 @@ class LrmListItemServiceTests :
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = listId, owner = owner) } returns mockLrmListItem
         every { mockLrmListItemRepository.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) } returns 1
-        val response = lrmListItemService.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner)
+        val response = lrmListItemService.removeByOwnerAndListIdAndItemId(listId, itemId, owner)
         response.content shouldBe Pair("Item1", "List1")
         response.message shouldBe "Removed item 'Item1' from list 'List1'"
       }
 
       it("throw an exception when the item is not found") {
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns null
-        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId, itemId, owner) }
         exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       }
 
       it("throw an exception when the list is not found") {
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns mockLrmItem1
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns null
-        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId, itemId, owner) }
         exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       }
 
@@ -283,7 +296,7 @@ class LrmListItemServiceTests :
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns mockLrmItem1
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = listId, owner = owner) } returns null
-        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId, itemId, owner) }
         exception.cause.shouldBeInstanceOf<ListItemNotFoundException>()
       }
 
@@ -294,7 +307,7 @@ class LrmListItemServiceTests :
         every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = listId, owner = owner) } returns mockLrmListItem
         every { mockLrmListItemRepository.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) } throws
           RuntimeException("Repository Exception")
-        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId, itemId, owner) }
         exception.cause.shouldBeInstanceOf<RuntimeException>()
         (exception.cause as RuntimeException).message.shouldBe("Repository Exception")
       }
@@ -305,7 +318,7 @@ class LrmListItemServiceTests :
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = listId, owner = owner) } returns mockLrmListItem
         every { mockLrmListItemRepository.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) } returns 0
-        shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) }
+        shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId, itemId, owner) }
       }
 
       it("throw an exception when more than one record is deleted") {
@@ -313,7 +326,7 @@ class LrmListItemServiceTests :
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = listId, owner = owner) } returns mockLrmListItem
         every { mockLrmListItemRepository.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) } returns 2
-        shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId = listId, itemId = itemId, owner = owner) }
+        shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListIdAndItemId(listId, itemId, owner) }
       }
     }
 
@@ -324,7 +337,7 @@ class LrmListItemServiceTests :
         every { mockLrmItem1.name } returns "Item1"
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns mockLrmItem1
         every { mockLrmListItemRepository.removeByOwnerAndItemId(itemId = itemId, owner = owner) } returns 3
-        val response = lrmListItemService.removeByOwnerAndItemId(itemId = itemId, owner = owner)
+        val response = lrmListItemService.removeByOwnerAndItemId(itemId, owner)
         response.content shouldBe Pair("Item1", 3)
         response.message shouldBe "Removed '${mockLrmItem1.name}' from 3 lists."
       }
@@ -333,21 +346,21 @@ class LrmListItemServiceTests :
         every { mockLrmItem1.name } returns "Item1"
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns mockLrmItem1
         every { mockLrmListItemRepository.removeByOwnerAndItemId(itemId = itemId, owner = owner) } returns 1
-        val response = lrmListItemService.removeByOwnerAndItemId(itemId = itemId, owner = owner)
+        val response = lrmListItemService.removeByOwnerAndItemId(itemId, owner)
         response.content shouldBe Pair("Item1", 1)
         response.message shouldBe "Removed '${mockLrmItem1.name}' from 1 list."
       }
 
       it("throw an exception if the item is not found") {
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns null
-        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndItemId(itemId = itemId, owner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndItemId(itemId, owner) }
         exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       }
 
       it("throw a DomainException when an unknown error occurs") {
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns mockLrmItem1
         every { mockLrmListItemRepository.removeByOwnerAndListId(listId = itemId, owner = owner) } throws RuntimeException("Unknown error")
-        shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndItemId(itemId = itemId, owner = owner) }
+        shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndItemId(itemId, owner) }
       }
     }
 
@@ -358,7 +371,7 @@ class LrmListItemServiceTests :
         every { mockLrmList.name } returns "List1"
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.removeByOwnerAndListId(listId = listId, owner = owner) } returns 3
-        val response = lrmListItemService.removeByOwnerAndListId(listId = listId, owner = owner)
+        val response = lrmListItemService.removeByOwnerAndListId(listId, owner)
         response.content shouldBe Pair("List1", 3)
         response.message shouldBe "Removed 3 items from list 'List1'"
       }
@@ -367,21 +380,21 @@ class LrmListItemServiceTests :
         every { mockLrmList.name } returns "List1"
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.removeByOwnerAndListId(listId = listId, owner = owner) } returns 1
-        val response = lrmListItemService.removeByOwnerAndListId(listId = listId, owner = owner)
+        val response = lrmListItemService.removeByOwnerAndListId(listId, owner)
         response.content shouldBe Pair("List1", 1)
         response.message shouldBe "Removed 1 item from list 'List1'"
       }
 
       it("throw an exception if the list is not found") {
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns null
-        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListId(listId = listId, owner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListId(listId, owner) }
         exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       }
 
       it("throw a DomainException when an unknown error occurs") {
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = listId, owner = owner) } returns mockLrmList
         every { mockLrmListItemRepository.removeByOwnerAndListId(listId = listId, owner = owner) } throws RuntimeException("Unknown error")
-        shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListId(listId = listId, owner = owner) }
+        shouldThrow<DomainException> { lrmListItemService.removeByOwnerAndListId(listId, owner) }
       }
     }
 
@@ -401,7 +414,7 @@ class LrmListItemServiceTests :
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = destinationListId, owner = owner) } returns mockDestinationList
         every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = currentListId, owner = owner) } returns mockLrmListItem
         every { mockLrmListItemRepository.updateListId(lrmListItem = mockLrmListItem, destinationListId = destinationListId) } returns 1
-        val response = lrmListItemService.move(itemId = itemId, currentListId = currentListId, destinationListId = destinationListId, owner = owner)
+        val response = lrmListItemService.move(itemId, currentListId, destinationListId, owner)
         response.content shouldBe Triple("Item1", "CurrentList", "DestinationList")
         response.message shouldBe "Moved item 'Item1' from list 'CurrentList' to list 'DestinationList'"
       }
@@ -409,7 +422,7 @@ class LrmListItemServiceTests :
       it("throw an exception when the item is not found") {
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns null
         val exception = shouldThrow<DomainException> {
-          lrmListItemService.move(itemId = itemId, currentListId = currentListId, destinationListId = destinationListId, owner = owner)
+          lrmListItemService.move(itemId, currentListId, destinationListId, owner)
         }
         exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
       }
@@ -418,7 +431,7 @@ class LrmListItemServiceTests :
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns mockLrmItem1
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = currentListId, owner = owner) } returns null
         val exception = shouldThrow<DomainException> {
-          lrmListItemService.move(itemId = itemId, currentListId = currentListId, destinationListId = destinationListId, owner = owner)
+          lrmListItemService.move(itemId, currentListId, destinationListId, owner)
         }
         exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       }
@@ -428,7 +441,7 @@ class LrmListItemServiceTests :
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = currentListId, owner = owner) } returns mockCurrentList
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = destinationListId, owner = owner) } returns null
         val exception = shouldThrow<DomainException> {
-          lrmListItemService.move(itemId = itemId, currentListId = currentListId, destinationListId = destinationListId, owner = owner)
+          lrmListItemService.move(itemId, currentListId, destinationListId, owner)
         }
         exception.cause.shouldBeInstanceOf<ListNotFoundException>()
       }
@@ -439,7 +452,7 @@ class LrmListItemServiceTests :
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = destinationListId, owner = owner) } returns mockDestinationList
         every { mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(itemId = itemId, listId = currentListId, owner = owner) } returns null
         val exception = shouldThrow<DomainException> {
-          lrmListItemService.move(itemId = itemId, currentListId = currentListId, destinationListId = destinationListId, owner = owner)
+          lrmListItemService.move(itemId, currentListId, destinationListId, owner)
         }
         exception.cause.shouldBeInstanceOf<ListItemNotFoundException>()
       }
@@ -452,7 +465,7 @@ class LrmListItemServiceTests :
         every { mockLrmListItemRepository.updateListId(lrmListItem = mockLrmListItem, destinationListId = destinationListId) } throws
           RuntimeException("Unknown error")
         val exception = shouldThrow<DomainException> {
-          lrmListItemService.move(itemId = itemId, currentListId = currentListId, destinationListId = destinationListId, owner = owner)
+          lrmListItemService.move(itemId, currentListId, destinationListId, owner)
         }
         exception.cause.shouldBeInstanceOf<RuntimeException>()
       }
@@ -465,21 +478,21 @@ class LrmListItemServiceTests :
         val expectedCount = 5L
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns mockLrmItem1 // Assuming this returns a valid item
         every { mockLrmListItemRepository.countByOwnerAndItemId(itemId = itemId, itemOwner = owner) } returns expectedCount
-        val response = lrmListItemService.countByOwnerAndItemId(itemId = itemId, owner = owner)
+        val response = lrmListItemService.countByOwnerAndItemId(itemId, owner)
         response.content shouldBe expectedCount
         response.message shouldBe "Item is associated with $expectedCount lists."
       }
 
       it("throw exception when item not found") {
         every { mockLrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = owner) } returns null
-        val exception = shouldThrow<DomainException> { lrmListItemService.countByOwnerAndItemId(itemId = itemId, owner = owner) }
+        val exception = shouldThrow<DomainException> { lrmListItemService.countByOwnerAndItemId(itemId, owner) }
         exception.cause.shouldBeInstanceOf<ItemNotFoundException>()
         exception.httpStatus shouldBe HttpStatus.NOT_FOUND
       }
 
       it("throw exception when item repository throws an exception") {
         every { mockLrmListRepository.findByOwnerAndIdOrNull(id = itemId, owner = "lorem ipsum") } throws RuntimeException("Error")
-        val exception = shouldThrow<DomainException> { lrmListItemService.countByOwnerAndListId(listId = itemId, owner = "lorem ipsum") }
+        val exception = shouldThrow<DomainException> { lrmListItemService.countByOwnerAndListId(itemId, "lorem ipsum") }
         exception.cause.shouldBeInstanceOf<RuntimeException>()
         exception.httpStatus shouldBe HttpStatus.INTERNAL_SERVER_ERROR
       }
