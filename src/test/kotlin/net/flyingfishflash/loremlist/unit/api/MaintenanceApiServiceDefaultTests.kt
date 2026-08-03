@@ -23,11 +23,7 @@ class MaintenanceApiServiceDefaultTests :
     describe("MaintenanceApiServiceDefault") {
       it("purge") {
         val mockServiceResponse = ServiceResponse(
-          content = DomainPurged(
-            associationDeletedCount = 997,
-            itemDeletedCount = 998,
-            listDeletedCount = 999,
-          ),
+          content = DomainPurged(997, 998, 999),
           message = "irrelevant",
         )
 

@@ -33,7 +33,7 @@ class MaintenanceControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/maintenance/purge") {
       describe("delete") {
         it("domain is purged") {
-          val domainPurgedResponse = DomainPurgedResponse(associationDeletedCount = 997, itemDeletedCount = 998, listDeletedCount = 999)
+          val domainPurgedResponse = DomainPurgedResponse(997, 998, 999)
           val apiServiceResponse = ApiServiceResponse(content = domainPurgedResponse, message = "irrelevant")
           every { mockMaintenanceApiService.purge() } returns apiServiceResponse
           val instance = "/maintenance/purge"
