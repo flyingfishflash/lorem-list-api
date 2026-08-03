@@ -91,12 +91,12 @@ dependencies {
   }
 }
 
-jacoco { toolVersion = "0.8.12" }
+jacoco { toolVersion = "0.8.15" }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_23
+  sourceCompatibility = JavaVersion.toVersion(25)
   toolchain {
-    languageVersion = JavaLanguageVersion.of(23)
+    languageVersion = JavaLanguageVersion.of(26)
   }
 }
 
@@ -137,6 +137,12 @@ springBoot {
 }
 
 spotless {
+  java {
+    googleJavaFormat()
+    importOrder()
+    removeUnusedImports()
+  }
+
   kotlinGradle { ktlint("1.5.0") }
 
   kotlin {
@@ -172,9 +178,17 @@ spotless {
 tasks {
   compileKotlin {
     compilerOptions {
-      jvmTarget.set(JvmTarget.JVM_23)
+      jvmTarget.set(JvmTarget.JVM_21)
       freeCompilerArgs.add("-Xjsr305=strict")
     }
+  }
+
+  compileJava {
+    options.release.set(25)
+  }
+
+  compileTestJava {
+    options.release.set(25)
   }
 
   register<Sync>("explodeBootJar") {
