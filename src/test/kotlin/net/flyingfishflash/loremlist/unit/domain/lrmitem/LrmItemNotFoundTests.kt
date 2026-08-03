@@ -10,29 +10,29 @@ class LrmItemNotFoundTests :
     describe("ItemNotFoundException()") {
       it("primary constructor: default message") {
         val id = UUID.randomUUID()
-        val itemNotFoundException = ItemNotFoundException(id = id)
+        val itemNotFoundException = ItemNotFoundException(id)
         itemNotFoundException.message.shouldBe("Item could not be found.")
       }
 
       it("primary constructor: non-default message") {
-        val itemNotFoundException = ItemNotFoundException(id = UUID.randomUUID(), message = "Lorem Ipsum")
+        val itemNotFoundException = ItemNotFoundException(UUID.randomUUID(), "Lorem Ipsum")
         itemNotFoundException.message.shouldBe("Lorem Ipsum")
       }
 
       it("secondary constructor: default message, set size = 1") {
         val ids = setOf(UUID.randomUUID())
-        val itemNotFoundException = ItemNotFoundException(idCollection = ids)
+        val itemNotFoundException = ItemNotFoundException(ids)
         itemNotFoundException.message.shouldBe("Item could not be found.")
       }
 
       it("secondary constructor: default message, set size > 1") {
         val ids = setOf(UUID.randomUUID(), UUID.randomUUID())
-        val itemNotFoundException = ItemNotFoundException(idCollection = ids)
+        val itemNotFoundException = ItemNotFoundException(ids)
         itemNotFoundException.message.shouldBe("Items (2) could not be found.")
       }
 
       it("secondary constructor: non-default message") {
-        val itemNotFoundException = ItemNotFoundException(idCollection = setOf(UUID.randomUUID()), message = "Lorem Ipsum")
+        val itemNotFoundException = ItemNotFoundException(setOf(UUID.randomUUID()), "Lorem Ipsum")
         itemNotFoundException.message.shouldBe("Lorem Ipsum")
       }
     }

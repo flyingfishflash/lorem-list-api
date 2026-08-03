@@ -146,22 +146,23 @@ class LrmItemRepositoryRdbms : LrmItemRepository {
     return resultRows
       .distinctBy { it[repositoryTable.id] }
       .map {
-        it.toLrmItem().copy(
-          lists = listsByItems[it[repositoryTable.id]]?.sortedBy { list -> list.name }?.toSet() ?: emptySet(),
+        it.toLrmItem().withLists(
+          listsByItems[it[repositoryTable.id]]?.sortedBy { list -> list.name }?.toSet() ?: emptySet(),
         )
       }
   }
 
   fun ResultRow.toLrmItem(): LrmItem {
     return LrmItem(
-      id = this[repositoryTable.id],
-      name = this[repositoryTable.name],
-      description = this[repositoryTable.description],
-      owner = this[repositoryTable.owner],
-      created = this[repositoryTable.created],
-      creator = this[repositoryTable.creator],
-      updated = this[repositoryTable.updated],
-      updater = this[repositoryTable.updater],
+      this[repositoryTable.id],
+      this[repositoryTable.name],
+      this[repositoryTable.description],
+      this[repositoryTable.owner],
+      this[repositoryTable.created],
+      this[repositoryTable.creator],
+      this[repositoryTable.updated],
+      this[repositoryTable.updater],
+      emptySet(),
     )
   }
 }

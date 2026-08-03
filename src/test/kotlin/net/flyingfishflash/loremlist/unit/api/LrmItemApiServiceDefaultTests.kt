@@ -34,14 +34,15 @@ class LrmItemApiServiceDefaultTests :
     val irrelevantMessage = "ksADs8y96KRa1Zo4ipMdr5t8faudmFj4c564S02MjsNG6TXEO7yctC08Bb53bCB7"
 
     fun lrmItem(): LrmItem = LrmItem(
-      id = id0,
-      name = lrmItemCreateRequest.name,
-      description = lrmItemCreateRequest.description,
-      owner = "Lorem Ipsum Owner",
-      created = now,
-      creator = "Lorem Ipsum Created By",
-      updated = now,
-      updater = "Lorem Ipsum Updated By",
+      id0,
+      lrmItemCreateRequest.name,
+      lrmItemCreateRequest.description,
+      "Lorem Ipsum Owner",
+      now,
+      "Lorem Ipsum Created By",
+      now,
+      "Lorem Ipsum Updated By",
+      emptySet(),
     )
 
     afterEach { clearAllMocks() }
@@ -68,8 +69,8 @@ class LrmItemApiServiceDefaultTests :
         )
         val apiServiceResponse = ApiServiceResponse(
           content = LrmItemDeletedResponse(
-            itemNames = serviceResponse.content.itemNames,
-            associatedListNames = serviceResponse.content.associatedListNames,
+            serviceResponse.content.itemNames,
+            serviceResponse.content.associatedListNames,
           ),
           message = serviceResponse.message,
         )
@@ -89,8 +90,8 @@ class LrmItemApiServiceDefaultTests :
         )
         val apiServiceResponse = ApiServiceResponse(
           content = LrmItemDeletedResponse(
-            itemNames = serviceResponse.content.itemNames,
-            associatedListNames = serviceResponse.content.associatedListNames,
+            serviceResponse.content.itemNames,
+            serviceResponse.content.associatedListNames,
           ),
           message = serviceResponse.message,
         )
@@ -146,11 +147,7 @@ class LrmItemApiServiceDefaultTests :
 //          "quantity" to updatedItemQuantity
         )
         val originalLrmItem = lrmItem()
-        val updatedLrmItem = lrmItem().copy(
-          name = updatedItemName,
-          description = updatedItemDescription,
-          // quantity = updatedItemQuantity
-        )
+        val updatedLrmItem = lrmItem().withName(updatedItemName).withDescription(updatedItemDescription)
         every { mockLrmItemService.findByOwnerAndId(id0, owner) } returns ServiceResponse(
           originalLrmItem,
           irrelevantMessage,
@@ -179,7 +176,7 @@ class LrmItemApiServiceDefaultTests :
 //          "quantity" to updatedItemQuantity
         )
         val originalLrmItem = lrmItem()
-        val updatedLrmItem = lrmItem().copy()
+        val updatedLrmItem = lrmItem()
         every { mockLrmItemService.findByOwnerAndId(id0, owner) } returns ServiceResponse(
           originalLrmItem,
           irrelevantMessage,

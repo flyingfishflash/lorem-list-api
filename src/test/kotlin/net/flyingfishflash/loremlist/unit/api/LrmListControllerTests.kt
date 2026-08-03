@@ -89,14 +89,15 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     )
 
     fun createLrmItem(id: UUID, nameSuffix: String = "") = LrmItem(
-      id = id,
-      name = "Lorem Item Name${if (nameSuffix.isNotEmpty()) " ($nameSuffix)" else ""}",
-      description = "Lorem Item Description",
-      owner = "Lorem Ipsum Owner",
-      created = now,
-      creator = "Lorem Ipsum Created By",
-      updated = now,
-      updater = "Lorem Ipsum Updated By",
+      id,
+      "Lorem Item Name${if (nameSuffix.isNotEmpty()) " ($nameSuffix)" else ""}",
+      "Lorem Item Description",
+      "Lorem Ipsum Owner",
+      now,
+      "Lorem Ipsum Created By",
+      now,
+      "Lorem Ipsum Updated By",
+      emptySet(),
     )
 
     fun createLrmListItem(id: UUID, nameSuffix: String = "") = LrmListItem(
@@ -113,15 +114,15 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     )
 
     fun lrmItem(): LrmItem = LrmItem(
-      id = id[0],
-      name = lrmItemCreateRequest.name,
-      description = lrmItemCreateRequest.description,
-      owner = "Lorem Ipsum Owner",
-      created = now,
-      creator = "Lorem Ipsum Created By",
-      updated = now,
-      updater = "Lorem Ipsum Updated By",
-
+      id[0],
+      lrmItemCreateRequest.name,
+      lrmItemCreateRequest.description,
+      "Lorem Ipsum Owner",
+      now,
+      "Lorem Ipsum Created By",
+      now,
+      "Lorem Ipsum Updated By",
+      emptySet(),
     )
 
     fun performRequest(method: HttpMethod, url: String, content: String? = null): ResultActions {
@@ -995,7 +996,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           val serviceResponse = listOf(LrmItemResponse.fromLrmItem(lrmItem()))
           val mockApiServiceResponse = ApiServiceResponse(serviceResponse, "message is irrelevant")
           every {
-            mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class), listId = listId)
+            mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(ofType(String::class), listId)
           } returns mockApiServiceResponse
           val instance = "/lists/$listId/items/eligible"
           mockMvc.get(instance) {
@@ -1015,7 +1016,7 @@ class LrmListControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.[0].description") { value(serviceResponse[0].description) }
           }
           verify(exactly = 1) {
-            mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class), listId = listId)
+            mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(ofType(String::class), listId)
           }
         }
       }

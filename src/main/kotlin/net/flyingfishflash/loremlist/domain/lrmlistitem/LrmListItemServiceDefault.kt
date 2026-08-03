@@ -117,14 +117,15 @@ class LrmListItemServiceDefault(
   private fun createItem(lrmItemCreate: LrmItemCreate, creator: String): LrmItem = runCatching {
     val now = now()
     val lrmItem = LrmItem(
-      id = UUID.randomUUID(),
-      name = lrmItemCreate.name,
-      description = lrmItemCreate.description,
-      created = now,
-      owner = creator,
-      creator = creator,
-      updated = now,
-      updater = creator,
+      UUID.randomUUID(),
+      lrmItemCreate.name,
+      lrmItemCreate.description,
+      creator,
+      now,
+      creator,
+      now,
+      creator,
+      emptySet(),
     )
     val itemId = lrmItemRepository.insert(lrmItem)
     val newLrmItem = lrmItemRepository.findByOwnerAndIdOrNull(id = itemId, owner = creator)

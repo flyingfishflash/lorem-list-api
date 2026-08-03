@@ -209,7 +209,7 @@ class LrmListController(private val lrmListApiService: LrmListApiService, privat
     request: HttpServletRequest,
     @AuthenticationPrincipal principal: Jwt,
   ): ResponseEntity<ResponseSuccess<List<LrmItemResponse>>> {
-    val apiServiceResponse = lrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = principal.subject, listId = listId)
+    val apiServiceResponse = lrmItemApiService.findByOwnerAndHavingNoListAssociations(principal.subject, listId)
     val response = ResponseSuccess(apiServiceResponse.content, apiServiceResponse.message, request)
     val responseStatus = HttpStatus.OK
     logger.info { objectMapper.writeValueAsString(response) }

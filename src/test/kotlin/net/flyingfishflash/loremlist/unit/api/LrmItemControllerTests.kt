@@ -57,15 +57,15 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     val lrmItemCreateRequest = LrmItemCreateRequest(name = "Lorem Item Name", description = "Lorem Item Description", isSuppressed = false)
 
     fun lrmItem(): LrmItem = LrmItem(
-      id = id0,
-      name = lrmItemCreateRequest.name,
-      description = lrmItemCreateRequest.description,
-      owner = "Lorem Ipsum Owner",
-      created = now,
-      creator = "Lorem Ipsum Created By",
-      updated = now,
-      updater = "Lorem Ipsum Updated By",
-
+      id0,
+      lrmItemCreateRequest.name,
+      lrmItemCreateRequest.description,
+      "Lorem Ipsum Owner",
+      now,
+      "Lorem Ipsum Created By",
+      now,
+      "Lorem Ipsum Updated By",
+      emptySet(),
     )
 
     afterEach { clearAllMocks() }
@@ -75,10 +75,10 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("delete") {
         it("items are deleted") {
           val serviceResponse =
-            LrmItemDeletedResponse(itemNames = listOf("Deleted Lorem Item Name"), associatedListNames = listOf("Associated Lorem List Name"))
+            LrmItemDeletedResponse(listOf("Deleted Lorem Item Name"), listOf("Associated Lorem List Name"))
           val message = "Deleted all (${serviceResponse.itemNames.size}) of your items from ${serviceResponse.associatedListNames.size} lists."
           val mockReturn = ApiServiceResponse(serviceResponse, message)
-          every { mockLrmItemApiService.deleteByOwner(owner = ofType(String::class)) } returns mockReturn
+          every { mockLrmItemApiService.deleteByOwner(ofType(String::class)) } returns mockReturn
           val instance = "/items"
           mockMvc.delete(instance) {
             with(jwt())
@@ -102,7 +102,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("items are found") {
           val mockServiceResponse = listOf(LrmItemResponse.fromLrmItem(lrmItem()))
           val mockApiServiceResponse = ApiServiceResponse(mockServiceResponse, "message is irrelevant")
-          every { mockLrmItemApiService.findByOwner(owner = ofType(String::class)) } returns mockApiServiceResponse
+          every { mockLrmItemApiService.findByOwner(ofType(String::class)) } returns mockApiServiceResponse
           val instance = "/items"
           mockMvc.get(instance) {
             with(jwt())
@@ -123,7 +123,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
               doesNotExist()
             }
           }
-          verify(exactly = 1) { mockLrmItemApiService.findByOwner(owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmItemApiService.findByOwner(ofType(String::class)) }
         }
       }
     }
@@ -131,10 +131,10 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
     describe("/items/{item-id}") {
       describe("delete") {
         it("item is deleted") {
-          val mockServiceResponse = LrmItemDeletedResponse(itemNames = listOf("dolor sit amet"), associatedListNames = listOf("Lorem Ipsum"))
+          val mockServiceResponse = LrmItemDeletedResponse(listOf("dolor sit amet"), listOf("Lorem Ipsum"))
           val mockApiServiceResponse = ApiServiceResponse(mockServiceResponse, "message is irrelevant")
           every {
-            mockLrmItemApiService.deleteByOwnerAndId(id = id1, owner = ofType(String::class), removeListAssociations = false)
+            mockLrmItemApiService.deleteByOwnerAndId(id1, ofType(String::class), false)
           } returns mockApiServiceResponse
           val instance = "/items/$id1"
           mockMvc.delete(instance) {
@@ -154,16 +154,16 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           }
           verify(exactly = 1) {
             mockLrmItemApiService.deleteByOwnerAndId(
-              id = ofType(UUID::class),
-              owner = ofType(String::class),
-              removeListAssociations = ofType(Boolean::class),
+              ofType(UUID::class),
+              ofType(String::class),
+              ofType(Boolean::class),
             )
           }
         }
 
         it("item is not found") {
           every {
-            mockLrmItemApiService.deleteByOwnerAndId(id = id1, owner = ofType(String::class), removeListAssociations = false)
+            mockLrmItemApiService.deleteByOwnerAndId(id1, ofType(String::class), false)
           } throws ItemNotFoundException(id1)
 //          val expectedMessage = EntityNotFoundException.defaultMessage()
           val instance = "/items/$id1"
@@ -184,9 +184,9 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           }
           verify(exactly = 1) {
             mockLrmItemApiService.deleteByOwnerAndId(
-              id = ofType(UUID::class),
-              owner = ofType(String::class),
-              removeListAssociations = ofType(Boolean::class),
+              ofType(UUID::class),
+              ofType(String::class),
+              ofType(Boolean::class),
             )
           }
         }
@@ -196,7 +196,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("item is found") {
           val mockServiceResponse = LrmItemResponse.fromLrmItem(lrmItem())
           val mockApiServiceResponse = ApiServiceResponse(mockServiceResponse, "message is irrelevant")
-          every { mockLrmItemApiService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } returns
+          every { mockLrmItemApiService.findByOwnerAndId(id1, ofType(String::class)) } returns
             mockApiServiceResponse
           val instance = "/items/$id1"
           mockMvc.get(instance) {
@@ -212,11 +212,11 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.description") { value(lrmItem().description) }
             jsonPath("$.content.name") { value(lrmItem().name) }
           }
-          verify(exactly = 1) { mockLrmItemApiService.findByOwnerAndId(id = id1, owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmItemApiService.findByOwnerAndId(id1, ofType(String::class)) }
         }
 
         it("item is not found") {
-          every { mockLrmItemApiService.findByOwnerAndId(id = id1, owner = ofType(String::class)) } throws
+          every { mockLrmItemApiService.findByOwnerAndId(id1, ofType(String::class)) } throws
             ItemNotFoundException(id1)
 //          val expectedMessage = ItemNotFoundException.defaultMessage()
           val instance = "/items/$id1"
@@ -234,7 +234,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
 //            jsonPath("$.content.detail") { value(expectedMessage) }
           }
-          verify(exactly = 1) { mockLrmItemApiService.findByOwnerAndId(id = ofType(UUID::class), owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmItemApiService.findByOwnerAndId(ofType(UUID::class), ofType(String::class)) }
         }
       }
 
@@ -242,11 +242,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("item is found and updated") {
           val mockApiServiceResponse = ApiServiceResponse(LrmItemResponse.fromLrmItem(lrmItem()), "message is irrelevant")
           every {
-            mockLrmItemApiService.patchByOwnerAndId(
-              id = id1,
-              owner = ofType(String::class),
-              patchRequest = any(),
-            )
+            mockLrmItemApiService.patchByOwnerAndId(id1, ofType(String::class), any())
           } returns mockApiServiceResponse
           val instance = "/items/$id1"
           mockMvc.patch(instance) {
@@ -267,8 +263,8 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           }
           verify(exactly = 1) {
             mockLrmItemApiService.patchByOwnerAndId(
-              id = ofType(UUID::class),
-              owner = ofType(String::class),
+              ofType(UUID::class),
+              ofType(String::class),
               mapOf("name" to lrmItem().name),
             )
           }
@@ -311,7 +307,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
 
         it("item is not found") {
           every {
-            mockLrmItemApiService.patchByOwnerAndId(id = id1, owner = ofType(String::class), patchRequest = any())
+            mockLrmItemApiService.patchByOwnerAndId(id1, ofType(String::class), any())
           } throws ListNotFoundException(id1)
 //          val expectedMessage = ListNotFoundException.defaultMessage()
           val instance = "/items/$id1"
@@ -334,8 +330,8 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
           }
           verify(exactly = 1) {
             mockLrmItemApiService.patchByOwnerAndId(
-              id = ofType(UUID::class),
-              owner = ofType(String::class),
+              ofType(UUID::class),
+              ofType(String::class),
               mapOf("name" to lrmItem().name),
             )
           }
@@ -348,10 +344,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
         it("count of list associations is returned") {
           val mockApiServiceResponse = ApiServiceResponse(ApiMessageNumeric(999), "message is irrelevant")
           every {
-            mockLrmItemApiService.countListAssociationsByItemIdAndItemOwner(
-              itemId = id1,
-              itemOwner = ofType(String::class),
-            )
+            mockLrmItemApiService.countListAssociationsByItemIdAndItemOwner(id1, ofType(String::class))
           } returns mockApiServiceResponse
           val instance = "/items/$id1/lists/count"
           mockMvc.get(instance) {
@@ -368,19 +361,13 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.value") { value(mockApiServiceResponse.content.value) }
           }
           verify(exactly = 1) {
-            mockLrmItemApiService.countListAssociationsByItemIdAndItemOwner(
-              itemId = ofType(UUID::class),
-              itemOwner = ofType(String::class),
-            )
+            mockLrmItemApiService.countListAssociationsByItemIdAndItemOwner(ofType(UUID::class), ofType(String::class))
           }
         }
 
         it("item is not found") {
           every {
-            mockLrmItemApiService.countListAssociationsByItemIdAndItemOwner(
-              itemId = id1,
-              itemOwner = ofType(String::class),
-            )
+            mockLrmItemApiService.countListAssociationsByItemIdAndItemOwner(id1, ofType(String::class))
           } throws DomainException.builder().httpStatus(HttpStatus.NOT_FOUND).build()
           val instance = "/items/$id1/lists/count"
           mockMvc.get(instance) {
@@ -394,10 +381,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.status") { HttpStatus.NOT_FOUND.value() }
           }
           verify(exactly = 1) {
-            mockLrmItemApiService.countListAssociationsByItemIdAndItemOwner(
-              itemId = ofType(UUID::class),
-              itemOwner = ofType(String::class),
-            )
+            mockLrmItemApiService.countListAssociationsByItemIdAndItemOwner(ofType(UUID::class), ofType(String::class))
           }
         }
       }
@@ -407,7 +391,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("get") {
         it("count of items is returned") {
           every {
-            mockLrmItemApiService.countByOwner(owner = ofType(String::class))
+            mockLrmItemApiService.countByOwner(ofType(String::class))
           } returns ApiServiceResponse(ApiMessageNumeric(999L), "999 items.")
           val instance = "/items/count"
           mockMvc.get(instance) {
@@ -430,7 +414,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
       describe("get") {
         it("items with no list association are found") {
           val mockApiServiceResponse = ApiServiceResponse(listOf(LrmItemResponse.fromLrmItem(lrmItem())), "message is irrelevant")
-          every { mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class)) } returns mockApiServiceResponse
+          every { mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(ofType(String::class)) } returns mockApiServiceResponse
           val instance = "/items/with-no-lists"
           mockMvc.get(instance) {
             with(jwt())
@@ -448,7 +432,7 @@ class LrmItemControllerTests(mockMvc: MockMvc) : DescribeSpec() {
             jsonPath("$.content.[0].name") { value(mockApiServiceResponse.content[0].name) }
             jsonPath("$.content.[0].description") { value(mockApiServiceResponse.content[0].description) }
           }
-          verify(exactly = 1) { mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(owner = ofType(String::class)) }
+          verify(exactly = 1) { mockLrmItemApiService.findByOwnerAndHavingNoListAssociations(ofType(String::class)) }
         }
       }
     }
