@@ -78,12 +78,7 @@ dependencies {
   testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
   testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestExtensionsSpringVersion")
   testImplementation("org.springframework.security:spring-security-test")
-  testImplementation("org.springframework.boot:spring-boot-starter-test") {
-    exclude(group = "org.assertj", module = "assertj-core")
-    exclude(group = "org.hamcrest", module = "hamcrest")
-    exclude(group = "org.mockito", module = "mockito-core")
-    exclude(group = "org.mockito", module = "mockito-junit-jupiter")
-  }
+  testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 jacoco { toolVersion = "0.8.15" }
