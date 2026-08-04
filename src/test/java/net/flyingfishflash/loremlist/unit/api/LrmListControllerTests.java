@@ -19,7 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,8 +76,7 @@ class LrmListControllerTests {
 
   @MockitoBean private LrmItemApiService mockLrmItemApiService;
 
-  private static final ObjectMapper OBJECT_MAPPER =
-      new ObjectMapper().registerModule(new KotlinModule.Builder().build());
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final Instant now = Clock.System.INSTANCE.now();
   private final UUID id0 = UUID.fromString("00000000-0000-4000-a000-000000000000");

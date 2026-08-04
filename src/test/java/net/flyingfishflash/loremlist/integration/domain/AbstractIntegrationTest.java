@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,8 +32,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @AutoConfigureMockMvc
 public abstract class AbstractIntegrationTest {
 
-  protected static final ObjectMapper OBJECT_MAPPER =
-      new ObjectMapper().registerModule(new KotlinModule.Builder().build());
+  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   @Autowired protected MockMvc mockMvc;
 

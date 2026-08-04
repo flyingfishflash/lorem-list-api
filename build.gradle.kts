@@ -1,5 +1,4 @@
 import com.adarshr.gradle.testlogger.theme.ThemeType
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 group = "net.flyingfishflash"
 description = "Simple List Management API"
@@ -18,10 +17,6 @@ plugins {
   id("org.sonarqube") version "6.2.0.5505"
   id("org.springframework.boot") version "3.5.0"
   id("org.springdoc.openapi-gradle-plugin") version "1.9.0"
-  kotlin("jvm") version "2.1.20"
-  kotlin("plugin.jpa") version "2.1.20"
-  kotlin("plugin.serialization") version "2.1.20"
-  kotlin("plugin.spring") version "2.1.20"
 //  id("org.graalvm.buildtools.native") version "0.9.28"
 }
 
@@ -31,28 +26,19 @@ val ciPipelineId by extra { ciPipelineId() }
 
 val flywayVersion = "11.9.1"
 val jakartaValidationApiVersion = "3.1.1"
-val kotestVersion = "5.9.1"
-val kotestExtensionsSpringVersion = "1.3.0"
-val kotlinLoggingVersion = "7.0.7"
 val kotlinxDateTimeVersion = "0.6.2"
-val kotlinxSerializationJson = "1.8.1"
 val postgresqlVersion = "42.7.6"
 val springDocOpenApiStarterWebmvcUiVersion = "2.8.8"
-val springmockkVersion = "4.0.2"
 
 configurations { compileOnly { extendsFrom(configurations.annotationProcessor.get()) } }
 
 dependencies {
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-//  https://github.com/oshai/kotlin-logging/releases
-  implementation("io.github.oshai:kotlin-logging-jvm:$kotlinLoggingVersion")
   implementation("jakarta.validation:jakarta.validation-api:$jakartaValidationApiVersion")
 //  https://github.com/flyway/flyway/releases
   implementation("org.flywaydb:flyway-core:$flywayVersion")
   implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
-  implementation("org.jetbrains.kotlin:kotlin-reflect")
+  // kotlinx-datetime backs kotlinx.datetime.Instant, still used throughout the domain model.
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJson")
 //  https://github.com/springdoc/springdoc-openapi/releases
   implementation(
     "org.springdoc:springdoc-openapi-starter-webmvc-ui:" +
@@ -71,12 +57,6 @@ dependencies {
   runtimeOnly("com.h2database:h2")
   runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-  testImplementation("com.ninja-squad:springmockk:$springmockkVersion")
-  testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
-  testImplementation("io.kotest:kotest-assertions-json:$kotestVersion")
-  testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-  testImplementation("io.kotest:kotest-framework-datatest:$kotestVersion")
-  testImplementation("io.kotest.extensions:kotest-extensions-spring:$kotestExtensionsSpringVersion")
   testImplementation("org.springframework.security:spring-security-test")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
@@ -95,20 +75,20 @@ sonarqube {
     property("sonar.projectVersion", project.version.toString())
     property(
       "sonar.cpd.exclusions",
-      "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/LrmItemController.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/LrmListController.kt,",
+      "src/main/java/net/flyingfishflash/loremlist/api/LrmItemController.java," +
+        "src/main/java/net/flyingfishflash/loremlist/api/LrmListController.java,",
     )
     property(
       "sonar.coverage.exclusions",
-      "src/main/kotlin/net/flyingfishflash/loremlist/LoremListApplication.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/**/data/**," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/*/*/*Configuration.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/core/configuration/**," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/core/response/structure/ApiMessage.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/*/*Repository.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmitem/LrmItem.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/domain/lrmlist/LrmList.kt," +
-        "src/main/kotlin/net/flyingfishflash/loremlist/persistence/**,",
+      "src/main/java/net/flyingfishflash/loremlist/LoremListApplication.java," +
+        "src/main/java/net/flyingfishflash/loremlist/**/data/**," +
+        "src/main/java/net/flyingfishflash/loremlist/*/*/*Configuration.java," +
+        "src/main/java/net/flyingfishflash/loremlist/core/configuration/**," +
+        "src/main/java/net/flyingfishflash/loremlist/core/response/structure/ApiMessage.java," +
+        "src/main/java/net/flyingfishflash/loremlist/domain/*/*Repository.java," +
+        "src/main/java/net/flyingfishflash/loremlist/domain/lrmitem/LrmItem.java," +
+        "src/main/java/net/flyingfishflash/loremlist/domain/lrmlist/LrmList.java," +
+        "src/main/java/net/flyingfishflash/loremlist/persistence/**,",
     )
   }
 }
@@ -133,25 +113,6 @@ spotless {
     removeUnusedImports()
   }
 
-  kotlinGradle { ktlint("1.5.0") }
-
-  kotlin {
-    ktlint("1.5.0")
-      .editorConfigOverride(
-        mapOf(
-          "indent_size" to 2,
-          "ktlint_code_style" to "intellij_idea",
-          "max_line_length" to 160,
-          "ktlint_standard_function-expression-body" to "disabled",
-          "ktlint_function_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than" to "5",
-        ),
-      )
-    suppressLintsFor {
-      step = "ktlint"
-      shortCode = "standard:max-line-length"
-    }
-  }
-
   json {
     target("*.json")
     jackson()
@@ -166,13 +127,6 @@ spotless {
 }
 
 tasks {
-  compileKotlin {
-    compilerOptions {
-      jvmTarget.set(JvmTarget.JVM_21)
-      freeCompilerArgs.add("-Xjsr305=strict")
-    }
-  }
-
   compileJava {
     options.release.set(25)
   }
@@ -226,14 +180,11 @@ tasks {
       files(
         project.sourceSets.main.get().output.asFileTree.filter { f: File ->
           !(
-            f.path.contains("/kotlin/main/net/flyingfishflash/loremlist") &&
-              (
-                f.name.equals("Application") ||
-                  f.name.contains("ApplicationConfiguration") ||
-                  f.name.contains("Configuration") ||
-                  f.path.contains("dto/") ||
-                  f.path.contains("configuration/")
-              )
+            f.name.equals("Application") ||
+              f.name.contains("ApplicationConfiguration") ||
+              f.name.contains("Configuration") ||
+              f.path.contains("dto/") ||
+              f.path.contains("configuration/")
           )
         },
       ),
