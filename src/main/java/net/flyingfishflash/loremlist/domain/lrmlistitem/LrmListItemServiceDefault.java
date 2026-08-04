@@ -119,10 +119,17 @@ public class LrmListItemServiceDefault implements LrmListItemService {
           .supplemental(exception.getSupplemental())
           .build();
     } catch (Exception exception) {
-      // Exposed's repository methods can throw java.sql.SQLException (as ExposedSQLException)
-      // without declaring it in their
-      // Kotlin signature, so it can't be caught by type from Java - it must be checked via
-      // instanceof here instead.
+      // JdbcClient translates a unique constraint violation into a DuplicateKeyException; the
+      // SQLException checks below remain as a fallback for exceptions raised directly by a
+      // repository (e.g. in tests).
+      if (exception
+          instanceof org.springframework.dao.DuplicateKeyException duplicateKeyException) {
+        throw DomainException.builder()
+            .cause(duplicateKeyException)
+            .httpStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+            .message(exceptionMessage + ": It already exists.")
+            .build();
+      }
       if (exception instanceof SQLException sqlException) {
         String sqlMessage = sqlException.getMessage();
         if (sqlMessage != null
@@ -177,7 +184,7 @@ public class LrmListItemServiceDefault implements LrmListItemService {
     // return created associations with sorted item names
     List<SuccinctLrmComponent> items =
         associations.stream()
-            .map(SuccinctLrmComponentPair::getItem)
+            .map(SuccinctLrmComponentPair::item)
             .sorted(java.util.Comparator.comparing(SuccinctLrmComponent::getName))
             .map(item -> (SuccinctLrmComponent) item)
             .toList();

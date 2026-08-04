@@ -27,9 +27,6 @@ import net.flyingfishflash.loremlist.domain.lrmlist.data.LrmListDeleted
 import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItem
 import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItemService
 import net.flyingfishflash.loremlist.toJsonElement
-import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.StatementContext
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpStatus
 import java.sql.SQLException
@@ -82,11 +79,7 @@ class LrmListServiceTests :
       ),
     )
 
-    fun exposedSQLExceptionGeneric(): ExposedSQLException = ExposedSQLException(
-      cause = SQLException("Cause of ExposedSQLException"),
-      transaction = mockk<Transaction>(relaxed = true),
-      contexts = listOf(mockk<StatementContext>(relaxed = true)),
-    )
+    fun sqlExceptionGeneric(): SQLException = SQLException("Cause of SQLException")
 
     afterEach { clearAllMocks() }
     afterSpec { unmockkAll() }
@@ -119,10 +112,10 @@ class LrmListServiceTests :
         verify { mockLrmListRepository.findByOwnerAndIdOrNull(id = ofType(UUID::class), owner = ofType(String::class)) }
       }
 
-      it("list repository throws exposed sql exception") {
-        every { mockLrmListRepository.insert(ofType(LrmList::class)) } throws exposedSQLExceptionGeneric()
+      it("list repository throws sql exception") {
+        every { mockLrmListRepository.insert(ofType(LrmList::class)) } throws sqlExceptionGeneric()
         val exception = shouldThrow<DomainException> { lrmListService.create(lrmListCreate, mockUserName) }
-        exception.cause.shouldBeInstanceOf<ExposedSQLException>()
+        exception.cause.shouldBeInstanceOf<SQLException>()
         exception.httpStatus.shouldBe(HttpStatus.INTERNAL_SERVER_ERROR)
         exception.message.shouldNotBeNull().shouldBeEqual("List could not be created.")
         exception.responseMessage.shouldBeEqual("List could not be created.")
@@ -401,10 +394,10 @@ class LrmListServiceTests :
         shouldThrow<ConstraintViolationException> { lrmListService.patchName(patchedLrmList) }
       }
 
-      it("list repository throws exposed sql exception") {
-        every { mockLrmListRepository.updateName(ofType(LrmList::class)) } throws exposedSQLExceptionGeneric()
-        val exception = shouldThrow<ExposedSQLException> { lrmListService.patchName(lrmList()) }
-        exception.message?.shouldContain("ExposedSQLException")
+      it("list repository throws sql exception") {
+        every { mockLrmListRepository.updateName(ofType(LrmList::class)) } throws sqlExceptionGeneric()
+        val exception = shouldThrow<SQLException> { lrmListService.patchName(lrmList()) }
+        exception.message?.shouldContain("SQLException")
         verify { mockLrmListRepository.updateName(ofType(LrmList::class)) }
       }
     }

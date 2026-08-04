@@ -51,9 +51,6 @@ server:
       remote-ip-header: x-forwarded-for
 
 spring:
-  exposed:
-    show-sql: 'true'
-    generate-ddl: 'false'
   jackson:
     default-property-inclusion: non_null
     serialization:

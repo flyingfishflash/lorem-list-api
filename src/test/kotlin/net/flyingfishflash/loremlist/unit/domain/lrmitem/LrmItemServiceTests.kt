@@ -27,9 +27,6 @@ import net.flyingfishflash.loremlist.domain.lrmlist.LrmList
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListService
 import net.flyingfishflash.loremlist.domain.lrmlist.LrmListSuccinct
 import net.flyingfishflash.loremlist.domain.lrmlistitem.LrmListItemService
-import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.statements.StatementContext
 import org.springframework.http.HttpStatus
 import java.sql.SQLException
 import java.util.UUID
@@ -76,11 +73,7 @@ class LrmItemServiceTests :
       setOf(LrmListSuccinct(id = id0, name = "Lorem List Name")),
     )
 
-    fun exposedSQLExceptionGeneric(): ExposedSQLException = ExposedSQLException(
-      cause = SQLException("Cause of ExposedSQLException"),
-      transaction = mockk<Transaction>(relaxed = true),
-      contexts = listOf(mockk<StatementContext>(relaxed = true)),
-    )
+    fun sqlExceptionGeneric(): SQLException = SQLException("Cause of SQLException")
 
     afterEach { clearAllMocks() }
     afterSpec { unmockkAll() }
@@ -383,10 +376,10 @@ class LrmItemServiceTests :
 //      shouldThrow<ConstraintViolationException> { lrmItemService.patchName(patchedLrmItem) }
 //    }
 
-      it("item repository throws exposed sql exception") {
-        every { mockLrmItemRepository.updateName(ofType(LrmItem::class)) } throws exposedSQLExceptionGeneric()
-        val exception = shouldThrow<ExposedSQLException> { lrmItemService.patchName(lrmItem()) }
-        exception.message?.shouldContain("ExposedSQLException")
+      it("item repository throws sql exception") {
+        every { mockLrmItemRepository.updateName(ofType(LrmItem::class)) } throws sqlExceptionGeneric()
+        val exception = shouldThrow<SQLException> { lrmItemService.patchName(lrmItem()) }
+        exception.message?.shouldContain("SQLException")
         verify { mockLrmItemRepository.updateName(ofType(LrmItem::class)) }
       }
     }

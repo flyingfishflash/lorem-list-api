@@ -140,7 +140,7 @@ class LrmListItemServiceTests :
           every { mockLrmItemRepository.notFoundByOwnerAndId(itemIdCollection = listOf(itemId1), owner = owner) } returns emptySet()
           every { mockLrmListItemRepository.create(any()) } returns
             listOf(
-              SuccinctLrmComponentPair(list = LrmListSuccinct.fromLrmList(mockLrmList), item = LrmItemSuccinct.fromLrmItem(mockLrmItem1)),
+              SuccinctLrmComponentPair(LrmListSuccinct.fromLrmList(mockLrmList), LrmItemSuccinct.fromLrmItem(mockLrmItem1)),
             )
           val response = lrmListItemService.add(listId, listOf(itemId1), owner)
           response.message shouldContain "to item"
@@ -150,8 +150,8 @@ class LrmListItemServiceTests :
         it("when multiple items id's are provided") {
           every { mockLrmItemRepository.notFoundByOwnerAndId(itemIdCollection = listOf(itemId1, itemId2), owner = owner) } returns emptySet()
           every { mockLrmListItemRepository.create(any()) } returns listOf(
-            SuccinctLrmComponentPair(list = LrmListSuccinct.fromLrmList(mockLrmList), item = LrmItemSuccinct.fromLrmItem(mockLrmItem1)),
-            SuccinctLrmComponentPair(list = LrmListSuccinct.fromLrmList(mockLrmList), item = LrmItemSuccinct.fromLrmItem(mockLrmItem2)),
+            SuccinctLrmComponentPair(LrmListSuccinct.fromLrmList(mockLrmList), LrmItemSuccinct.fromLrmItem(mockLrmItem1)),
+            SuccinctLrmComponentPair(LrmListSuccinct.fromLrmList(mockLrmList), LrmItemSuccinct.fromLrmItem(mockLrmItem2)),
           )
           val response = lrmListItemService.add(listId, listOf(itemId1, itemId2), owner)
           response.message shouldContain "2 items"
@@ -168,7 +168,7 @@ class LrmListItemServiceTests :
         every { mockLrmItemRepository.notFoundByOwnerAndId(itemIdCollection = listOf(itemId1, itemId2), owner = owner) } returns emptySet()
         every { mockLrmListItemRepository.create(any()) } returns
           listOf(
-            SuccinctLrmComponentPair(list = LrmListSuccinct.fromLrmList(mockLrmList), item = LrmItemSuccinct.fromLrmItem(mockLrmItem1)),
+            SuccinctLrmComponentPair(LrmListSuccinct.fromLrmList(mockLrmList), LrmItemSuccinct.fromLrmItem(mockLrmItem1)),
           )
         val exception = shouldThrow<DomainException> { lrmListItemService.add(listId, listOf(itemId1, itemId2), owner) }
         exception.message.shouldContain("created = 1 / requested = 2")

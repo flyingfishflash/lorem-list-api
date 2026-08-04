@@ -29,7 +29,6 @@ val ciCommit by extra { ciCommit() }
 val ciPlatform by extra { ciPlatform() }
 val ciPipelineId by extra { ciPipelineId() }
 
-val exposedVersion = "0.61.0"
 val flywayVersion = "11.9.1"
 val jakartaValidationApiVersion = "3.1.1"
 val kotestVersion = "5.9.1"
@@ -51,9 +50,6 @@ dependencies {
 //  https://github.com/flyway/flyway/releases
   implementation("org.flywaydb:flyway-core:$flywayVersion")
   implementation("org.flywaydb:flyway-database-postgresql:$flywayVersion")
-//  https://github.com/JetBrains/Exposed/releases
-  implementation("org.jetbrains.exposed:exposed-spring-boot-starter:$exposedVersion")
-  implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinxSerializationJson")
@@ -68,6 +64,7 @@ dependencies {
   )
 //  https://github.com/spring-projects/spring-boot/releases
   implementation("org.springframework.boot:spring-boot-starter-actuator")
+  implementation("org.springframework.boot:spring-boot-starter-jdbc")
   implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("org.springframework.boot:spring-boot-starter-web")
@@ -265,6 +262,9 @@ testlogger {
   showExceptions = false
   showSimpleNames = true
   showStandardStreams = true
+  showExceptions = true
+  showStackTraces = true
+  showFullStackTraces = true
   theme = ThemeType.MOCHA
 }
 
