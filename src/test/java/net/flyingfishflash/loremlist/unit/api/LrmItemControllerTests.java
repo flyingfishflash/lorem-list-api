@@ -67,8 +67,8 @@ class LrmItemControllerTests {
   private LrmItem lrmItem() {
     return new LrmItem(
         UUID.fromString("00000000-0000-4000-a000-000000000000"),
-        lrmItemCreateRequest.getName(),
-        lrmItemCreateRequest.getDescription(),
+        lrmItemCreateRequest.name(),
+        lrmItemCreateRequest.description(),
         "Lorem Ipsum Owner",
         now,
         "Lorem Ipsum Created By",

@@ -107,6 +107,6 @@ class ListItemCreateTest extends AbstractIntegrationTest {
   }
 
   Stream<Arguments> requestRecords() {
-    return requestRecords.stream().map(r -> Arguments.of(r.listItemCreateRequest().getName(), r));
+    return requestRecords.stream().map(r -> Arguments.of(r.listItemCreateRequest().name(), r));
   }
 }

@@ -121,7 +121,7 @@ class ItemReadTest extends AbstractIntegrationTest {
   }
 
   Stream<Arguments> requestsAlpha() {
-    return requestsAlpha.stream().map(r -> Arguments.of(r.listItemCreateRequest().getName(), r));
+    return requestsAlpha.stream().map(r -> Arguments.of(r.listItemCreateRequest().name(), r));
   }
 
   @ParameterizedTest(name = "succeeds for ''{0}'' [no lists]")
@@ -135,7 +135,7 @@ class ItemReadTest extends AbstractIntegrationTest {
   }
 
   Stream<Arguments> requestsBeta() {
-    return requestsBeta.stream().map(r -> Arguments.of(r.listItemCreateRequest().getName(), r));
+    return requestsBeta.stream().map(r -> Arguments.of(r.listItemCreateRequest().name(), r));
   }
 
   @Test

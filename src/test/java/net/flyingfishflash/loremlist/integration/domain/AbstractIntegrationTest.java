@@ -64,9 +64,9 @@ public abstract class AbstractIntegrationTest {
             .requestBody(writeValueAsString(listRequest))
             .additionalMatchers(
                 jsonPath("$.content.id").isNotEmpty(),
-                jsonPath("$.content.name").value(listRequest.getName()),
-                jsonPath("$.content.description").value(listRequest.getDescription()),
-                jsonPath("$.content.public").value(listRequest.getPublic()),
+                jsonPath("$.content.name").value(listRequest.name()),
+                jsonPath("$.content.description").value(listRequest.description()),
+                jsonPath("$.content.public").value(listRequest.isPublic()),
                 jsonPath("$.content.created").isNotEmpty(),
                 jsonPath("$.content.updated").isNotEmpty(),
                 jsonPath("$.content.items").isEmpty())
@@ -82,9 +82,9 @@ public abstract class AbstractIntegrationTest {
             .requestBody(writeValueAsString(itemRequest))
             .additionalMatchers(
                 jsonPath("$.content.id").isNotEmpty(),
-                jsonPath("$.content.name").value(itemRequest.getName()),
-                jsonPath("$.content.description").value(itemRequest.getDescription()),
-                jsonPath("$.content.quantity").value(itemRequest.getQuantity()),
+                jsonPath("$.content.name").value(itemRequest.name()),
+                jsonPath("$.content.description").value(itemRequest.description()),
+                jsonPath("$.content.quantity").value(itemRequest.quantity()),
                 jsonPath("$.content.isSuppressed").value(itemRequest.isSuppressed()),
                 jsonPath("$.content.created").isNotEmpty(),
                 jsonPath("$.content.updated").isNotEmpty(),

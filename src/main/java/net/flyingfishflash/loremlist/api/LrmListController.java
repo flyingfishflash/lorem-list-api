@@ -271,7 +271,7 @@ public class LrmListController {
       @AuthenticationPrincipal Jwt principal) {
     ApiServiceResponse<LrmListItemAddedResponse> apiServiceResponse =
         lrmListApiService.addListItem(
-            listId, lrmListItemAddRequest.getItemIdCollection(), principal.getSubject());
+            listId, lrmListItemAddRequest.itemIdCollection(), principal.getSubject());
     ResponseSuccess<LrmListItemAddedResponse> response =
         new ResponseSuccess<>(
             apiServiceResponse.getContent(), apiServiceResponse.getMessage(), request);

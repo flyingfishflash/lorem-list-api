@@ -49,9 +49,9 @@ class PublicControllerTests {
   private LrmList lrmList() {
     return new LrmList(
         id0,
-        lrmListCreateRequest.getName(),
-        lrmListCreateRequest.getDescription(),
-        lrmListCreateRequest.getPublic(),
+        lrmListCreateRequest.name(),
+        lrmListCreateRequest.description(),
+        lrmListCreateRequest.isPublic(),
         "Lorem Ipsum Owner",
         now,
         "Lorum Ipsum Created By",

@@ -117,9 +117,9 @@ class ListReadTest extends AbstractIntegrationTest {
         new ArrayList<>(
             List.of(
                 jsonPath("$.content.id").value(uuid.toString()),
-                jsonPath("$.content.name").value(request.getName()),
-                jsonPath("$.content.description").value(request.getDescription()),
-                jsonPath("$.content.public").value(request.getPublic())));
+                jsonPath("$.content.name").value(request.name()),
+                jsonPath("$.content.description").value(request.description()),
+                jsonPath("$.content.public").value(request.isPublic())));
     matchers.add(jsonPath("$..items.length()").value(uuid.equals(firstListId) ? itemCount : 0));
     verifyRequest(HttpMethod.GET, "/lists/" + uuid + "?includeItems=true")
         .expectedDisposition(DispositionOfSuccess.SUCCESS)
@@ -135,9 +135,9 @@ class ListReadTest extends AbstractIntegrationTest {
         .expectedDisposition(DispositionOfSuccess.SUCCESS)
         .additionalMatchers(
             jsonPath("$.content.id").value(uuid.toString()),
-            jsonPath("$.content.name").value(request.getName()),
-            jsonPath("$.content.description").value(request.getDescription()),
-            jsonPath("$.content.public").value(request.getPublic()))
+            jsonPath("$.content.name").value(request.name()),
+            jsonPath("$.content.description").value(request.description()),
+            jsonPath("$.content.public").value(request.isPublic()))
         .perform();
   }
 
@@ -149,9 +149,9 @@ class ListReadTest extends AbstractIntegrationTest {
         .expectedDisposition(DispositionOfSuccess.SUCCESS)
         .additionalMatchers(
             jsonPath("$.content.id").value(uuid.toString()),
-            jsonPath("$.content.name").value(request.getName()),
-            jsonPath("$.content.description").value(request.getDescription()),
-            jsonPath("$.content.public").value(request.getPublic()))
+            jsonPath("$.content.name").value(request.name()),
+            jsonPath("$.content.description").value(request.description()),
+            jsonPath("$.content.public").value(request.isPublic()))
         .perform();
   }
 

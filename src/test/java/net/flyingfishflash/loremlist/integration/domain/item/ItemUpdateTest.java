@@ -77,8 +77,8 @@ class ItemUpdateTest extends AbstractIntegrationTest {
   @ParameterizedTest(name = "succeeds for all supported fields of ''{0}''")
   @MethodSource("requestsAlpha")
   void succeedsForAllSupportedFields(String name, ListItemRequestRecord record) throws Exception {
-    String newName = record.listItemCreateRequest().getName() + " *";
-    String newDescription = record.listItemCreateRequest().getDescription() + " *";
+    String newName = record.listItemCreateRequest().name() + " *";
+    String newDescription = record.listItemCreateRequest().description() + " *";
     verifyRequest(HttpMethod.PATCH, "/items/" + record.itemId())
         .requestBody(
             "{ \"name\": \"" + newName + "\", \"description\": \"" + newDescription + "\" }")
@@ -100,6 +100,6 @@ class ItemUpdateTest extends AbstractIntegrationTest {
   }
 
   Stream<Arguments> requestsAlpha() {
-    return requestsAlpha.stream().map(r -> Arguments.of(r.listItemCreateRequest().getName(), r));
+    return requestsAlpha.stream().map(r -> Arguments.of(r.listItemCreateRequest().name(), r));
   }
 }

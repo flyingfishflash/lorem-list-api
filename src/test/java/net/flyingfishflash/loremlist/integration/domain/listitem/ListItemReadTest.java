@@ -44,7 +44,7 @@ class ListItemReadTest extends AbstractIntegrationTest {
     purgeDomain();
 
     listWithItemsId = createAndVerifyList(TestData.LIST_CREATE_REQUESTS.get(0));
-    listWithItemsName = TestData.LIST_CREATE_REQUESTS.get(0).getName();
+    listWithItemsName = TestData.LIST_CREATE_REQUESTS.get(0).name();
     requests = new ArrayList<>();
     for (var request : TestData.ITEM_CREATE_REQUESTS_ALPHA) {
       requests.add(
@@ -53,7 +53,7 @@ class ListItemReadTest extends AbstractIntegrationTest {
     }
 
     listWithNoItemsId = createAndVerifyList(TestData.LIST_CREATE_REQUESTS.get(1));
-    listWithNoItemsName = TestData.LIST_CREATE_REQUESTS.get(1).getName();
+    listWithNoItemsName = TestData.LIST_CREATE_REQUESTS.get(1).name();
     requestsBeta = new ArrayList<>();
     for (var request : TestData.ITEM_CREATE_REQUESTS_BETA) {
       requestsBeta.add(
@@ -153,7 +153,7 @@ class ListItemReadTest extends AbstractIntegrationTest {
   }
 
   Stream<Arguments> requests() {
-    return requests.stream().map(r -> Arguments.of(r.listItemCreateRequest().getName(), r));
+    return requests.stream().map(r -> Arguments.of(r.listItemCreateRequest().name(), r));
   }
 
   private record EligibleScenario(String listName, UUID listId, int expectedSize) {}

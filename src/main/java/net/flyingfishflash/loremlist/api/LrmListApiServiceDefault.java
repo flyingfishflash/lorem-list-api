@@ -58,9 +58,9 @@ public class LrmListApiServiceDefault implements LrmListApiService {
     // TODO: evaluate where LrmItemRequest or LrmItem should be provided to domain service
     LrmListCreate lrmListCreate =
         new LrmListCreate(
-            lrmListCreateRequest.getName(),
-            lrmListCreateRequest.getDescription(),
-            lrmListCreateRequest.getPublic());
+            lrmListCreateRequest.name(),
+            lrmListCreateRequest.description(),
+            lrmListCreateRequest.isPublic());
     ServiceResponse<LrmList> serviceResponse = lrmListService.create(lrmListCreate, owner);
     return new ApiServiceResponse<>(
         LrmListResponse.fromLrmList(serviceResponse.getContent()), serviceResponse.getMessage());
@@ -227,9 +227,9 @@ public class LrmListApiServiceDefault implements LrmListApiService {
       UUID listId, LrmItemCreateRequest itemCreateRequest, String creator) {
     LrmItemCreate lrmItemCreate =
         new LrmItemCreate(
-            itemCreateRequest.getName(),
-            itemCreateRequest.getDescription(),
-            itemCreateRequest.getQuantity(),
+            itemCreateRequest.name(),
+            itemCreateRequest.description(),
+            itemCreateRequest.quantity(),
             itemCreateRequest.isSuppressed());
     ServiceResponse<LrmListItem> serviceResponse =
         lrmListItemService.create(listId, lrmItemCreate, creator);

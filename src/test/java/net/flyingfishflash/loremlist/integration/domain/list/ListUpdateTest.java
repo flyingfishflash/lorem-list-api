@@ -104,9 +104,9 @@ class ListUpdateTest extends AbstractIntegrationTest {
         .expectedDisposition(DispositionOfSuccess.SUCCESS)
         .additionalMatchers(
             jsonPath("$.content.id").value(record.uuid().toString()),
-            jsonPath("$.content.name").value(record.updateRequest().getName()),
-            jsonPath("$.content.description").value(record.updateRequest().getDescription()),
-            jsonPath("$.content.public").value(record.updateRequest().getPublic()),
+            jsonPath("$.content.name").value(record.updateRequest().name()),
+            jsonPath("$.content.description").value(record.updateRequest().description()),
+            jsonPath("$.content.public").value(record.updateRequest().isPublic()),
             jsonPath("$.content.created").isNotEmpty(),
             jsonPath("$.content.updated").isNotEmpty(),
             jsonPath("$.content.items").isEmpty())
@@ -115,13 +115,13 @@ class ListUpdateTest extends AbstractIntegrationTest {
     verifyRequest(HttpMethod.GET, "/lists/" + record.uuid())
         .expectedDisposition(DispositionOfSuccess.SUCCESS)
         .additionalMatchers(
-            jsonPath("$.content.name").value(record.updateRequest().getName()),
-            jsonPath("$.content.description").value(record.updateRequest().getDescription()),
-            jsonPath("$.content.public").value(record.updateRequest().getPublic()))
+            jsonPath("$.content.name").value(record.updateRequest().name()),
+            jsonPath("$.content.description").value(record.updateRequest().description()),
+            jsonPath("$.content.public").value(record.updateRequest().isPublic()))
         .perform();
   }
 
   Stream<Arguments> requestRecords() {
-    return requestRecords.stream().map(r -> Arguments.of(r.createRequest().getName(), r));
+    return requestRecords.stream().map(r -> Arguments.of(r.createRequest().name(), r));
   }
 }

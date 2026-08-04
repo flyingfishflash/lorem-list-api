@@ -136,8 +136,8 @@ class LrmListControllerTests {
   private LrmItem lrmItem() {
     return new LrmItem(
         id0,
-        lrmItemCreateRequest.getName(),
-        lrmItemCreateRequest.getDescription(),
+        lrmItemCreateRequest.name(),
+        lrmItemCreateRequest.description(),
         "Lorem Ipsum Owner",
         now,
         "Lorem Ipsum Created By",

@@ -55,6 +55,6 @@ class ListCreateTest extends AbstractIntegrationTest {
 
   static Stream<Arguments> listCreateRequests() {
     return TestData.LIST_CREATE_REQUESTS.stream()
-        .map(request -> Arguments.of(request.getName(), request));
+        .map(request -> Arguments.of(request.name(), request));
   }
 }
