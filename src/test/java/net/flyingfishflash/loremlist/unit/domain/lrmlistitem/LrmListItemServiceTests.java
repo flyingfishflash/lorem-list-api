@@ -190,13 +190,13 @@ class LrmListItemServiceTests {
         List<SuccinctLrmComponentPair> createdAssociations =
             List.of(
                 new SuccinctLrmComponentPair(
-                    LrmListSuccinct.Companion.fromLrmList(mockLrmList),
-                    LrmItemSuccinct.Companion.fromLrmItem(mockLrmItem1)));
+                    LrmListSuccinct.fromLrmList(mockLrmList),
+                    LrmItemSuccinct.fromLrmItem(mockLrmItem1)));
         when(mockLrmListItemRepository.create(any())).thenReturn(createdAssociations);
         var response = lrmListItemService.add(listId, List.of(itemId1), owner);
         assertThat(response.getMessage()).contains("to item");
         assertThat(response.getContent().items())
-            .isEqualTo(List.of(LrmItemSuccinct.Companion.fromLrmItem(mockLrmItem1)));
+            .isEqualTo(List.of(LrmItemSuccinct.fromLrmItem(mockLrmItem1)));
       }
 
       @Test
@@ -206,19 +206,19 @@ class LrmListItemServiceTests {
         List<SuccinctLrmComponentPair> createdAssociations =
             List.of(
                 new SuccinctLrmComponentPair(
-                    LrmListSuccinct.Companion.fromLrmList(mockLrmList),
-                    LrmItemSuccinct.Companion.fromLrmItem(mockLrmItem1)),
+                    LrmListSuccinct.fromLrmList(mockLrmList),
+                    LrmItemSuccinct.fromLrmItem(mockLrmItem1)),
                 new SuccinctLrmComponentPair(
-                    LrmListSuccinct.Companion.fromLrmList(mockLrmList),
-                    LrmItemSuccinct.Companion.fromLrmItem(mockLrmItem2)));
+                    LrmListSuccinct.fromLrmList(mockLrmList),
+                    LrmItemSuccinct.fromLrmItem(mockLrmItem2)));
         when(mockLrmListItemRepository.create(any())).thenReturn(createdAssociations);
         var response = lrmListItemService.add(listId, List.of(itemId1, itemId2), owner);
         assertThat(response.getMessage()).contains("2 items");
         assertThat(response.getContent().items())
             .isEqualTo(
                 List.of(
-                    LrmItemSuccinct.Companion.fromLrmItem(mockLrmItem1),
-                    LrmItemSuccinct.Companion.fromLrmItem(mockLrmItem2)));
+                    LrmItemSuccinct.fromLrmItem(mockLrmItem1),
+                    LrmItemSuccinct.fromLrmItem(mockLrmItem2)));
       }
     }
 
@@ -235,8 +235,8 @@ class LrmListItemServiceTests {
       List<SuccinctLrmComponentPair> createdAssociations =
           List.of(
               new SuccinctLrmComponentPair(
-                  LrmListSuccinct.Companion.fromLrmList(mockLrmList),
-                  LrmItemSuccinct.Companion.fromLrmItem(mockLrmItem1)));
+                  LrmListSuccinct.fromLrmList(mockLrmList),
+                  LrmItemSuccinct.fromLrmItem(mockLrmItem1)));
       when(mockLrmListItemRepository.create(any())).thenReturn(createdAssociations);
       DomainException exception =
           catchDomainException(
@@ -352,7 +352,7 @@ class LrmListItemServiceTests {
           .thenReturn(Set.of());
       when(mockLrmListItemRepository.create(Set.of(new Pair<>(listId, itemId))))
           .thenReturn(List.of(mockSuccinctLrmComponentPair));
-      LrmItemSuccinct itemSuccinct = LrmItemSuccinct.Companion.fromLrmItem(mockLrmItem1);
+      LrmItemSuccinct itemSuccinct = LrmItemSuccinct.fromLrmItem(mockLrmItem1);
       when(mockSuccinctLrmComponentPair.item()).thenReturn(itemSuccinct);
       when(mockLrmListItemRepository.findByOwnerAndItemIdAndListIdOrNull(
               eq(itemId), eq(listId), eq(owner)))

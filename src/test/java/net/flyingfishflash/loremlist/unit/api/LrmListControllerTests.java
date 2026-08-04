@@ -675,8 +675,7 @@ class LrmListControllerTests {
       String instance = "/lists/" + id1 + "/items";
       LrmListItemAddedResponse mockResponse =
           new LrmListItemAddedResponse(
-              createLrmList(id1).name(),
-              List.of(LrmItemSuccinct.Companion.fromLrmItem(createLrmItem(id2))));
+              createLrmList(id1).name(), List.of(LrmItemSuccinct.fromLrmItem(createLrmItem(id2))));
       when(mockLrmListApiService.addListItem(eq(id1), any(), anyString()))
           .thenReturn(new ApiServiceResponse<>(mockResponse, apiResponseMessage));
       LrmListItemAddRequest requestBody = new LrmListItemAddRequest(Set.of(UUID.randomUUID()));
@@ -701,10 +700,10 @@ class LrmListControllerTests {
           .andExpect(jsonPath("$.content.associatedComponents[0].type").value("item"))
           .andExpect(
               jsonPath("$.content.associatedComponents[0].id")
-                  .value(mockResponse.associatedComponents().get(0).getId().toString()))
+                  .value(mockResponse.associatedComponents().get(0).id().toString()))
           .andExpect(
               jsonPath("$.content.associatedComponents[0].name")
-                  .value(mockResponse.associatedComponents().get(0).getName()));
+                  .value(mockResponse.associatedComponents().get(0).name()));
     }
 
     @Test
@@ -714,8 +713,8 @@ class LrmListControllerTests {
           new LrmListItemAddedResponse(
               createLrmList(id1).name(),
               List.of(
-                  LrmItemSuccinct.Companion.fromLrmItem(createLrmItem(id2)),
-                  LrmItemSuccinct.Companion.fromLrmItem(createLrmItem(id3))));
+                  LrmItemSuccinct.fromLrmItem(createLrmItem(id2)),
+                  LrmItemSuccinct.fromLrmItem(createLrmItem(id3))));
       when(mockLrmListApiService.addListItem(eq(id1), any(), anyString()))
           .thenReturn(new ApiServiceResponse<>(mockResponse, apiResponseMessage));
       LrmListItemAddRequest requestBody = new LrmListItemAddRequest(Set.of(UUID.randomUUID()));
@@ -740,10 +739,10 @@ class LrmListControllerTests {
           .andExpect(jsonPath("$.content.associatedComponents[0].type").value("item"))
           .andExpect(
               jsonPath("$.content.associatedComponents[0].id")
-                  .value(mockResponse.associatedComponents().get(0).getId().toString()))
+                  .value(mockResponse.associatedComponents().get(0).id().toString()))
           .andExpect(
               jsonPath("$.content.associatedComponents[0].name")
-                  .value(mockResponse.associatedComponents().get(0).getName()));
+                  .value(mockResponse.associatedComponents().get(0).name()));
     }
 
     @Test

@@ -76,7 +76,7 @@ public class LrmItemServiceDefault implements LrmItemService {
       List<String> associatedListNames =
           items.stream()
               .flatMap(item -> item.lists().stream())
-              .map(LrmListSuccinct::getName)
+              .map(LrmListSuccinct::name)
               .sorted()
               .toList();
       LrmItemDeleted lrmItemDeleted = new LrmItemDeleted(itemNames, associatedListNames);
@@ -143,7 +143,7 @@ public class LrmItemServiceDefault implements LrmItemService {
 
   private LrmItemDeleted createDeleteResponse(LrmItem item) {
     List<String> associatedListNames =
-        item.lists().stream().map(LrmListSuccinct::getName).sorted().toList();
+        item.lists().stream().map(LrmListSuccinct::name).sorted().toList();
     return new LrmItemDeleted(List.of(item.name()), associatedListNames);
   }
 

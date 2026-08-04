@@ -9,12 +9,6 @@ import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.module.SimpleModule
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
-import net.flyingfishflash.loremlist.domain.SuccinctLrmComponent
-import net.flyingfishflash.loremlist.domain.lrmitem.LrmItemSuccinct
-import net.flyingfishflash.loremlist.domain.lrmlist.LrmListSuccinct
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.HttpMessageConverter
@@ -36,27 +30,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 @Configuration
 class SerializationConfig : WebMvcConfigurer {
 
-  val module = SerializersModule {
-    polymorphic(SuccinctLrmComponent::class) {
-      subclass(LrmListSuccinct::class)
-      subclass(LrmItemSuccinct::class)
-    }
-  }
-
   @Bean
   fun messageConverter(): KotlinSerializationJsonHttpMessageConverter {
-    return KotlinSerializationJsonHttpMessageConverter(
-      Json {
-        serializersModule = module
-      },
-    )
+    return KotlinSerializationJsonHttpMessageConverter(Json {})
   }
 
   @Bean
   fun jsonFormat(): Json {
-    return Json {
-      serializersModule = module
-    }
+    return Json {}
   }
 
   @Bean

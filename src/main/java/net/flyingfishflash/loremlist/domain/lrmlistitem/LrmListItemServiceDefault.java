@@ -95,7 +95,7 @@ public class LrmListItemServiceDefault implements LrmListItemService {
                 + "' to "
                 + type.invert().name().toLowerCase()
                 + " '"
-                + listItemCreated.items().get(0).getName()
+                + listItemCreated.items().get(0).name()
                 + "'";
       } else {
         message =
@@ -185,7 +185,7 @@ public class LrmListItemServiceDefault implements LrmListItemService {
     List<SuccinctLrmComponent> items =
         associations.stream()
             .map(SuccinctLrmComponentPair::item)
-            .sorted(java.util.Comparator.comparing(SuccinctLrmComponent::getName))
+            .sorted(java.util.Comparator.comparing(SuccinctLrmComponent::name))
             .map(item -> (SuccinctLrmComponent) item)
             .toList();
     return new LrmListItemAdded(list.name(), items);
@@ -234,7 +234,7 @@ public class LrmListItemServiceDefault implements LrmListItemService {
         findByOwnerAndItemIdAndListId(lrmItem.id(), listId, creator).getContent();
     String message =
         "Created item '"
-            + lrmListItemAdded.items().get(0).getName()
+            + lrmListItemAdded.items().get(0).name()
             + "' and assigned it to list '"
             + lrmListItemAdded.listName()
             + "'";

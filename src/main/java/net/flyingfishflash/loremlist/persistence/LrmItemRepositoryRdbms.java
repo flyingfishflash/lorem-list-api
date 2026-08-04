@@ -235,7 +235,7 @@ class LrmItemRepositoryRdbms implements LrmItemRepository {
           lists == null
               ? Set.of()
               : lists.stream()
-                  .sorted(Comparator.comparing(LrmListSuccinct::getName))
+                  .sorted(Comparator.comparing(LrmListSuccinct::name))
                   .collect(Collectors.toCollection(LinkedHashSet::new));
       result.add(item.withLists(sortedLists));
     }
