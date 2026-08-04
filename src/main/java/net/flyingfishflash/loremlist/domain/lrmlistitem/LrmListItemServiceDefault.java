@@ -197,8 +197,8 @@ public class LrmListItemServiceDefault implements LrmListItemService {
       LrmItem lrmItem =
           new LrmItem(
               UUID.randomUUID(),
-              lrmItemCreate.getName(),
-              lrmItemCreate.getDescription(),
+              lrmItemCreate.name(),
+              lrmItemCreate.description(),
               creator,
               now,
               creator,
@@ -226,7 +226,7 @@ public class LrmListItemServiceDefault implements LrmListItemService {
         findByOwnerAndItemIdAndListId(lrmItem.id(), listId, creator).getContent();
     LrmListItem tmpListItem =
         lrmListItem
-            .withQuantity(lrmItemCreate.getQuantity())
+            .withQuantity(lrmItemCreate.quantity())
             .withIsSuppressed(lrmItemCreate.isSuppressed());
     patchQuantity(tmpListItem);
     patchIsSuppressed(tmpListItem);

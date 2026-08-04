@@ -53,9 +53,9 @@ class LrmListServiceTests {
   private LrmList lrmList() {
     return new LrmList(
         id0,
-        lrmListCreate.getName(),
-        lrmListCreate.getDescription(),
-        lrmListCreate.getPublic(),
+        lrmListCreate.name(),
+        lrmListCreate.description(),
+        lrmListCreate.isPublic(),
         "Lorem Ipsum Owner",
         now,
         "Lorem Ipsum Created By",

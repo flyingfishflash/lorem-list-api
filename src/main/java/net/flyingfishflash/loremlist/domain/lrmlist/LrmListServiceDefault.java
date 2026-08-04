@@ -63,9 +63,9 @@ public class LrmListServiceDefault implements LrmListService {
       LrmList lrmList =
           new LrmList(
               UUID.randomUUID(),
-              lrmListCreate.getName(),
-              lrmListCreate.getDescription(),
-              lrmListCreate.getPublic(),
+              lrmListCreate.name(),
+              lrmListCreate.description(),
+              lrmListCreate.isPublic(),
               creator,
               now,
               creator,

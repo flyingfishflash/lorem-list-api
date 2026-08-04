@@ -54,8 +54,8 @@ class LrmItemServiceTests {
   private LrmItem lrmItem() {
     return new LrmItem(
         id0,
-        lrmItemCreate.getName(),
-        lrmItemCreate.getDescription(),
+        lrmItemCreate.name(),
+        lrmItemCreate.description(),
         "Lorem Ipsum Owner",
         now,
         "Lorem Ipsum Created By",
